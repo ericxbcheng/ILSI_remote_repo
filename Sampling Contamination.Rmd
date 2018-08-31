@@ -1,0 +1,154 @@
+---
+title: 'Sampling: Contamination'
+author: "Xianbin Cheng"
+date: "August 29, 2018"
+output: html_document
+---
+
+# Method #
+
+1. Load in libraries and check the session info.
+
+```{r, warning = FALSE, message= FALSE}
+library(tidyverse)
+library(MASS)
+```
+
+```{r}
+sessionInfo()
+```
+
+2. Define the input paramaters and create a simulation function.
+
+* `n_sim` = the number of simulations  
+* `x_lim` = the limits of the horizontal axis  
+* `y_lim` = the limits of the vertical axis  
+* `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) = 0.25, var(Y) = 0.25 and cov(X, Y) = 0  
+* `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,1)`)
+* `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,1)`)  
+* `n_affected` = the number of affected plants near the contamination spot, which follows a Poisson distribution (`Pois(lambda = 5)`)   
+
+```{r}
+## The input parameters
+n_sim = 3
+x_lim = c(0, 10)
+y_lim = c(0, 10)
+covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
+```
+
+```{r}
+## The simulation function for contamination spot and its spread
+sim_contam = function(n_sim, x_lim, y_lim, covariance, lambda){
+  
+  # Generate a matrix that contains contamination coordinates
+  x = runif(n = n_sim, min = x_lim[1], max = x_lim[2])
+  y = runif(n = n_sim, min = y_lim[1], max = y_lim[2])
+  n_affected = rpois(n = 1, lambda = lambda)
+  
+  mat_1 = matrix(data = c(x, y), ncol = 2)
+  
+  # Each column of spread_coord contains 2*n_affected elements, the first n_affected elements are random numbers generated from mat_1[1,1] and the second n_affected elements are random numbers generated from mat_1[1,2]
+  spread_coord = apply(X = mat_1, MARGIN = 1, FUN = mvrnorm, n = n_affected, Sigma = covar_mat)
+  
+  # Split the spread_coord by columns, rearrange the vector of each list into an nx2 matrix, then combine these matrices by row.
+  spread_coord_2 = split(x = spread_coord, f = col(spread_coord))
+  spread_coord_3 = lapply(X = spread_coord_2, FUN = function(x){matrix(x, ncol = 2)})
+  spread_coord_4 = do.call(what = rbind, args = spread_coord_3)
+
+  # Combine the contamination spot coordinates and the spread coordinates
+  mat_2 = rbind(mat_1, spread_coord_4)
+
+  # Remove points that are outside the perimeter.
+  out = which(mat_2[, 1] < x_lim[1] |
+                mat_2[, 1] > x_lim[2] |
+                mat_2[, 2] < y_lim[1] | mat_2[, 2] > y_lim[2],
+                arr.ind = TRUE)[1]
+  if(is.na(out) == FALSE){
+    mat_3 = mat_2[-out, ]
+  } else {
+    mat_3 = mat_2
+  }
+
+  # Clean up the matrix and convert it to a data frame
+  df_1 = as.data.frame(mat_3)
+  colnames(df_1) = c("X", "Y")
+  label = c(rep("spot", nrow(mat_1)), rep("spread", nrow(mat_3) - nrow(mat_1)))
+  df_2 = cbind(df_1, label)
+  
+  return(df_2)
+}
+
+```
+
+```{r, echo = FALSE, eval = FALSE}
+#### Debug
+
+### Generate a matrix that contains contamination coordinates
+  # x = runif(n = n_sim, min = x_lim[1], max = x_lim[2])
+  # y = runif(n = n_sim, min = y_lim[1], max = y_lim[2])
+  # n_affected = rpois(n = 1, lambda = 5)
+  # 
+  # mat_1 = matrix(data = c(x, y), ncol = 2)
+  # 
+  # # Each column of spread_coord contains 2*n_affected elements, the first n_affected elements are random numbers generated from mat_1[1,1] and the second n_affected elements are random numbers generated from mat_1[1,2]
+  # spread_coord = apply(X = mat_1, MARGIN = 1, FUN = mvrnorm, n = n_affected, Sigma = covar_mat)
+  # 
+  # # Split the spread_coord by columns, rearrange the vector of each list into an nx2 matrix, then combine these matrices by row.
+  # spread_coord_2 = split(x = spread_coord, f = col(spread_coord))
+  # spread_coord_3 = lapply(X = spread_coord_2, FUN = function(x){matrix(x, ncol = 2)})
+  # spread_coord_4 = do.call(what = rbind, args = spread_coord_3)
+  # 
+  # # Combine the contamination spot coordinates and the spread coordinates
+  # mat_2 = rbind(mat_1, spread_coord_4)
+  # 
+  # ### Remove points that are outside the perimeter.
+  # out = which(mat_2[ ,1] < x_lim[1] | mat_2[ , 1] > x_lim[2] | mat_2[,2] < y_lim[1] | mat_2[,2] > y_lim[2], arr.ind = TRUE)[1]
+  # if(is.na(out) == FALSE){
+  #   mat_3 = mat_2[-out, ]
+  # } else {
+  #   mat_3 = mat_2
+  # }
+  # 
+  # ### Clean up the matrix and convert it to a data frame
+  # df_1 = as.data.frame(mat_3)
+  # colnames(df_1) = c("X", "Y")
+  # label = c(rep("spot", nrow(mat_1)), rep("spread", nrow(mat_3) - nrow(mat_1)))
+  # df_2 = cbind(df_1, label)
+
+```
+
+3. Simulate the contamination center and its spread.
+
+```{r}
+# Run this if we want reproducibility
+set.seed(123)
+```
+
+```{r}
+contam_xy = sim_contam(n_sim = n_sim, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, lambda = 5) 
+```
+
+# Results #
+
+1. Visualization of contamination spots.
+
+```{r}
+ggplot(data = contam_xy, aes(x = X, y = Y)) +
+  geom_point(aes(color = label)) +
+  coord_cartesian(xlim = x_lim, ylim = y_lim) +
+  theme_bw()
+```
+
+2. Visualization of the covariance matrix that describes the contamination spread.
+
+```{r}
+### Visualize the covariance matrix
+test = mvrnorm(n = 10000, mu = c(5,5), Sigma = covar_mat)
+test = as.data.frame(test)
+colnames(test) = c("X", "Y")
+
+kernel_density = kde2d(x = test$X, y = test$Y, n = 50)
+image(kernel_density)
+contour(kernel_density, add = TRUE)
+```
+
