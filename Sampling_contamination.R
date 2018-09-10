@@ -1,4 +1,5 @@
 library(tidyverse)
+library(ggforce)
 library(MASS)
 
 sessionInfo()
@@ -7,7 +8,13 @@ sessionInfo()
 n_sim = 3
 x_lim = c(0, 10)
 y_lim = c(0, 10)
+
+### Mode 1
+n_affected = rpois(n = 1, lambda = 5)
 covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
+
+### Mode 2
+spread_radius = 2.5
 
 ## Some helper functions for creating unique identifiers for each observation.
 naming_spread = function(df, spot, spread){
@@ -25,12 +32,11 @@ naming_spot = function(df, spot){
 }
 
 ## The simulation function for contamination spot and its spread
-sim_contam = function(n_sim, x_lim, y_lim, covariance, lambda){
+sim_contam = function(n_sim, x_lim, y_lim, covariance, n_affected, radius){
   
   ## Generate a matrix that contains contamination coordinates
   x = runif(n = n_sim, min = x_lim[1], max = x_lim[2])
   y = runif(n = n_sim, min = y_lim[1], max = y_lim[2])
-  n_affected = rpois(n = 1, lambda = lambda)
   
   spot_coord = matrix(data = c(x, y), ncol = 2) %>% as.data.frame()
   
@@ -49,13 +55,15 @@ sim_contam = function(n_sim, x_lim, y_lim, covariance, lambda){
   # Create a factor column.
   label = c(rep("spot", times = n_sim), rep("spread", times = n_sim * n_affected))
   
-  # Combine the contamination spot coordinates and the spread coordinates, and then combine the factor column.
+  # Create a spread radius column
+  r = spread_radius
+  
+  # Combine the contamination spot coordinates and the spread coordinates, and then combine the factor column and the spread radius column.
   df_1 = rbind(spot_coord_2, spread_coord_5)
   colnames(df_1) = c("X", "Y", "ID")
-  df_2 = cbind(df_1, label)
-  rownames(df_2) = NULL
+  df_2 = cbind(df_1, label, r)
   
-  ### Remove points that are outside the perimeter.
+  # Remove points that are outside the perimeter.
   out = which(df_2[ ,1] < x_lim[1] | df_2[ , 1] > x_lim[2] | df_2[,2] < y_lim[1] | df_2[,2] > y_lim[2], arr.ind = TRUE)[1]
   if(is.na(out) == FALSE){
     df_3 = df_2[-out, ]
@@ -63,16 +71,31 @@ sim_contam = function(n_sim, x_lim, y_lim, covariance, lambda){
     df_3 = df_2
   }
   
+  # Reset the row names
+  rownames(df_3) = NULL
+  
   return(df_3)
 }
 
 # Run this if we want reproducibility
 #set.seed(123)
 
-contam_xy = sim_contam(n_sim = n_sim, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, lambda = 5) 
+contam_xy = sim_contam(n_sim = n_sim, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
 
-plot_contam = ggplot() +
+## Visualization
+
+# Mode 1: Discrete Spread
+plot_contam_dis = ggplot() +
   geom_point(data = contam_xy, aes(x = X, y = Y, color = label)) +
+  coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
+  theme_bw()
+
+# Mode 2: Continuous Spread
+plot_contam_cont = ggplot() +
+  geom_point(data = subset(contam_xy, subset = contam_xy$label == "spot"), 
+             aes(x = X, y = Y, color = label)) +
+  geom_circle(data = subset(contam_xy, subset = contam_xy$label == "spot"),
+              aes(x0 = X, y0 = Y, r = r), fill = "coral", alpha = 0.1) +
   coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
   theme_bw()
 
