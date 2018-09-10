@@ -7,11 +7,10 @@ output: html_document
 
 # Method
 
-1. Load libraries and source R code from `Sampling Contamination.Rmd`.
+1. Load libraries and source R code from `Sampling_contamination.R`.
 
 ```{r, message = FALSE, warning = FALSE}
 library(reshape2)
-library(ggforce)
 library(kableExtra)
 ```
 
@@ -36,22 +35,35 @@ summary(contam_xy$label)
 * `n_sim` = the number of simulations  
 * `x_lim` = the limits of the horizontal axis  
 * `y_lim` = the limits of the vertical axis  
-* `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) = 0.25, var(Y) = 0.25 and cov(X, Y) = 0  
 * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,1)`)
 * `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,1)`)  
+
+** Mode 1: Discrete Spread** 
+
 * `n_affected` = the number of affected plants near the contamination spot, which follows a Poisson distribution (`Pois(lambda = 5)`)   
+* `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) = 0.25, var(Y) = 0.25 and cov(X, Y) = 0  
+
+** Mode 2: Continuous Spread**
+
+* `spread_radius` = the radius of the contamination spread
 
 ```{r}
 n_sim
-covar_mat
 x_lim
 y_lim
+
+## Mode 1
+n_affected
+covar_mat
+
+## Mode 2
+spread_radius
 ```
 
 3. Define parameters for generating sampling plans.
 
 * `n_sp` = the number of sampling points
-* `sp_radius` = the radius (m) of a circular region around the sample point.
+* `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
 
 ```{r}
 n_sp = 10
@@ -66,133 +78,114 @@ sp_radius = 1
 ```
 
 ```{r}
-x_sp = runif(n = n_sp, min = x_lim[1], max = x_lim[2])
-y_sp = runif(n = n_sp, min = y_lim[1], max = y_lim[2])
-
-a = rep("sp", times = n_sp)
-b = 1:n_sp %>% as.character()
-ID = paste(a, "-", b, sep = "")
-
-sp_xy = data.frame(X = x_sp, 
-                   Y = y_sp,
-                   ID = ID,
-                   label = "sample point")
+# Create a function that generates a simple random sampling plan
+sim_plan = function(n_sp, x_lim, y_lim, radius){
+  
+  ## Generate a data frame that contains the coordinates of the sampling points
+  x_sp = runif(n = n_sp, min = x_lim[1], max = x_lim[2])
+  y_sp = runif(n = n_sp, min = y_lim[1], max = y_lim[2])
+  
+  ## Generate a unique identifier for each sample point
+  a = rep("sp", times = n_sp)
+  b = 1:n_sp %>% as.character()
+  ID = paste(a, "-", b, sep = "")
+  
+  ## Generate a column for sample radius
+  r = rep(radius, times = n_sp)
+  
+  data.frame(X = x_sp,
+             Y = y_sp,
+             ID = ID,
+             label = "sample point",
+             r = r)
+}
 ```
 
 ```{r}
-str(sp_xy)
+sp_xy = sim_plan(n_sp = n_sp, x_lim = x_lim, y_lim = y_lim, r = sp_radius)
 ```
 
-5. Combine the coordinates of the contaminated locations and the sampling points.
+5. Combine the `sp_xy` and `contam_xy` by row.
 
 ```{r}
 contam_sp_xy = rbind(contam_xy, sp_xy)
 rownames(contam_sp_xy) = NULL
-
-str(contam_sp_xy)
 ```
-
-6. Calculate the Euclidean distance between points. 
-
-```{r}
-dist_mat = dist(x = contam_sp_xy[ ,1:2], method = "euclidean") %>% as.matrix()
-```
-
-```{r}
-dist_mat[1:5, 1:5]
-```
-
-7. Extract out the distances between sample points and contamination points. Reshape the matrix into a long data frame.
-
-```{r}
-sp_ind = which(contam_sp_xy$label == "sample point")
-
-dist_contam_sp = dist_mat[-sp_ind, sp_ind] %>%
-  melt(data = ., varnames = c("row_contam", "row_sp"), value.name = "Distance")
-```
-
-```{r}
-str(dist_contam_sp)
-```
-
-8. Determine the sample points whose sample region covers at least one contamination point (spot or spread).
-
-```{r}
-cover = dist_contam_sp[which(dist_contam_sp$Distance <= sp_radius), ]
-
-contam_ID = contam_sp_xy$ID[cover$row_contam]
-sp_ID = contam_sp_xy$ID[cover$row_sp]
-
-cover_2 = cbind(cover, contam_ID, sp_ID)
-```
-
-9. Find out the contamination points that are detected. Beware that the same contamination point could be covered by multiple sample regions.
-
-```{r}
-cover_uniq = cover_2 %>%
-  dplyr::select(contam_ID, sp_ID, Distance) %>%
-  filter(!duplicated(contam_ID)) %>%
-  arrange(.data = ., contam_ID)
-```
-
 
 # Results
 
 1. Show the simulated contamination.
 
 ```{r}
-plot_contam
+# Mode 1: Discrete Spread
+plot_contam_dis
+
+# Mode 2: Continuous Spread
+plot_contam_cont
 ```
 
 2. Show the sample points and sample regions.
 
 ```{r}
-temp = cbind(sp_xy,
-             data.frame(radius = rep(x = sp_radius, times = nrow(sp_xy))))
-```
+plot_sp_cont = ggplot() +
+  geom_point(data = sp_xy, aes(x = X, y = Y, color = label, shape = label)) +
+  scale_color_manual(values = c("darkgreen")) +
+  scale_shape_manual(values = 4) +
+  geom_circle(data = sp_xy, aes(x0 = X, y0 = Y, r = r), fill = "darkgreen", alpha = 0.1) +
+  coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
+  theme_bw()
 
-```{r}
-plot_sp = ggplot(data = temp) +
-  geom_point(aes(x = X, y = Y), shape = 4, color = "darkgreen") +
-  geom_circle(aes(x0 = X, y0 = Y, r = radius), fill = "darkgreen", alpha = 0.1) +
+plot_sp_dis = ggplot() +
+  geom_point(data = sp_xy, aes(x = X, y = Y, color = label, shape = label)) +
+  scale_color_manual(values = c("darkgreen")) +
+  scale_shape_manual(values = 4) +
   coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
   theme_bw()
 ```
 
 ```{r}
-plot_sp
+# Sampling plan for continuous spread
+plot_sp_cont
+
+# Sampling plan for discrete spread
+plot_sp_dis
 ```
 
 
-2. Overlay the sampling plan on the simulated contamination plot.
+3. Overlay the sampling plan on the simulated contamination plot.
 
 ```{r}
-plot_cont_sp = ggplot() +
+plot_overlay_cont = ggplot() +
+  geom_point(data = subset(x = contam_sp_xy, subset = label != "spread"), 
+             aes(x = X, y = Y, 
+                 color = label, 
+                 shape = label)) +
+  scale_color_manual(values = c("coral", "darkgreen")) +
+  scale_shape_manual(values = c(16, 4)) +
+  geom_circle(data = subset(x = contam_sp_xy, subset = label == "spot"),
+              aes(x0 = X, y0 = Y, r = r), 
+              fill = "coral", 
+              alpha = 0.1) +
+  coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
+  theme_bw()
+
+plot_overlay_dis = ggplot() +
   geom_point(data = contam_sp_xy, aes(x = X, y = Y, color = label, shape = label)) +
   scale_color_manual(values = c("coral", "cornflowerblue", "darkgreen")) +
   scale_shape_manual(values = c(16, 16, 4)) +
+  geom_circle(data = subset(x = contam_sp_xy, subset = label == "sample point"),
+              aes(x0 = X, y0 = Y, r = r),
+              fill = "darkgreen",
+              alpha = 0.1) +
   coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
   theme_bw()
 ```
 
 ```{r}
-plot_cont_sp
-```
+# Sampling plan for continuous spread
+plot_overlay_cont
 
-3. Show the sample regions.
-
-```{r}
-plot_cont_sp +
-  geom_circle(aes(x0 = X, y0 = Y, r = radius), data = temp, fill = "darkgreen", alpha = 0.1)
-```
-
-5.  There are `r nrow(cover_uniq)` out of `r nrow(contam_xy)` contamination points detected by sampling. 
-
-```{r}
-## Contaminated points that are detected
-kable_styling(kable(x = cover_uniq, format = "html"), full_width = FALSE)
-
-## All contaminated points
-kable_styling(kable(x = contam_sp_xy, format = "html"), full_width = FALSE)
+# Sampling plan for discrete spread
+plot_overlay_dis
 ```
 
