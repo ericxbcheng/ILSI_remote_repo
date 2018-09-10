@@ -37,83 +37,118 @@ covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
 ```
 
 ```{r}
+## Some helper functions for creating unique identifiers for each observation.
+naming_spread = function(df, spot, spread){
+    a = rep(x = 1:spot, each = spread) %>% as.character()
+    b = rep(x = 1:spread, times = spot) %>% as.character()
+    c = paste(a, "-", b, sep = "")
+    cbind(df, c)
+  }
+  
+naming_spot = function(df, spot){
+    a = 1:spot %>% as.character()
+    b = rep(0, times = spot) %>% as.character()
+    c = paste(a, "-", b, sep = "")
+    cbind(df, c)
+  }
+
 ## The simulation function for contamination spot and its spread
 sim_contam = function(n_sim, x_lim, y_lim, covariance, lambda){
   
-  # Generate a matrix that contains contamination coordinates
+  ## Generate a matrix that contains contamination coordinates
   x = runif(n = n_sim, min = x_lim[1], max = x_lim[2])
   y = runif(n = n_sim, min = y_lim[1], max = y_lim[2])
-  n_affected = rpois(n = 1, lambda = lambda)
+  n_affected = rpois(n = 1, lambda = 5)
   
-  mat_1 = matrix(data = c(x, y), ncol = 2)
+  spot_coord = matrix(data = c(x, y), ncol = 2) %>% as.data.frame()
   
   # Each column of spread_coord contains 2*n_affected elements, the first n_affected elements are random numbers generated from mat_1[1,1] and the second n_affected elements are random numbers generated from mat_1[1,2]
-  spread_coord = apply(X = mat_1, MARGIN = 1, FUN = mvrnorm, n = n_affected, Sigma = covar_mat)
+  spread_coord = apply(X = spot_coord, MARGIN = 1, FUN = mvrnorm, n = n_affected, Sigma = covar_mat)
   
   # Split the spread_coord by columns, rearrange the vector of each list into an nx2 matrix, then combine these matrices by row.
   spread_coord_2 = split(x = spread_coord, f = col(spread_coord))
   spread_coord_3 = lapply(X = spread_coord_2, FUN = function(x){matrix(x, ncol = 2)})
-  spread_coord_4 = do.call(what = rbind, args = spread_coord_3)
-
-  # Combine the contamination spot coordinates and the spread coordinates
-  mat_2 = rbind(mat_1, spread_coord_4)
-
-  # Remove points that are outside the perimeter.
-  out = which(mat_2[, 1] < x_lim[1] |
-                mat_2[, 1] > x_lim[2] |
-                mat_2[, 2] < y_lim[1] | mat_2[, 2] > y_lim[2],
-                arr.ind = TRUE)[1]
-  if(is.na(out) == FALSE){
-    mat_3 = mat_2[-out, ]
-  } else {
-    mat_3 = mat_2
-  }
-
-  # Clean up the matrix and convert it to a data frame
-  df_1 = as.data.frame(mat_3)
-  colnames(df_1) = c("X", "Y")
-  label = c(rep("spot", nrow(mat_1)), rep("spread", nrow(mat_3) - nrow(mat_1)))
-  df_2 = cbind(df_1, label)
+  spread_coord_4 = do.call(what = rbind, args = spread_coord_3) %>% as.data.frame()
   
-  return(df_2)
+  # Give a unique identifier to each observation.
+  spread_coord_5 = naming_spread(spread_coord_4, n_sim, n_affected)
+  spot_coord_2 = naming_spot(spot_coord, n_sim)
+  
+  # Create a factor column.
+  label = c(rep("spot", times = n_sim), rep("spread", times = n_sim * n_affected))
+  
+  # Combine the contamination spot coordinates and the spread coordinates, and then combine the factor column.
+  df_1 = rbind(spot_coord_2, spread_coord_5)
+  colnames(df_1) = c("X", "Y", "ID")
+  df_2 = cbind(df_1, label)
+  rownames(df_2) = NULL
+  
+  ### Remove points that are outside the perimeter.
+  out = which(df_2[ ,1] < x_lim[1] | df_2[ , 1] > x_lim[2] | df_2[,2] < y_lim[1] | df_2[,2] > y_lim[2], arr.ind = TRUE)[1]
+  if(is.na(out) == FALSE){
+    df_3 = df_2[-out, ]
+  } else {
+    df_3 = df_2
+  }
+  
+  return(df_3)
 }
-
 ```
 
 ```{r, echo = FALSE, eval = FALSE}
 #### Debug
 
-### Generate a matrix that contains contamination coordinates
-  # x = runif(n = n_sim, min = x_lim[1], max = x_lim[2])
-  # y = runif(n = n_sim, min = y_lim[1], max = y_lim[2])
-  # n_affected = rpois(n = 1, lambda = 5)
-  # 
-  # mat_1 = matrix(data = c(x, y), ncol = 2)
-  # 
-  # # Each column of spread_coord contains 2*n_affected elements, the first n_affected elements are random numbers generated from mat_1[1,1] and the second n_affected elements are random numbers generated from mat_1[1,2]
-  # spread_coord = apply(X = mat_1, MARGIN = 1, FUN = mvrnorm, n = n_affected, Sigma = covar_mat)
-  # 
-  # # Split the spread_coord by columns, rearrange the vector of each list into an nx2 matrix, then combine these matrices by row.
-  # spread_coord_2 = split(x = spread_coord, f = col(spread_coord))
-  # spread_coord_3 = lapply(X = spread_coord_2, FUN = function(x){matrix(x, ncol = 2)})
-  # spread_coord_4 = do.call(what = rbind, args = spread_coord_3)
-  # 
-  # # Combine the contamination spot coordinates and the spread coordinates
-  # mat_2 = rbind(mat_1, spread_coord_4)
-  # 
-  # ### Remove points that are outside the perimeter.
-  # out = which(mat_2[ ,1] < x_lim[1] | mat_2[ , 1] > x_lim[2] | mat_2[,2] < y_lim[1] | mat_2[,2] > y_lim[2], arr.ind = TRUE)[1]
-  # if(is.na(out) == FALSE){
-  #   mat_3 = mat_2[-out, ]
-  # } else {
-  #   mat_3 = mat_2
-  # }
-  # 
-  # ### Clean up the matrix and convert it to a data frame
-  # df_1 = as.data.frame(mat_3)
-  # colnames(df_1) = c("X", "Y")
-  # label = c(rep("spot", nrow(mat_1)), rep("spread", nrow(mat_3) - nrow(mat_1)))
-  # df_2 = cbind(df_1, label)
+# ## Generate a matrix that contains contamination coordinates
+# x = runif(n = n_sim, min = x_lim[1], max = x_lim[2])
+# y = runif(n = n_sim, min = y_lim[1], max = y_lim[2])
+# n_affected = rpois(n = 1, lambda = 5)
+# 
+# spot_coord = matrix(data = c(x, y), ncol = 2) %>% as.data.frame()
+# 
+# # Each column of spread_coord contains 2*n_affected elements, the first n_affected elements are random numbers generated from mat_1[1,1] and the second n_affected elements are random numbers generated from mat_1[1,2]
+# spread_coord = apply(X = spot_coord, MARGIN = 1, FUN = mvrnorm, n = n_affected, Sigma = covar_mat)
+# 
+# # Split the spread_coord by columns, rearrange the vector of each list into an nx2 matrix, then combine these matrices by row.
+# spread_coord_2 = split(x = spread_coord, f = col(spread_coord))
+# spread_coord_3 = lapply(X = spread_coord_2, FUN = function(x){matrix(x, ncol = 2)})
+# spread_coord_4 = do.call(what = rbind, args = spread_coord_3) %>% as.data.frame()
+# 
+# # Give a unique identifier to each observation.
+# naming_spread = function(df, spot, spread){
+#   a = rep(x = 1:spot, each = spread) %>% as.character()
+#   b = rep(x = 1:spread, times = spot) %>% as.character()
+#   c = paste(a, "-", b, sep = "")
+#   cbind(df, c)
+# }
+# 
+# spread_coord_5 = naming_spread(spread_coord_4, n_sim, n_affected)
+# 
+# naming_spot = function(df, spot){
+#   a = 1:spot %>% as.character()
+#   b = rep(0, times = spot) %>% as.character()
+#   c = paste(a, "-", b, sep = "")
+#   cbind(df, c)
+# }
+# 
+# spot_coord_2 = naming_spot(spot_coord, n_sim)
+# 
+#   # Create a factor column.
+#   label = c(rep("spot", times = n_sim), rep("spread", times = n_sim * n_affected))
+# 
+#   # Combine the contamination spot coordinates and the spread coordinates, and then combine the factor column.
+#   df_1 = rbind(spot_coord_2, spread_coord_5)
+#   colnames(df_1) = c("X", "Y", "ID")
+#   df_2 = cbind(df_1, label)
+# 
+#   ### Remove points that are outside the perimeter.
+#   out = which(df_2[ ,1] < x_lim[1] | df_2[ , 1] > x_lim[2] | df_2[,2] < y_lim[1] | df_2[,2] > y_lim[2], arr.ind = TRUE)[1]
+#   if(is.na(out) == FALSE){
+#     df_3 = df_2[-out, ]
+#   } else {
+#     df_3 = df_2
+#   }
+# 
+#   return(df_3)
 
 ```
 
@@ -121,7 +156,7 @@ sim_contam = function(n_sim, x_lim, y_lim, covariance, lambda){
 
 ```{r}
 # Run this if we want reproducibility
-set.seed(123)
+#set.seed(123)
 ```
 
 ```{r}
@@ -133,10 +168,14 @@ contam_xy = sim_contam(n_sim = n_sim, x_lim = x_lim, y_lim = y_lim, covariance =
 1. Visualization of contamination spots.
 
 ```{r}
-ggplot(data = contam_xy, aes(x = X, y = Y)) +
-  geom_point(aes(color = label)) +
-  coord_cartesian(xlim = x_lim, ylim = y_lim) +
+plot_contam = ggplot() +
+  geom_point(data = contam_xy, aes(x = X, y = Y, color = label)) +
+  coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
   theme_bw()
+```
+
+```{r}
+plot_contam
 ```
 
 2. Visualization of the covariance matrix that describes the contamination spread.
