@@ -87,6 +87,7 @@ str(sp_xy)
 
 ```{r}
 contam_sp_xy = rbind(contam_xy, sp_xy)
+rownames(contam_sp_xy) = NULL
 
 str(contam_sp_xy)
 ```
