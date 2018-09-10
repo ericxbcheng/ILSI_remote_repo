@@ -7,12 +7,55 @@ output: html_document
 
 # Method  
 
-1. Load libraries and source R code from `Sampling_contamination.R` and `Sampling_plan.R`.
+1. Load libraries and source R code from `Sampling_plan.R`.
 
 ```{r}
-source("Sampling_contamination.R")
 source("Sampling_plan.R")
 ```
+
+```{r}
+sessionInfo()
+```
+
+2. List important parameters from `Sampling_contamination.R` and `Sampling_plan.R`.
+
+**Contamination:**  
+
+  * `n_sim` = the number of simulations  
+  * `x_lim` = the limits of the horizontal axis  
+  * `y_lim` = the limits of the vertical axis  
+  * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,1)`)
+  * `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,1)`)  
+
+  **Mode 1: Discrete Spread** 
+
+  * `n_affected` = the number of affected plants near the contamination spot, which follows a Poisson distribution (`Pois(lambda = 5)`)   
+  * `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) =     0.25, var(Y) = 0.25 and cov(X, Y) = 0  
+
+  **Mode 2: Continuous Spread**
+
+  * `spread_radius` = the radius of the contamination spread
+
+**Sampling Plan:**  
+
+  * `n_sp` = the number of sampling points
+  * `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
+
+```{r}
+n_sim
+x_lim
+y_lim
+n_affected
+covar_mat
+spread_radius
+n_sp
+sp_radius
+```
+```{r}
+kable_styling(kable(subset(contam_sp_xy, select = -r), format = "html"), full_width = FALSE)
+```
+
+
 
 2. Calculate the Euclidean distance between points. 
 
