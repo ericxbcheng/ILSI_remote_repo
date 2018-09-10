@@ -2,8 +2,6 @@ library(tidyverse)
 library(ggforce)
 library(MASS)
 
-sessionInfo()
-
 ## The input parameters
 n_sim = 3
 x_lim = c(0, 10)
