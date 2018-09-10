@@ -58,7 +58,7 @@ sim_contam = function(n_sim, x_lim, y_lim, covariance, lambda){
   ## Generate a matrix that contains contamination coordinates
   x = runif(n = n_sim, min = x_lim[1], max = x_lim[2])
   y = runif(n = n_sim, min = y_lim[1], max = y_lim[2])
-  n_affected = rpois(n = 1, lambda = 5)
+  n_affected = rpois(n = 1, lambda = lambda)
   
   spot_coord = matrix(data = c(x, y), ncol = 2) %>% as.data.frame()
   
