@@ -15,7 +15,7 @@ library(kableExtra)
 ```
 
 ```{r, warning = FALSE, message = FALSE}
-source(file = "Sampling_contamination.R" )
+source(file = "Sampling_contamination.R")
 ```
 
 ```{r}
