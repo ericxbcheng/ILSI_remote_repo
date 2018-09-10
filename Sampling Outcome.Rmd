@@ -1,0 +1,62 @@
+---
+title: "Sampling Outcome"
+author: "Xianbin Cheng"
+date: "September 10, 2018"
+output: html_document
+---
+
+# Method  
+
+1. Load libraries and source R code from `Sampling_contamination.R` and `Sampling_plan.R`.
+
+```{r}
+source("Sampling_contamination.R")
+source("Sampling_plan.R")
+```
+
+2. Calculate the Euclidean distance between points. 
+
+```{r}
+dist_mat = dist(x = contam_sp_xy[ ,1:2], method = "euclidean") %>% as.matrix()
+```
+
+```{r}
+dist_mat[1:5, 1:5]
+```
+
+3. Extract out the distances between sample points and contamination points. Reshape the matrix into a long data frame.
+
+```{r}
+sp_ind = which(contam_sp_xy$label == "sample point")
+
+dist_contam_sp = dist_mat[-sp_ind, sp_ind] %>%
+  melt(data = ., varnames = c("row_contam", "row_sp"), value.name = "Distance")
+```
+
+```{r}
+str(dist_contam_sp)
+```
+
+4. Determine the sample points whose sample region covers at least one contamination point (spot or spread).
+
+```{r}
+cover = dist_contam_sp[which(dist_contam_sp$Distance <= sp_radius), ]
+
+contam_ID = contam_sp_xy$ID[cover$row_contam]
+sp_ID = contam_sp_xy$ID[cover$row_sp]
+
+cover_2 = cbind(cover, contam_ID, sp_ID)
+```
+
+5. Find out the contamination points that are detected. Beware that the same contamination point could be covered by multiple sample regions.
+
+```{r}
+cover_uniq = cover_2 %>%
+  dplyr::select(contam_ID, sp_ID, Distance) %>%
+  filter(!duplicated(contam_ID)) %>%
+  arrange(.data = ., contam_ID)
+```
+
+
+# Results  
+
