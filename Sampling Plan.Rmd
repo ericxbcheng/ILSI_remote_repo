@@ -127,7 +127,7 @@ plot_contam_cont
 2. Show the sample points and sample regions.
 
 ```{r}
-plot_sp_cont = ggplot() +
+plot_sp_dis = ggplot() +
   geom_point(data = sp_xy, aes(x = X, y = Y, color = label, shape = label)) +
   scale_color_manual(values = c("darkgreen")) +
   scale_shape_manual(values = 4) +
@@ -135,7 +135,7 @@ plot_sp_cont = ggplot() +
   coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
   theme_bw()
 
-plot_sp_dis = ggplot() +
+plot_sp_cont = ggplot() +
   geom_point(data = sp_xy, aes(x = X, y = Y, color = label, shape = label)) +
   scale_color_manual(values = c("darkgreen")) +
   scale_shape_manual(values = 4) +

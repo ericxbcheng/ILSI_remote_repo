@@ -40,7 +40,7 @@ rownames(contam_sp_xy) = NULL
 # Visualization
 
 ## Sampling plan for continuous spread
-plot_sp_cont = ggplot() +
+plot_sp_dis = ggplot() +
   geom_point(data = sp_xy, aes(x = X, y = Y, color = label, shape = label)) +
   scale_color_manual(values = c("darkgreen")) +
   scale_shape_manual(values = 4) +
@@ -49,7 +49,7 @@ plot_sp_cont = ggplot() +
   theme_bw()
 
 ## Sampling plan for discrete spread
-plot_sp_dis = ggplot() +
+plot_sp_cont = ggplot() +
   geom_point(data = sp_xy, aes(x = X, y = Y, color = label, shape = label)) +
   scale_color_manual(values = c("darkgreen")) +
   scale_shape_manual(values = 4) +
