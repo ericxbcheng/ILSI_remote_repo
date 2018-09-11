@@ -9,7 +9,7 @@ output: html_document
 
 1. Load libraries and source R code from `Sampling_plan.R`.
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 source("Sampling_plan.R")
 ```
 
@@ -51,55 +51,140 @@ spread_radius
 n_sp
 sp_radius
 ```
+
+```{r}
+summary(contam_sp_xy$label)
+```
+
 ```{r}
 kable_styling(kable(subset(contam_sp_xy, select = -r), format = "html"), full_width = FALSE)
 ```
 
-
-
-2. Calculate the Euclidean distance between points. 
+3. Calculate the Euclidean distance between sample points and contamination points. 
 
 ```{r}
-dist_mat = dist(x = contam_sp_xy[ ,1:2], method = "euclidean") %>% as.matrix()
+# Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points.
+calc_dist = function(df){
+  
+  a = dist(x = df[ ,1:2], method = "euclidean") %>% as.matrix()
+  
+  sp_ind = which(df$label == "sample point")
+  
+  b = a[-sp_ind, sp_ind] %>%
+    melt(data = ., varnames = c("row_contam", "row_sp"), value.name = "Distance")
+  
+  return(b)
+}
 ```
 
 ```{r}
-dist_mat[1:5, 1:5]
+dist_contam_sp = calc_dist(contam_sp_xy)
 ```
 
-3. Extract out the distances between sample points and contamination points. Reshape the matrix into a long data frame.
+4. Evaluate the performance of the sampling plan.
+
+**Mode 1: Discrete Spread:**  
+
+* Determine which contamination points (spot and spread) are covered by sampling region with a radius of `r sp_radius`.
+
+**Mode 2: Continuous Spread:**  
+
+* Determine which sample points are within the contamination region with a radius of `r spread_radius`.
 
 ```{r}
-sp_ind = which(contam_sp_xy$label == "sample point")
-
-dist_contam_sp = dist_mat[-sp_ind, sp_ind] %>%
-  melt(data = ., varnames = c("row_contam", "row_sp"), value.name = "Distance")
+# Create a function to idenfity points that falls within a certain distance from another point
+cover = function(df_dist, df_coord, r, method){
+  
+  ## Find the points that meet the distance criterion
+  a = df_dist %>%
+    filter(Distance <= r)
+  
+  ## Create columns that identify each observation
+  contam_ID = df_coord$ID[a$row_contam]
+  
+  b = substr(x = contam_ID, start = 3, stop = 3)
+  contam_type = ifelse(test = b == "0", yes = "spot", no = "spread")
+  
+  sp_ID = df_coord$ID[a$row_sp]
+  
+  c = cbind(a, contam_ID, sp_ID, contam_type)
+  
+  ## Create output based on the method.
+  if(method == "discrete") {
+    d = c %>%
+      arrange(.data = ., contam_ID)
+  } else if (method == "continuous") {
+    d = c %>%
+      dplyr::filter(contam_type == "spot") %>%
+      arrange(.data = ., contam_ID)
+  }
+  
+  return(d)
+}
 ```
 
 ```{r}
-str(dist_contam_sp)
-```
+# Mode 1: Discrete Spread
+cover_dis = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = sp_radius, method = "discrete")
 
-4. Determine the sample points whose sample region covers at least one contamination point (spot or spread).
-
-```{r}
-cover = dist_contam_sp[which(dist_contam_sp$Distance <= sp_radius), ]
-
-contam_ID = contam_sp_xy$ID[cover$row_contam]
-sp_ID = contam_sp_xy$ID[cover$row_sp]
-
-cover_2 = cbind(cover, contam_ID, sp_ID)
-```
-
-5. Find out the contamination points that are detected. Beware that the same contamination point could be covered by multiple sample regions.
-
-```{r}
-cover_uniq = cover_2 %>%
-  dplyr::select(contam_ID, sp_ID, Distance) %>%
-  filter(!duplicated(contam_ID)) %>%
-  arrange(.data = ., contam_ID)
+# Mode 2: Continuous Spread
+cover_cont = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = spread_radius, method = "continuous")
 ```
 
 
 # Results  
 
+1. **Mode 1: Discrete Spread**
+
+```{r}
+# Discrete Spread
+plot_contam_dis
+plot_sp_dis
+plot_overlay_dis
+```
+
+```{r}
+# Show the contamination points that are detected by sampling.
+cover_dis %>%
+  dplyr::select(-c(row_contam, row_sp))
+```
+
+```{r}
+# Evaluation: 
+
+## 1. How many contamination points are detected?
+length(unique(cover_dis$contam_ID))
+
+## 2. What's the rate of detection?
+length(unique(cover_dis$contam_ID)) / nrow(contam_xy)
+```
+
+* Therefore, we detected `r length(unique(cover_dis$contam_ID))` out of `r nrow(contam_xy)` contamination points. The rate of detection is `r length(unique(cover_dis$contam_ID)) / nrow(contam_xy)`.
+
+
+2. **Mode 2: Continuous Spread**
+
+```{r}
+# Continuous Spread
+plot_contam_cont
+plot_sp_cont
+plot_overlay_cont
+```
+
+```{r}
+# Show the sample points that detected contamination
+cover_cont %>%
+  dplyr::select(-c(row_contam, row_sp)) 
+```
+
+```{r}
+# Evaluation: 
+
+## 1. How many sample points detected contamination?
+length(unique(cover_cont$sp_ID))
+
+## 2. What's the rate of detection?
+length(unique(cover_cont$sp_ID)) / n_sp
+```
+
+* Therefore, `r length(unique(cover_cont$sp_ID))` out of `r n_sp` sample points detected contamination. The rate of detection is `r length(unique(cover_cont$sp_ID)) / n_sp`.
