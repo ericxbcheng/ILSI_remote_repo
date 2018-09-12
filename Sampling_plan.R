@@ -43,7 +43,7 @@ rownames(contam_sp_xy) = NULL
 plot_sp_dis = ggplot() +
   geom_point(data = sp_xy, aes(x = X, y = Y, color = label, shape = label)) +
   scale_color_manual(values = c("darkgreen")) +
-  scale_shape_manual(values = 4) +
+  scale_shape_manual(values = 15) +
   geom_circle(data = sp_xy, aes(x0 = X, y0 = Y, r = r), fill = "darkgreen", alpha = 0.1) +
   coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
   theme_bw()
@@ -52,7 +52,7 @@ plot_sp_dis = ggplot() +
 plot_sp_cont = ggplot() +
   geom_point(data = sp_xy, aes(x = X, y = Y, color = label, shape = label)) +
   scale_color_manual(values = c("darkgreen")) +
-  scale_shape_manual(values = 4) +
+  scale_shape_manual(values = 15) +
   coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
   theme_bw()
 
@@ -63,7 +63,7 @@ plot_overlay_cont = ggplot() +
                  color = label, 
                  shape = label)) +
   scale_color_manual(values = c("coral", "darkgreen")) +
-  scale_shape_manual(values = c(16, 4)) +
+  scale_shape_manual(values = c(16, 15)) +
   geom_circle(data = subset(x = contam_sp_xy, subset = label == "spot"),
               aes(x0 = X, y0 = Y, r = r), 
               fill = "coral", 
@@ -75,7 +75,7 @@ plot_overlay_cont = ggplot() +
 plot_overlay_dis = ggplot() +
   geom_point(data = contam_sp_xy, aes(x = X, y = Y, color = label, shape = label)) +
   scale_color_manual(values = c("coral", "cornflowerblue", "darkgreen")) +
-  scale_shape_manual(values = c(16, 16, 4)) +
+  scale_shape_manual(values = c(16, 16, 15)) +
   geom_circle(data = subset(x = contam_sp_xy, subset = label == "sample point"),
               aes(x0 = X, y0 = Y, r = r),
               fill = "darkgreen",
