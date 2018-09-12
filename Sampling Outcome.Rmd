@@ -24,8 +24,8 @@ sessionInfo()
   * `n_sim` = the number of simulations  
   * `x_lim` = the limits of the horizontal axis  
   * `y_lim` = the limits of the vertical axis  
-  * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,1)`)
-  * `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,1)`)  
+  * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,10)`)
+  * `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,10)`)  
 
   **Mode 1: Discrete Spread** 
 
@@ -188,3 +188,15 @@ length(unique(cover_cont$sp_ID)) / n_sp
 ```
 
 * Therefore, `r length(unique(cover_cont$sp_ID))` out of `r n_sp` sample points detected contamination. The rate of detection is `r length(unique(cover_cont$sp_ID)) / n_sp`.
+
+```{r}
+pdf(file = "Sampling Plots.pdf")
+  plot_contam_dis
+  plot_sp_dis
+  plot_overlay_dis
+  plot_contam_cont
+  plot_sp_cont
+  plot_overlay_cont
+dev.off()
+```
+
