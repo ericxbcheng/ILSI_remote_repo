@@ -7,14 +7,10 @@ output: html_document
 
 # Method
 
-1. Load libraries and source R code from `Sampling_contamination.R`.
-
-```{r, message = FALSE, warning = FALSE}
-library(reshape2)
-library(kableExtra)
-```
+1. Load libraries and source R code.
 
 ```{r, warning = FALSE, message = FALSE}
+source(file = "Sampling_libraries.R")
 source(file = "Sampling_contamination.R")
 source(file = "Sampling_visualization.R")
 ```
@@ -22,14 +18,6 @@ source(file = "Sampling_visualization.R")
 ```{r}
 sessionInfo()
 ```
-
-```{r}
-## Basic info of the contamination simulation
-str(contam_xy)
-
-summary(contam_xy$label)
-```
-
 
 2. List important parameters from `Sampling_contamination.R`.
 
@@ -49,17 +37,31 @@ summary(contam_xy$label)
 * `spread_radius` = the radius of the contamination spread
 
 ```{r}
-n_sim
-x_lim
-y_lim
+## The input parameters
+n_sim = 3
+x_lim = c(0, 10)
+y_lim = c(0, 10)
 
-## Mode 1
-n_affected
-covar_mat
+### Mode 1
+n_affected = rpois(n = 1, lambda = 5)
+covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
 
-## Mode 2
-spread_radius
+### Mode 2
+spread_radius = 2.5
 ```
+
+```{r}
+# Generate the coordinates of contamination points
+contam_xy = sim_contam(n_sim = n_sim, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
+```
+
+```{r}
+## Basic info of the contamination simulation
+str(contam_xy)
+
+summary(contam_xy$label)
+```
+
 
 3. Define parameters for generating sampling plans.
 
@@ -71,7 +73,7 @@ n_sp = 10
 sp_radius = 1
 ```
 
-4. Simulate a sampling plan. In this case, we simulate a simple random sampling plan. The coordinates of sampling points follows a uniform distribution $U(0,1)$.
+4. Simulate a sampling plan. In this case, we simulate a simple random sampling plan. The coordinates of sampling points follows a uniform distribution $U(0,10)$.
 
 ```{r}
 # Run this if we want reproducibility

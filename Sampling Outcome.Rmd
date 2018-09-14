@@ -7,10 +7,12 @@ output: html_document
 
 # Method  
 
-1. Load libraries and source R code from `Sampling_plan.R`.
+1. Load libraries and source R code.
 
 ```{r, message = FALSE, warning = FALSE}
+source("Sampling_libraries.R")
 source("Sampling_plan.R")
+source("Sampling_contamination.R")
 source("Sampling_visualization.R")
 ```
 
@@ -43,14 +45,33 @@ sessionInfo()
   * `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
 
 ```{r}
-n_sim
-x_lim
-y_lim
-n_affected
-covar_mat
-spread_radius
-n_sp
-sp_radius
+## Contamination
+n_sim = 3
+x_lim = c(0, 10)
+y_lim = c(0, 10)
+
+### Mode 1
+n_affected = rpois(n = 1, lambda = 5)
+covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
+
+### Mode 2
+spread_radius = 2.5
+
+## Sampling plan
+n_sp = 10
+sp_radius = 1
+```
+
+```{r}
+# Generate the coordinates of contamination points
+contam_xy = sim_contam(n_sim = n_sim, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
+
+# Generate the coordinates of sample points
+sp_xy = sim_plan(n_sp = n_sp, x_lim = x_lim, y_lim = y_lim, r = sp_radius)
+
+# Generate the combined coordinates of contamination and sample points
+contam_sp_xy = rbind(contam_xy, sp_xy)
+rownames(contam_sp_xy) = NULL
 ```
 
 ```{r}

@@ -7,15 +7,10 @@ output: html_document
 
 # Method #
 
-1. Load in libraries and check the session info.
+1. Load in libraries, visualization functions and check the session info.
 
 ```{r, warning = FALSE, message= FALSE}
-library(tidyverse)
-library(ggforce)
-library(MASS)
-```
-
-```{r}
+source(file = "Sampling_libraries.R")
 source(file = "Sampling_visualization.R")
 ```
 
