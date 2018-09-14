@@ -1,18 +1,3 @@
-library(tidyverse)
-library(ggforce)
-library(MASS)
-
-## The input parameters
-n_sim = 3
-x_lim = c(0, 10)
-y_lim = c(0, 10)
-
-### Mode 1
-n_affected = rpois(n = 1, lambda = 5)
-covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
-
-### Mode 2
-spread_radius = 2.5
 
 ## Some helper functions for creating unique identifiers for each observation.
 naming_spread = function(df, spot, spread){
@@ -75,9 +60,5 @@ sim_contam = function(n_sim, x_lim, y_lim, covariance, n_affected, radius){
   return(df_3)
 }
 
-# Run this if we want reproducibility
-#set.seed(123)
-
-contam_xy = sim_contam(n_sim = n_sim, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
 
 

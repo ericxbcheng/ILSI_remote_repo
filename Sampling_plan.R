@@ -1,14 +1,3 @@
-library(reshape2)
-library(kableExtra)
-
-source(file = "Sampling_contamination.R")
-
-# The input parameters
-n_sp = 10
-sp_radius = 1
-
-# Run this if we want reproducibility
-#set.seed(123)
 
 # Create a function that generates a simple random sampling plan
 sim_plan = function(n_sp, x_lim, y_lim, radius){
@@ -31,8 +20,3 @@ sim_plan = function(n_sp, x_lim, y_lim, radius){
              label = "sample point",
              r = r)
 }
-
-sp_xy = sim_plan(n_sp = n_sp, x_lim = x_lim, y_lim = y_lim, r = sp_radius)
-
-contam_sp_xy = rbind(contam_xy, sp_xy)
-rownames(contam_sp_xy) = NULL
