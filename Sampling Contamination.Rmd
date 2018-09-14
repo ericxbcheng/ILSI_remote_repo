@@ -16,6 +16,10 @@ library(MASS)
 ```
 
 ```{r}
+source(file = "Sampling_visualization.R")
+```
+
+```{r}
 sessionInfo()
 ```
 
@@ -24,8 +28,8 @@ sessionInfo()
 * `n_sim` = the number of simulations  
 * `x_lim` = the limits of the horizontal axis  
 * `y_lim` = the limits of the vertical axis  
-* `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,1)`)
-* `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,1)`)  
+* `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,10)`)
+* `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,10)`)  
 
 **Mode 1: Discrete Spread**
 
@@ -188,10 +192,7 @@ contam_xy = sim_contam(n_sim = n_sim, x_lim = x_lim, y_lim = y_lim, covariance =
 **Mode 1: Discrete Spread**
 
 ```{r}
-plot_contam_dis = ggplot() +
-  geom_point(data = contam_xy, aes(x = X, y = Y, color = label)) +
-  coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
-  theme_bw()
+plot_contam_dis = contam_draw(data = contam_xy, method = "discrete", xlim = x_lim, ylim = y_lim)
 ```
 
 ```{r}
@@ -201,13 +202,7 @@ plot_contam_dis
 **Mode 2: Continuous Spread**
 
 ```{r}
-plot_contam_cont = ggplot() +
-  geom_point(data = subset(contam_xy, subset = contam_xy$label == "spot"), 
-             aes(x = X, y = Y, color = label)) +
-  geom_circle(data = subset(contam_xy, subset = contam_xy$label == "spot"),
-              aes(x0 = X, y0 = Y, r = r), fill = "coral", alpha = 0.1) +
-  coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
-  theme_bw()
+plot_contam_cont = contam_draw(data = contam_xy, method = "continuous", xlim = x_lim, ylim = y_lim)
 ```
 
 ```{r}

@@ -11,6 +11,7 @@ output: html_document
 
 ```{r, message = FALSE, warning = FALSE}
 source("Sampling_plan.R")
+source("Sampling_visualization.R")
 ```
 
 ```{r}
@@ -138,6 +139,10 @@ cover_cont = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = spread
 
 ```{r}
 # Discrete Spread
+plot_contam_dis = contam_draw(data = contam_xy, method = "discrete", xlim = x_lim, ylim = y_lim)
+plot_sp_dis = sp_draw(data = sp_xy, method = "discrete", xlim = x_lim, ylim = y_lim)
+plot_overlay_dis = overlay_draw(data = contam_sp_xy, method = "discrete", xlim = x_lim, ylim = y_lim)
+
 plot_contam_dis
 plot_sp_dis
 plot_overlay_dis
@@ -166,6 +171,10 @@ length(unique(cover_dis$contam_ID)) / nrow(contam_xy)
 
 ```{r}
 # Continuous Spread
+plot_contam_cont = contam_draw(data = contam_xy, method = "continuous", xlim = x_lim, ylim = y_lim)
+plot_sp_cont = sp_draw(data = sp_xy, method = "continuous", xlim = x_lim, ylim = y_lim)
+plot_overlay_cont = overlay_draw(data = contam_sp_xy, method = "continuous", xlim = x_lim, ylim = y_lim)
+
 plot_contam_cont
 plot_sp_cont
 plot_overlay_cont
@@ -189,7 +198,7 @@ length(unique(cover_cont$sp_ID)) / n_sp
 
 * Therefore, `r length(unique(cover_cont$sp_ID))` out of `r n_sp` sample points detected contamination. The rate of detection is `r length(unique(cover_cont$sp_ID)) / n_sp`.
 
-```{r}
+```{r, eval= FALSE}
 pdf(file = "Sampling Plots.pdf")
   plot_contam_dis
   plot_sp_dis

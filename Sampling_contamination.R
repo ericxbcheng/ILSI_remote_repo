@@ -80,20 +80,4 @@ sim_contam = function(n_sim, x_lim, y_lim, covariance, n_affected, radius){
 
 contam_xy = sim_contam(n_sim = n_sim, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
 
-## Visualization
-
-# Mode 1: Discrete Spread
-plot_contam_dis = ggplot() +
-  geom_point(data = contam_xy, aes(x = X, y = Y, color = label)) +
-  coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
-  theme_bw()
-
-# Mode 2: Continuous Spread
-plot_contam_cont = ggplot() +
-  geom_point(data = subset(contam_xy, subset = contam_xy$label == "spot"), 
-             aes(x = X, y = Y, color = label)) +
-  geom_circle(data = subset(contam_xy, subset = contam_xy$label == "spot"),
-              aes(x0 = X, y0 = Y, r = r), fill = "coral", alpha = 0.1) +
-  coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
-  theme_bw()
 

@@ -16,6 +16,7 @@ library(kableExtra)
 
 ```{r, warning = FALSE, message = FALSE}
 source(file = "Sampling_contamination.R")
+source(file = "Sampling_visualization.R")
 ```
 
 ```{r}
@@ -118,29 +119,22 @@ rownames(contam_sp_xy) = NULL
 
 ```{r}
 # Mode 1: Discrete Spread
+plot_contam_dis = contam_draw(data = contam_xy, method = "discrete", xlim = x_lim, ylim = y_lim)
+
 plot_contam_dis
 
 # Mode 2: Continuous Spread
+plot_contam_cont = contam_draw(data = contam_xy, method = "continuous", xlim = x_lim, ylim = y_lim)
+
 plot_contam_cont
 ```
 
 2. Show the sample points and sample regions.
 
 ```{r}
-plot_sp_dis = ggplot() +
-  geom_point(data = sp_xy, aes(x = X, y = Y, color = label, shape = label)) +
-  scale_color_manual(values = c("darkgreen")) +
-  scale_shape_manual(values = 15) +
-  geom_circle(data = sp_xy, aes(x0 = X, y0 = Y, r = r), fill = "darkgreen", alpha = 0.1) +
-  coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
-  theme_bw()
+plot_sp_dis = sp_draw(data = sp_xy, method = "discrete", xlim = x_lim, ylim = y_lim)
 
-plot_sp_cont = ggplot() +
-  geom_point(data = sp_xy, aes(x = X, y = Y, color = label, shape = label)) +
-  scale_color_manual(values = c("darkgreen")) +
-  scale_shape_manual(values = 15) +
-  coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
-  theme_bw()
+plot_sp_cont = sp_draw(data = sp_xy, method = "continuous", xlim = x_lim, ylim = y_lim)
 ```
 
 ```{r}
@@ -155,30 +149,9 @@ plot_sp_dis
 3. Overlay the sampling plan on the simulated contamination plot.
 
 ```{r}
-plot_overlay_cont = ggplot() +
-  geom_point(data = subset(x = contam_sp_xy, subset = label != "spread"), 
-             aes(x = X, y = Y, 
-                 color = label, 
-                 shape = label)) +
-  scale_color_manual(values = c("coral", "darkgreen")) +
-  scale_shape_manual(values = c(16, 15)) +
-  geom_circle(data = subset(x = contam_sp_xy, subset = label == "spot"),
-              aes(x0 = X, y0 = Y, r = r), 
-              fill = "coral", 
-              alpha = 0.1) +
-  coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
-  theme_bw()
+plot_overlay_cont = overlay_draw(data = contam_sp_xy, method = "continuous", xlim = x_lim, ylim = y_lim)
 
-plot_overlay_dis = ggplot() +
-  geom_point(data = contam_sp_xy, aes(x = X, y = Y, color = label, shape = label)) +
-  scale_color_manual(values = c("coral", "cornflowerblue", "darkgreen")) +
-  scale_shape_manual(values = c(16, 16, 15)) +
-  geom_circle(data = subset(x = contam_sp_xy, subset = label == "sample point"),
-              aes(x0 = X, y0 = Y, r = r),
-              fill = "darkgreen",
-              alpha = 0.1) +
-  coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
-  theme_bw()
+plot_overlay_dis = overlay_draw(data = contam_sp_xy, method = "discrete", xlim = x_lim, ylim = y_lim)
 ```
 
 ```{r}
