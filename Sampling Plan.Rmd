@@ -21,7 +21,7 @@ sessionInfo()
 
 2. List important parameters from `Sampling_contamination.R`.
 
-* `n_sim` = the number of simulations  
+* `n_contam` = the number of contamination points  
 * `x_lim` = the limits of the horizontal axis  
 * `y_lim` = the limits of the vertical axis  
 * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,10)`)
@@ -38,7 +38,7 @@ sessionInfo()
 
 ```{r}
 ## The input parameters
-n_sim = 3
+n_contam = 3
 x_lim = c(0, 10)
 y_lim = c(0, 10)
 
@@ -52,7 +52,7 @@ spread_radius = 2.5
 
 ```{r}
 # Generate the coordinates of contamination points
-contam_xy = sim_contam(n_sim = n_sim, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
+contam_xy = sim_contam(n_contam = n_contam, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
 ```
 
 ```{r}

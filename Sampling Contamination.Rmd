@@ -20,7 +20,7 @@ sessionInfo()
 
 2. Define the input paramaters and create a simulation function.
 
-* `n_sim` = the number of simulations  
+* `n_contam` = the number of contamination points  
 * `x_lim` = the limits of the horizontal axis  
 * `y_lim` = the limits of the vertical axis  
 * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,10)`)
@@ -37,7 +37,7 @@ sessionInfo()
 
 ```{r}
 ## The input parameters
-n_sim = 3
+n_contam = 3
 x_lim = c(0, 10)
 y_lim = c(0, 10)
 
@@ -66,11 +66,11 @@ naming_spot = function(df, spot){
   }
 
 ## The simulation function for contamination spot and its spread
-sim_contam = function(n_sim, x_lim, y_lim, covariance, n_affected, radius){
+sim_contam = function(n_contam, x_lim, y_lim, covariance, n_affected, radius){
   
   ## Generate a matrix that contains contamination coordinates
-  x = runif(n = n_sim, min = x_lim[1], max = x_lim[2])
-  y = runif(n = n_sim, min = y_lim[1], max = y_lim[2])
+  x = runif(n = n_contam, min = x_lim[1], max = x_lim[2])
+  y = runif(n = n_contam, min = y_lim[1], max = y_lim[2])
   
   spot_coord = matrix(data = c(x, y), ncol = 2) %>% as.data.frame()
   
@@ -83,11 +83,11 @@ sim_contam = function(n_sim, x_lim, y_lim, covariance, n_affected, radius){
   spread_coord_4 = do.call(what = rbind, args = spread_coord_3) %>% as.data.frame()
   
   # Give a unique identifier to each observation.
-  spread_coord_5 = naming_spread(spread_coord_4, n_sim, n_affected)
-  spot_coord_2 = naming_spot(spot_coord, n_sim)
+  spread_coord_5 = naming_spread(spread_coord_4, n_contam, n_affected)
+  spot_coord_2 = naming_spot(spot_coord, n_contam)
   
   # Create a factor column.
-  label = c(rep("spot", times = n_sim), rep("spread", times = n_sim * n_affected))
+  label = c(rep("spot", times = n_contam), rep("spread", times = n_contam * n_affected))
   
   # Create a spread radius column
   r = spread_radius
@@ -116,8 +116,8 @@ sim_contam = function(n_sim, x_lim, y_lim, covariance, n_affected, radius){
 #### Debug
 
 # ## Generate a matrix that contains contamination coordinates
-# x = runif(n = n_sim, min = x_lim[1], max = x_lim[2])
-# y = runif(n = n_sim, min = y_lim[1], max = y_lim[2])
+# x = runif(n = n_contam, min = x_lim[1], max = x_lim[2])
+# y = runif(n = n_contam, min = y_lim[1], max = y_lim[2])
 # n_affected = rpois(n = 1, lambda = 5)
 # 
 # spot_coord = matrix(data = c(x, y), ncol = 2) %>% as.data.frame()
@@ -138,7 +138,7 @@ sim_contam = function(n_sim, x_lim, y_lim, covariance, n_affected, radius){
 #   cbind(df, c)
 # }
 # 
-# spread_coord_5 = naming_spread(spread_coord_4, n_sim, n_affected)
+# spread_coord_5 = naming_spread(spread_coord_4, n_contam, n_affected)
 # 
 # naming_spot = function(df, spot){
 #   a = 1:spot %>% as.character()
@@ -147,10 +147,10 @@ sim_contam = function(n_sim, x_lim, y_lim, covariance, n_affected, radius){
 #   cbind(df, c)
 # }
 # 
-# spot_coord_2 = naming_spot(spot_coord, n_sim)
+# spot_coord_2 = naming_spot(spot_coord, n_contam)
 # 
 #   # Create a factor column.
-#   label = c(rep("spot", times = n_sim), rep("spread", times = n_sim * n_affected))
+#   label = c(rep("spot", times = n_contam), rep("spread", times = n_contam * n_affected))
 # 
 #   # Combine the contamination spot coordinates and the spread coordinates, and then combine the factor column.
 #   df_1 = rbind(spot_coord_2, spread_coord_5)
@@ -177,7 +177,7 @@ sim_contam = function(n_sim, x_lim, y_lim, covariance, n_affected, radius){
 ```
 
 ```{r}
-contam_xy = sim_contam(n_sim = n_sim, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
+contam_xy = sim_contam(n_contam = n_contam, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
 ```
 
 # Results #
