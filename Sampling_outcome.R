@@ -42,7 +42,7 @@ cover = function(df_dist, df_coord, r, method){
 }
 
 # Create a function that calculates the rate of detection
-ROD = function(df_cover, df_contam, n_sp, method){
+calc_ROD = function(df_cover, df_contam, n_sp, method){
   if(method == "discrete"){
     length(unique(df_cover$contam_ID)) / nrow(df_contam)
   } else if (method == "continuous"){

@@ -145,7 +145,7 @@ cover = function(df_dist, df_coord, r, method){
 }
 
 # Create a function that calculates the rate of detection
-ROD = function(df_cover, df_contam, n_sp, method){
+calc_ROD = function(df_cover, df_contam, n_sp, method){
   if(method == "discrete"){
     length(unique(df_cover$contam_ID)) / nrow(df_contam)
   } else if (method == "continuous"){
@@ -186,7 +186,7 @@ cover_dis %>%
 
 ```{r}
 # Evaluation: 
-ROD(df_cover = cover_dis, df_contam = contam_xy, n_sp = n_sp, method = "discrete")
+calc_ROD(df_cover = cover_dis, df_contam = contam_xy, n_sp = n_sp, method = "discrete")
 ```
 
 * Therefore, we detected `r length(unique(cover_dis$contam_ID))` out of `r nrow(contam_xy)` contamination points. The rate of detection is `r length(unique(cover_dis$contam_ID)) / nrow(contam_xy)`.
@@ -213,7 +213,7 @@ cover_cont %>%
 
 ```{r}
 # Evaluation: 
-ROD(df_cover = cover_cont, df_contam = contam_xy, n_sp = n_sp, method = "continuous")
+calc_ROD(df_cover = cover_cont, df_contam = contam_xy, n_sp = n_sp, method = "continuous")
 ```
 
 * Therefore, `r length(unique(cover_cont$sp_ID))` out of `r n_sp` sample points detected contamination. The rate of detection is `r length(unique(cover_cont$sp_ID)) / n_sp`.
