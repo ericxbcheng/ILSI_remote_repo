@@ -49,3 +49,33 @@ calc_ROD = function(df_cover, df_contam, n_sp, method){
     length(unique(df_cover$sp_ID)) / n_sp
   }
 }
+
+# Create a function that runs the simulation once and gives an ROD
+sim_outcome = function(n_contam, x_lim, y_lim, n_affected, covar_mat, spread_radius, n_sp, sp_radius, method){
+  
+  # Generate the coordinates of contamination points
+  contam_xy = sim_contam(n_contam = n_contam, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
+  
+  # Generate the coordinates of sample points
+  sp_xy = sim_plan(n_sp = n_sp, x_lim = x_lim, y_lim = y_lim, r = sp_radius)
+  
+  # Generate the combined coordinates of contamination and sample points
+  contam_sp_xy = rbind(contam_xy, sp_xy)
+  rownames(contam_sp_xy) = NULL
+  
+  # Calculate the distance between sample points and contamination points
+  dist_contam_sp = calc_dist(contam_sp_xy)
+  
+  # Determine whether contamination is detected and calculate ROD
+  if(method == "discrete"){
+    
+    cover_dis = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = sp_radius, method = method)
+    calc_ROD(df_cover = cover_dis, df_contam = contam_xy, n_sp = n_sp, method = method)
+    
+  } else if (method == "continuous"){
+    
+    cover_cont = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = spread_radius, method = method)
+    calc_ROD(df_cover = cover_cont, df_contam = contam_xy, n_sp = n_sp, method = method)
+    
+  }
+}
