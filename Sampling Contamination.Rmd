@@ -66,11 +66,11 @@ naming_spot = function(df, spot){
   }
 
 ## The simulation function for contamination spot and its spread
-sim_contam = function(n_contam, x_lim, y_lim, covariance, n_affected, radius){
+sim_contam = function(n_contam, xlim, ylim, covariance, n_affected, radius){
   
   ## Generate a matrix that contains contamination coordinates
-  x = runif(n = n_contam, min = x_lim[1], max = x_lim[2])
-  y = runif(n = n_contam, min = y_lim[1], max = y_lim[2])
+  x = runif(n = n_contam, min = xlim[1], max = xlim[2])
+  y = runif(n = n_contam, min = ylim[1], max = ylim[2])
   
   spot_coord = matrix(data = c(x, y), ncol = 2) %>% as.data.frame()
   
@@ -98,7 +98,7 @@ sim_contam = function(n_contam, x_lim, y_lim, covariance, n_affected, radius){
   df_2 = cbind(df_1, label, r)
   
   # Remove points that are outside the perimeter.
-  out = which(df_2[ ,1] < x_lim[1] | df_2[ , 1] > x_lim[2] | df_2[,2] < y_lim[1] | df_2[,2] > y_lim[2], arr.ind = TRUE)[1]
+  out = which(df_2[ ,1] < xlim[1] | df_2[ , 1] > xlim[2] | df_2[,2] < ylim[1] | df_2[,2] > ylim[2], arr.ind = TRUE)[1]
   if(is.na(out) == FALSE){
     df_3 = df_2[-out, ]
   } else {
@@ -177,7 +177,7 @@ sim_contam = function(n_contam, x_lim, y_lim, covariance, n_affected, radius){
 ```
 
 ```{r}
-contam_xy = sim_contam(n_contam = n_contam, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
+contam_xy = sim_contam(n_contam = n_contam, xlim = x_lim, ylim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
 ```
 
 # Results #
