@@ -12,7 +12,7 @@ calc_dist = function(df){
 }
 
 # Create a function to idenfity points that falls within a certain distance from another point
-cover = function(df_dist, df_coord, r, method){
+cover = function(df_dist, df_coord, r, spread){
   
   ## Find the points that meet the distance criterion
   a = df_dist %>%
@@ -28,11 +28,11 @@ cover = function(df_dist, df_coord, r, method){
   
   c = cbind(a, contam_ID, sp_ID, contam_type)
   
-  ## Create output based on the method.
-  if(method == "discrete") {
+  ## Create output based on the type of spread.
+  if(spread == "discrete") {
     d = c %>%
       arrange(.data = ., contam_ID)
-  } else if (method == "continuous") {
+  } else if (spread == "continuous") {
     d = c %>%
       dplyr::filter(contam_type == "spot") %>%
       arrange(.data = ., contam_ID)
@@ -42,16 +42,16 @@ cover = function(df_dist, df_coord, r, method){
 }
 
 # Create a function that calculates the rate of detection
-calc_ROD = function(df_cover, df_contam, n_sp, method){
-  if(method == "discrete"){
+calc_ROD = function(df_cover, df_contam, n_sp, spread){
+  if(spread == "discrete"){
     length(unique(df_cover$contam_ID)) / nrow(df_contam)
-  } else if (method == "continuous"){
+  } else if (spread == "continuous"){
     length(unique(df_cover$sp_ID)) / n_sp
   }
 }
 
 # Create a function that runs the simulation once and gives an ROD
-sim_outcome = function(n_contam, x_lim, y_lim, n_affected, covar_mat, spread_radius, n_sp, sp_radius, method){
+sim_outcome = function(n_contam, x_lim, y_lim, n_affected, covar_mat, spread_radius, n_sp, sp_radius, spread){
   
   # Generate the coordinates of contamination points
   contam_xy = sim_contam(n_contam = n_contam, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
@@ -67,15 +67,15 @@ sim_outcome = function(n_contam, x_lim, y_lim, n_affected, covar_mat, spread_rad
   dist_contam_sp = calc_dist(contam_sp_xy)
   
   # Determine whether contamination is detected and calculate ROD
-  if(method == "discrete"){
+  if(spread == "discrete"){
     
-    cover_dis = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = sp_radius, method = method)
-    calc_ROD(df_cover = cover_dis, df_contam = contam_xy, n_sp = n_sp, method = method)
+    cover_dis = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = sp_radius, spread = spread)
+    calc_ROD(df_cover = cover_dis, df_contam = contam_xy, n_sp = n_sp, spread = spread)
     
-  } else if (method == "continuous"){
+  } else if (spread == "continuous"){
     
-    cover_cont = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = spread_radius, method = method)
-    calc_ROD(df_cover = cover_cont, df_contam = contam_xy, n_sp = n_sp, method = method)
+    cover_cont = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = spread_radius, spread = spread)
+    calc_ROD(df_cover = cover_cont, df_contam = contam_xy, n_sp = n_sp, spread = spread)
     
   }
 }
