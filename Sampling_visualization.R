@@ -1,11 +1,11 @@
 # Contamination plots
-contam_draw = function(data, method, xlim, ylim){
-  if (method == "discrete") {
+contam_draw = function(data, spread, xlim, ylim){
+  if (spread == "discrete") {
     ggplot() +
       geom_point(data = data, aes(x = X, y = Y, color = label)) +
       coord_fixed(ratio = 1, xlim = xlim, ylim = ylim) +
       theme_bw()
-  } else if (method == "continuous") {
+  } else if (spread == "continuous") {
     ggplot() +
       geom_point(data = subset(data, subset = data$label == "spot"),
                  aes(x = X, y = Y, color = label)) +
@@ -18,8 +18,10 @@ contam_draw = function(data, method, xlim, ylim){
 }
 
 # Sampling plan plots
-sp_draw = function(data, method, xlim, ylim){
-  if(method == "discrete"){
+
+## Simple random sampling
+sp_draw_srs = function(data, spread, xlim, ylim){
+  if(spread == "discrete"){
     ggplot() +
       geom_point(data = data, aes(x = X, y = Y, color = label, shape = label)) +
       scale_color_manual(values = c("darkgreen")) +
@@ -27,7 +29,7 @@ sp_draw = function(data, method, xlim, ylim){
       geom_circle(data = data, aes(x0 = X, y0 = Y, r = r), fill = "darkgreen", alpha = 0.1) +
       coord_fixed(ratio = 1, xlim = xlim, ylim = ylim) +
       theme_bw()
-  } else if (method == "continuous"){
+  } else if (spread == "continuous"){
     ggplot() +
       geom_point(data = data, aes(x = X, y = Y, color = label, shape = label)) +
       scale_color_manual(values = c("darkgreen")) +
@@ -37,9 +39,33 @@ sp_draw = function(data, method, xlim, ylim){
   }
 }
 
+## Stratified random sampling
+sp_draw_strs = function(data, spread, xlim, ylim, n_strata, by){
+  base = sp_draw_srs(data = data, spread = spread, xlim = xlim, ylim = ylim)
+  bounds = calc_bounds(xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
+  if(by == "row"){
+    base + 
+      geom_hline(yintercept = bounds, color = "darkgrey")
+  } else if (by == "column"){
+    base +
+      geom_vline(xintercept = bounds, color = "darkgrey")
+  }
+}
+
+### A wrapper function
+sp_draw = function(method, data, spread, xlim, ylim, n_strata, by = "row"){
+  if(method == "srs"){
+    sp_draw_srs(data, spread, xlim, ylim)
+  } else if (method == "strs"){
+    sp_draw_strs(data, spread, xlim, ylim, n_strata, by)
+  }
+}
+
 # Overlay plots
-overlay_draw = function(data, method, xlim, ylim){
-  if(method == "discrete"){
+
+## Simple random sampling
+overlay_draw_srs = function(data, spread, xlim, ylim){
+  if(spread == "discrete"){
     ggplot() +
       geom_point(data = data, aes(x = X, y = Y, color = label, shape = label)) +
       scale_color_manual(values = c("coral", "cornflowerblue", "darkgreen")) +
@@ -50,7 +76,7 @@ overlay_draw = function(data, method, xlim, ylim){
                   alpha = 0.1) +
       coord_fixed(ratio = 1, xlim = xlim, ylim = ylim) +
       theme_bw()
-  } else if (method == "continuous"){
+  } else if (spread == "continuous"){
     ggplot() +
       geom_point(data = subset(x = data, subset = label != "spread"), 
                  aes(x = X, y = Y, 
@@ -64,6 +90,28 @@ overlay_draw = function(data, method, xlim, ylim){
                   alpha = 0.1) +
       coord_fixed(ratio = 1, xlim = xlim, ylim = ylim) +
       theme_bw()
+  }
+}
+
+## Stratified random sampling
+overlay_draw_strs = function(data, spread, xlim, ylim, n_strata, by){
+  base = overlay_draw_srs(data = data, spread = spread, xlim = xlim, ylim = ylim)
+  bounds = calc_bounds(xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
+  if(by == "row"){
+    base + 
+      geom_hline(yintercept = bounds, color = "darkgrey")
+  } else if (by == "column"){
+    base +
+      geom_vline(xintercept = bounds, color = "darkgrey")
+  }
+}
+
+### A wrapper function
+overlay_draw = function(method, data, spread, xlim, ylim, n_strata, by = "row"){
+  if(method == "srs"){
+    overlay_draw_srs(data, spread, xlim, ylim)
+  } else if (method == "strs"){
+    overlay_draw_strs(data, spread, xlim, ylim, n_strata, by)
   }
 }
 

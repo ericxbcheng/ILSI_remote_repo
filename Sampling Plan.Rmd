@@ -13,6 +13,7 @@ output: html_document
 source(file = "Sampling_libraries.R")
 source(file = "Sampling_contamination.R")
 source(file = "Sampling_visualization.R")
+source(file = "Sampling_plan.R")
 ```
 
 ```{r}
@@ -38,7 +39,7 @@ sessionInfo()
 
 ```{r}
 ## The input parameters
-n_contam = 3
+n_contam = rpois(n = 1, lambda = 3)
 x_lim = c(0, 10)
 y_lim = c(0, 10)
 
@@ -52,7 +53,7 @@ spread_radius = 2.5
 
 ```{r}
 # Generate the coordinates of contamination points
-contam_xy = sim_contam(n_contam = n_contam, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
+contam_xy = sim_contam(n_contam = n_contam, xlim = x_lim, ylim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
 ```
 
 ```{r}
@@ -67,10 +68,12 @@ summary(contam_xy$label)
 
 * `n_sp` = the number of sampling points
 * `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
+* `n_strata` = the number of strata (applicable to **Stratified random sampling**)
 
 ```{r}
 n_sp = 10
 sp_radius = 1
+n_strata = 5
 ```
 
 4. Simulate a sampling plan. In this case, we simulate a simple random sampling plan. The coordinates of sampling points follows a uniform distribution $U(0,10)$.
@@ -80,35 +83,109 @@ sp_radius = 1
 #set.seed(123)
 ```
 
+```{r, echo = FALSE}
+# # Create a helper function that gives unique identifers
+# naming_sp = function(n_sp, x_sp, y_sp, radius){
+#   
+#   # Generate a unique identifier for each sample point
+#   a = rep("sp", times = n_sp)
+#   b = 1:n_sp %>% as.character()
+#   ID = paste(a, "-", b, sep = "")
+#   
+#   ## Generate a column for sample radius
+#   r = rep(radius, times = n_sp)
+#   
+#   data.frame(X = x_sp,
+#              Y = y_sp,
+#              ID = ID,
+#              label = "sample point",
+#              r = r)
+# }
+# 
+# # Create a function that generates a simple random sampling plan
+# sim_plan_srs = function(n_sp, xlim, ylim, radius){
+#   
+#   ## Generate a data frame that contains the coordinates of the sampling points
+#   x_sp = runif(n = n_sp, min = xlim[1], max = xlim[2])
+#   y_sp = runif(n = n_sp, min = ylim[1], max = ylim[2])
+#   
+#   naming_sp(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, radius = radius)
+# }
+```
+
 ```{r}
+# Create a helper function that gives unique identifers
+naming_sp
+
 # Create a function that generates a simple random sampling plan
-sim_plan = function(n_sp, x_lim, y_lim, radius){
-  
-  ## Generate a data frame that contains the coordinates of the sampling points
-  x_sp = runif(n = n_sp, min = x_lim[1], max = x_lim[2])
-  y_sp = runif(n = n_sp, min = y_lim[1], max = y_lim[2])
-  
-  ## Generate a unique identifier for each sample point
-  a = rep("sp", times = n_sp)
-  b = 1:n_sp %>% as.character()
-  ID = paste(a, "-", b, sep = "")
-  
-  ## Generate a column for sample radius
-  r = rep(radius, times = n_sp)
-  
-  data.frame(X = x_sp,
-             Y = y_sp,
-             ID = ID,
-             label = "sample point",
-             r = r)
-}
+sim_plan_srs
+```
+
+
+5. Simulate a stratified random sampling plan. First of all, check whether `n_sp` is a multiple of `n_strata`. Then, divide the field into strata either by row or by column.
+
+```{r, echo = FALSE}
+# # Create a function that calculates the boundaries of each stratum
+# calc_bounds = function(xlim, ylim, n_strata, by){
+#   if(by == "row"){
+#     seq(from = ylim[1], to = ylim[2], by = (ylim[2] - ylim[1])/n_strata)
+#   } else if(by == "column"){
+#     seq(from = xlim[1], to = xlim[2], by = (xlim[2] - xlim[1])/n_strata)
+#   }
+# }
+# 
+# # Create a function that generates a stratified random sampling plan
+# sim_plan_strs = function(n_sp, n_strata, by, xlim, ylim, radius){
+#    
+#   if (n_sp %% n_strata != 0) {
+#     stop("n_sp is not a multiple of n_strata.")
+#   } else {
+#     bounds = calc_bounds(xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
+#     
+#     if (by == "row") {
+#       x_sp = runif(n = n_sp, min = xlim[1], max = xlim[2])
+#       y_sp = runif(n = n_sp, min = bounds[1:length(bounds)-1], max = bounds[2:length(bounds)])
+#     } else if (by == "column") {
+#       x_sp = runif(n = n_sp, min = bounds[1:length(bounds)-1], max = bounds[2:length(bounds)])
+#       y_sp = runif(n = n_sp, min = ylim[1], max = ylim[2])
+#     }
+#     
+#     naming_sp(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, radius = radius)
+#   }
+# }
 ```
 
 ```{r}
-sp_xy = sim_plan(n_sp = n_sp, x_lim = x_lim, y_lim = y_lim, r = sp_radius)
+# Create a function that calculates the boundaries of each stratum
+calc_bounds
+
+# Create a function that generates a stratified random sampling plan
+sim_plan_strs
 ```
 
-5. Combine the `sp_xy` and `contam_xy` by row.
+
+6. Wrap different sampling plans into one function.
+
+```{r, echo = FALSE}
+# sim_plan = function(method, n_sp, xlim, ylim, radius, n_strata, by = "row"){
+#   if(method == "srs"){
+#     sim_plan_srs(n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = radius)
+#   } else if (method == "strs"){
+#     sim_plan_strs(n_sp = n_sp, n_strata = n_strata, by = by, xlim = x_lim, ylim = y_lim, radius = radius)
+#   }
+# }
+```
+
+```{r}
+sim_plan
+```
+
+```{r}
+sp_xy = sim_plan(method = "strs", n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius, n_strata = n_strata, by = "row")
+```
+
+
+7. Combine the `sp_xy` and `contam_xy` by row.
 
 ```{r}
 contam_sp_xy = rbind(contam_xy, sp_xy)
@@ -121,12 +198,12 @@ rownames(contam_sp_xy) = NULL
 
 ```{r}
 # Mode 1: Discrete Spread
-plot_contam_dis = contam_draw(data = contam_xy, method = "discrete", xlim = x_lim, ylim = y_lim)
+plot_contam_dis = contam_draw(data = contam_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
 
 plot_contam_dis
 
 # Mode 2: Continuous Spread
-plot_contam_cont = contam_draw(data = contam_xy, method = "continuous", xlim = x_lim, ylim = y_lim)
+plot_contam_cont = contam_draw(data = contam_xy, spread = "continuous", xlim = x_lim, ylim = y_lim)
 
 plot_contam_cont
 ```
@@ -134,33 +211,61 @@ plot_contam_cont
 2. Show the sample points and sample regions.
 
 ```{r}
-plot_sp_dis = sp_draw(data = sp_xy, method = "discrete", xlim = x_lim, ylim = y_lim)
-
-plot_sp_cont = sp_draw(data = sp_xy, method = "continuous", xlim = x_lim, ylim = y_lim)
+# Simple random sampling
+# plot_sp_dis_srs = sp_draw_srs(data = sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
+# 
+# plot_sp_cont_srs = sp_draw_srs(data = sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim)
 ```
 
 ```{r}
-# Sampling plan for continuous spread
-plot_sp_cont
+# # Sampling plan for continuous spread
+# plot_sp_dis_srs
+# 
+# # Sampling plan for discrete spread
+# plot_sp_cont_srs
+```
 
-# Sampling plan for discrete spread
-plot_sp_dis
+```{r}
+# Stratified random sampling
+plot_sp_dis_strs = sp_draw(method = "strs", data = sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = "row")
+
+plot_sp_cont_strs = sp_draw(method = "strs", data = sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = "row")
+```
+
+```{r}
+plot_sp_dis_strs
+
+plot_sp_cont_strs
 ```
 
 
 3. Overlay the sampling plan on the simulated contamination plot.
 
 ```{r}
-plot_overlay_cont = overlay_draw(data = contam_sp_xy, method = "continuous", xlim = x_lim, ylim = y_lim)
-
-plot_overlay_dis = overlay_draw(data = contam_sp_xy, method = "discrete", xlim = x_lim, ylim = y_lim)
+# Simple random sampling
+# plot_overlay_cont = overlay_draw(data = contam_sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim)
+# 
+# plot_overlay_dis = overlay_draw(data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
 ```
 
 ```{r}
-# Sampling plan for continuous spread
-plot_overlay_cont
+# # Sampling plan for continuous spread
+# plot_overlay_cont
+# 
+# # Sampling plan for discrete spread
+# plot_overlay_dis
+```
 
-# Sampling plan for discrete spread
-plot_overlay_dis
+```{r}
+# Stratified random sampling
+plot_overlay_dis_strs = overlay_draw(method = "strs", data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = "row")
+
+plot_overlay_cont_strs = overlay_draw(method = "strs", data = contam_sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = "row")
+```
+
+```{r}
+plot_overlay_dis_strs
+
+plot_overlay_cont_strs
 ```
 
