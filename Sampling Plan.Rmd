@@ -69,11 +69,13 @@ summary(contam_xy$label)
 * `n_sp` = the number of sampling points
 * `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
 * `n_strata` = the number of strata (applicable to **Stratified random sampling**)
+* `by` = the side along which the field is divided into strata. It is either "row" or "column".
 
 ```{r}
 n_sp = 10
 sp_radius = 1
 n_strata = 5
+by = "column"
 ```
 
 4. Simulate a sampling plan. In this case, we simulate a simple random sampling plan. The coordinates of sampling points follows a uniform distribution $U(0,10)$.
@@ -181,7 +183,7 @@ sim_plan
 ```
 
 ```{r}
-sp_xy = sim_plan(method = "strs", n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius, n_strata = n_strata, by = "row")
+sp_xy = sim_plan(method = "strs", n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius, n_strata = n_strata, by = by)
 ```
 
 
@@ -227,9 +229,9 @@ plot_contam_cont
 
 ```{r}
 # Stratified random sampling
-plot_sp_dis_strs = sp_draw(method = "strs", data = sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = "row")
+plot_sp_dis_strs = sp_draw(method = "strs", data = sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
 
-plot_sp_cont_strs = sp_draw(method = "strs", data = sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = "row")
+plot_sp_cont_strs = sp_draw(method = "strs", data = sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
 ```
 
 ```{r}
@@ -258,9 +260,9 @@ plot_sp_cont_strs
 
 ```{r}
 # Stratified random sampling
-plot_overlay_dis_strs = overlay_draw(method = "strs", data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = "row")
+plot_overlay_dis_strs = overlay_draw(method = "strs", data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
 
-plot_overlay_cont_strs = overlay_draw(method = "strs", data = contam_sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = "row")
+plot_overlay_cont_strs = overlay_draw(method = "strs", data = contam_sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
 ```
 
 ```{r}

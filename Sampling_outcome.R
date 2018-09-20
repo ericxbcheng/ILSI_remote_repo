@@ -51,13 +51,13 @@ calc_ROD = function(df_cover, df_contam, n_sp, spread){
 }
 
 # Create a function that runs the simulation once and gives an ROD
-sim_outcome = function(n_contam, x_lim, y_lim, n_affected, covar_mat, spread_radius, n_sp, sp_radius, spread){
+sim_outcome = function(n_contam, xlim, ylim, n_affected, covar_mat, spread_radius, n_sp, sp_radius, spread){
   
   # Generate the coordinates of contamination points
-  contam_xy = sim_contam(n_contam = n_contam, x_lim = x_lim, y_lim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
+  contam_xy = sim_contam(n_contam = n_contam, xlim = xlim, ylim = ylim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
   
   # Generate the coordinates of sample points
-  sp_xy = sim_plan(n_sp = n_sp, x_lim = x_lim, y_lim = y_lim, r = sp_radius)
+  sp_xy = sim_plan(n_sp = n_sp, xlim = xlim, ylim = ylim, r = sp_radius)
   
   # Generate the combined coordinates of contamination and sample points
   contam_sp_xy = rbind(contam_xy, sp_xy)
