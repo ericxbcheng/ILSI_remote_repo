@@ -69,7 +69,7 @@ summary(contam_xy$label)
 * `n_sp` = the number of sampling points
 * `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
 * `n_strata` = the number of strata (applicable to **Stratified random sampling**)
-* `by` = the side along which the field is divided into strata. It is either "row" or "column".
+* `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to **Stratified random sampling**).
 
 ```{r}
 n_sp = 10
@@ -121,6 +121,14 @@ naming_sp
 
 # Create a function that generates a simple random sampling plan
 sim_plan_srs
+
+# Create a function that generates a stratified random sampling plan
+sim_plan_strs
+```
+
+```{r, echo = FALSE, eval = FALSE}
+# Create a function that generates a systematic sampling plan
+sim_plan_ss
 ```
 
 
@@ -165,29 +173,12 @@ calc_bounds
 sim_plan_strs
 ```
 
-
-6. Wrap different sampling plans into one function.
-
-```{r, echo = FALSE}
-# sim_plan = function(method, n_sp, xlim, ylim, radius, n_strata, by = "row"){
-#   if(method == "srs"){
-#     sim_plan_srs(n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = radius)
-#   } else if (method == "strs"){
-#     sim_plan_strs(n_sp = n_sp, n_strata = n_strata, by = by, xlim = x_lim, ylim = y_lim, radius = radius)
-#   }
-# }
-```
-
 ```{r}
-sim_plan
-```
-
-```{r}
-sp_xy = sim_plan(method = "strs", n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius, n_strata = n_strata, by = by)
+sp_xy = sim_plan(method = "ss", n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius)
 ```
 
 
-7. Combine the `sp_xy` and `contam_xy` by row.
+6. Combine the `sp_xy` and `contam_xy` by row.
 
 ```{r}
 contam_sp_xy = rbind(contam_xy, sp_xy)
@@ -240,6 +231,19 @@ plot_sp_dis_strs
 plot_sp_cont_strs
 ```
 
+```{r, echo = FALSE, eval = FALSE}
+# Systematic sampling
+plot_sp_dis_ss = sp_draw(method = "ss", data = sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
+
+plot_sp_cont_ss = sp_draw(method = "ss", data = sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim)
+```
+
+```{r, echo = FALSE, eval = FALSE}
+plot_sp_dis_ss
+
+plot_sp_cont_ss
+```
+
 
 3. Overlay the sampling plan on the simulated contamination plot.
 
@@ -269,5 +273,18 @@ plot_overlay_cont_strs = overlay_draw(method = "strs", data = contam_sp_xy, spre
 plot_overlay_dis_strs
 
 plot_overlay_cont_strs
+```
+
+```{r, echo = FALSE, eval = FALSE}
+# Systematic sampling
+plot_overlay_dis_ss = overlay_draw(method = "ss", data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
+
+plot_overlay_cont_ss = overlay_draw(method = "ss", data = contam_sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim)
+```
+
+```{r, echo = FALSE, eval = FALSE}
+plot_overlay_dis_ss
+
+plot_overlay_cont_ss
 ```
 

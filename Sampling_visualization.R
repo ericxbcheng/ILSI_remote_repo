@@ -53,11 +53,11 @@ sp_draw_strs = function(data, spread, xlim, ylim, n_strata, by){
 }
 
 ### A wrapper function
-sp_draw = function(method, data, spread, xlim, ylim, n_strata, by = "row"){
-  if(method == "srs"){
-    sp_draw_srs(data, spread, xlim, ylim)
+sp_draw = function(method, data, spread, xlim, ylim, n_strata, by){
+  if(method %in% c("srs", "ss")){
+    sp_draw_srs(data = data, spread = spread, xlim = xlim, ylim = ylim)
   } else if (method == "strs"){
-    sp_draw_strs(data, spread, xlim, ylim, n_strata, by)
+    sp_draw_strs(data = data, spread = spread, xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
   }
 }
 
@@ -107,11 +107,11 @@ overlay_draw_strs = function(data, spread, xlim, ylim, n_strata, by){
 }
 
 ### A wrapper function
-overlay_draw = function(method, data, spread, xlim, ylim, n_strata, by = "row"){
-  if(method == "srs"){
-    overlay_draw_srs(data, spread, xlim, ylim)
+overlay_draw = function(method, data, spread, xlim, ylim, n_strata, by){
+  if(method %in% c("srs", "ss")){
+    overlay_draw_srs(data = data, spread = spread, xlim = xlim, ylim = ylim)
   } else if (method == "strs"){
-    overlay_draw_strs(data, spread, xlim, ylim, n_strata, by)
+    overlay_draw_strs(data = data, spread = spread, xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
   }
 }
 

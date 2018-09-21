@@ -55,11 +55,41 @@ sim_plan_strs = function(n_sp, n_strata, by, xlim, ylim, radius){
   }
 }
 
+# Create a function that generates a systematic sampling plan
+sim_plan_ss = function(xlim, ylim, n_sp, radius){
+  
+  # k = sampling interval
+  k = xlim[2]*ylim[2]/n_sp
+  
+  # Randomly select 1 sample point in the first basic unit
+  x0 = runif(n = 1, min = 0, max = 1)
+  y0 = runif(n = 1, min = 0, max = 1)
+  
+  # Assume all samples are selected on a 1-dimensional space. Pick a sample at every k steps.
+  x_sp_raw = seq(from = x0, by = k, length.out = n_sp)
+  y_sp_raw = rep(y0, times = n_sp)
+  
+  # Calculate how much do sample points exceed the x boundary and determine how many sections should y boundary be divided into.
+  exceed_xlim = floor(x_sp_raw / xlim[2])
+  n_strata_y = max(exceed_xlim) + 1
+  delta_y = ylim[2] / n_strata_y
+  
+  # Rearrange sample points so that they are within the x and y boundaries
+  x_sp = x_sp_raw - xlim[2] * exceed_xlim
+  y_sp = y_sp_raw + delta_y * exceed_xlim
+  
+  naming_sp(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, radius = radius)
+}
+
 # A function that includes all kinds of sampling plan
-sim_plan = function(method, n_sp, xlim, ylim, radius, n_strata, by = "row"){
+sim_plan = function(method, n_sp, xlim, ylim, radius, n_strata, by){
   if(method == "srs"){
     sim_plan_srs(n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = radius)
   } else if (method == "strs"){
     sim_plan_strs(n_sp = n_sp, n_strata = n_strata, by = by, xlim = x_lim, ylim = y_lim, radius = radius)
+  } else if (method == "ss"){
+    sim_plan_ss(xlim = xlim, ylim = ylim, n_sp = n_sp, radius = radius)
+  } else {
+    stop("Sampling method does not exist. Try 'srs', 'strs', or 'ss'.")
   }
 }
