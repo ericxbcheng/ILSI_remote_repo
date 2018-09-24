@@ -174,7 +174,7 @@ sim_plan_strs
 ```
 
 ```{r}
-sp_xy = sim_plan(method = "ss", n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius)
+sp_xy = sim_plan(method = "strs", n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius, n_strata = n_strata, by = by)
 ```
 
 
