@@ -44,6 +44,9 @@ sessionInfo()
 
   * `n_sp` = the number of sampling points
   * `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
+  * `n_strata` = the number of strata (applicable to **Stratified random sampling**)
+  * `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to **Stratified random sampling**).
+
   
 **Iteration:**
 
