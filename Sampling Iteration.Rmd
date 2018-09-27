@@ -72,7 +72,7 @@ n_strata = 5
 by = "row"
 
 ## Sampling outcome
-n_sim = 10000
+n_sim = 100
 ```
 
 ```{r}
@@ -189,14 +189,38 @@ sim_iterate
 # For debug or reproducibility only
 # set.seed(123)
 
-sim_outcome(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = "strs", n_sp = n_sp, sp_radius = sp_radius, spread = "continuous", n_strata = n_strata, by = by)
+sim_outcome(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = "ss", n_sp = n_sp, sp_radius = sp_radius, spread = "continuous", n_strata = n_strata, by = by)
 ```
 
 2. Run the simulation for `r n_sim` times.
 
 ```{r}
-ROD = sim_iterate(n_sim = n_sim, n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = "strs", n_sp = n_sp, sp_radius = sp_radius, spread = "continuous", n_strata = n_strata, by = by)
+ROD = sim_iterate(n_sim = n_sim, n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = "ss", n_sp = n_sp, sp_radius = sp_radius, spread = "discrete", n_strata = n_strata, by = by)
 ```
+
+```{r, echo = FALSE}
+## Testing
+# system.time(sim_iterate(n_sim = 1000, n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = "ss", n_sp = n_sp, sp_radius = sp_radius, spread = "discrete", n_strata = n_strata, by = by))
+# 
+# system.time(lapply(X = rep(1, times = 1000), FUN = sim_iterate, n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = "ss", n_sp = n_sp, sp_radius = sp_radius, spread = "discrete", n_strata = n_strata, by = by))
+# 
+# sections = c(1, 2, 5, 10, 20, 50, 100, 200, 250, 500, 1000)
+# sections2 = lapply(X = sections, FUN = function(x) {rep(x, times = 1000/x)})
+# 
+# times = lapply(X = sections2, FUN = function(x){
+#   system.time(
+#     lapply(X = x, FUN = sim_iterate, n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = "ss", n_sp = n_sp, sp_radius = sp_radius, spread = "discrete", n_strata = n_strata, by = by)
+#   )
+# })
+# 
+# times = do.call(what = rbind, args = times)
+# 
+# ggplot()+
+#   geom_point(aes(x = sections, y = times[ ,3]))
+
+```
+
+
 
 3. Boxplot of the rate of detection.
 
