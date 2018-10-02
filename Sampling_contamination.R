@@ -14,8 +14,20 @@ naming_spot = function(df, spot){
   cbind(df, c)
 }
 
+## Create a function to generate contamination levels
+f_cont_level = function(n, param){
+  rlnorm(n = n, meanlog = log(param[1]), sdlog = log(param[2]))
+}
+
+## Calculate the contamination contribution using an exponential function.
+f_exp = function(d, spread_radius, LOC){
+  
+  theta = - spread_radius/log(LOC)
+  exp(-d/theta)
+}
+
 ## The simulation function for contamination spot and its spread
-sim_contam = function(n_contam, xlim, ylim, covariance, n_affected, radius){
+sim_contam = function(n_contam, xlim, ylim, covariance, n_affected, radius, cont_level){
   
   ## Generate a matrix that contains contamination coordinates
   x = runif(n = n_contam, min = xlim[1], max = xlim[2])
@@ -49,6 +61,7 @@ sim_contam = function(n_contam, xlim, ylim, covariance, n_affected, radius){
     df_1 = rbind(spot_coord_2, spread_coord_3)
     colnames(df_1) = c("X", "Y", "ID")
     df_2 = cbind(df_1, label, r)
+    df_2[["cont_level"]] = f_cont_level(n = nrow(df_2), param = cont_level)
     
   } else {
     
@@ -59,6 +72,7 @@ sim_contam = function(n_contam, xlim, ylim, covariance, n_affected, radius){
     df_1 = spot_coord_2
     colnames(df_1) = c("X", "Y", "ID")
     df_2 = cbind(df_1, label, r)
+    df_2[["cont_level"]] = f_cont_level(n = nrow(df_2), param = cont_level)
     
   }
   
@@ -78,6 +92,5 @@ sim_contam = function(n_contam, xlim, ylim, covariance, n_affected, radius){
   
   return(df_3)
 }
-
 
 

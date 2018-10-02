@@ -2,19 +2,29 @@
 contam_draw = function(data, spread, xlim, ylim){
   if (spread == "discrete") {
     ggplot() +
-      geom_point(data = data, aes(x = X, y = Y, color = label)) +
+      geom_point(data = data, aes(x = X, y = Y, shape = label, color = cont_level)) +
+      scale_color_gradient(name = "Contamination Level", low = "coral", high = "red4") +
       coord_fixed(ratio = 1, xlim = xlim, ylim = ylim) +
       theme_bw()
   } else if (spread == "continuous") {
     ggplot() +
       geom_point(data = subset(data, subset = data$label == "spot"),
-                 aes(x = X, y = Y, color = label)) +
+                 aes(x = X, y = Y, shape = label, color = cont_level)) +
+      scale_color_gradient(name = "Contamination Level", low = "coral", high = "red4") +
       geom_circle(
         data = subset(data, subset = data$label == "spot"),
         aes(x0 = X, y0 = Y, r = r), fill = "coral", alpha = 0.1) +
       coord_fixed(ratio = 1, xlim = xlim, ylim = ylim) +
-      theme_bw()
+      theme_bw() 
   }
+}
+
+## Draw the contamination level plot.
+contam_level_draw = function(spread_radius, LOC){
+  ggplot(data = data.frame(x = c(0, spread_radius)), aes(x = x))+
+    geom_line(stat = "function", fun = f_exp, args = list(spread_radius = spread_radius, LOC = LOC)) +
+    labs(x = "Distance from a contamination source", y = "Contamination contribution") +
+    theme_bw()
 }
 
 # Sampling plan plots
