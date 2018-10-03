@@ -16,6 +16,56 @@ naming_sp = function(n_sp, x_sp, y_sp, radius){
              r = r)
 }
 
+## Calculate the percent of contamination a source contributes to a sample point
+calc_perc_contam = function(df_dist, r, LOC){
+  f_exp(d = df_dist[["Distance"]], spread_radius = r, LOC = LOC)
+}
+
+# Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points.
+calc_dist = function(df){
+  
+  a = dist(x = df[ ,1:2], method = "euclidean") %>% as.matrix()
+  
+  sp_ind = which(df$label == "sample point")
+  
+  b = a[-sp_ind, sp_ind] %>%
+    melt(data = ., varnames = c("row_contam", "row_sp"), value.name = "Distance")
+  
+  return(b)
+}
+
+# Create a function that calculates contamination levels for each sample point and combine "contam_xy" and "sp_xy"
+gen_sim_data = function(df_contam, df_sp, spread_radius, LOC){
+  
+  ## Add the "cont_level" column to df_sp
+  df_sp[["cont_level"]] = NA
+  
+  ## Generate the combined coordinates of contamination and sample points
+  a = rbind(df_contam, df_sp)
+  rownames(a) = NULL
+  
+  ## Calculate the Euclidean distance between sample points and contamination points.
+  dist_contam_sp = calc_dist(a)
+  
+  ## Create a column that describes the contamination contribution of the source. Then match the row_contam with rows in contam_xy and show the corresponding cont_level. Calculate contamination contribution.
+  b = dist_contam_sp %>%
+    mutate(perc_contam = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC)) %>%
+    mutate(source_level = contam_xy$cont_level[.$row_contam],
+           source_contri = source_level * perc_contam)
+  
+  ## Sum up the source_contri for each sample point to represent the contamination level at that sample point
+  c = b %>%
+    group_by(row_sp) %>%
+    summarise(cont_level = sum(source_contri))
+  
+  ## Update the contamination level for each sample point
+  a$cont_level[c$row_sp] = c$cont_level
+  
+  return(a)
+}
+
+
+
 # Create a function that calculates the boundaries of each stratum
 calc_bounds = function(xlim, ylim, n_strata, by){
   if(by == "row"){
