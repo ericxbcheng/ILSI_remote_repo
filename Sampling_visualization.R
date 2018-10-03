@@ -77,23 +77,28 @@ sp_draw = function(method, data, spread, xlim, ylim, n_strata, by){
 overlay_draw_srs = function(data, spread, xlim, ylim){
   if(spread == "discrete"){
     ggplot() +
-      geom_point(data = data, aes(x = X, y = Y, color = label, shape = label)) +
-      scale_color_manual(values = c("coral", "cornflowerblue", "darkgreen")) +
-      scale_shape_manual(values = c(16, 16, 15)) +
+      geom_point(data = subset(data, subset = label == "sample point"), aes(x = X, y = Y, shape = label), color = "darkgreen") +
       geom_circle(data = subset(x = data, subset = label == "sample point"),
                   aes(x0 = X, y0 = Y, r = r),
                   fill = "darkgreen",
                   alpha = 0.1) +
+      geom_point(data = subset(data, subset = label != "sample point"), aes(x = X, y = Y, color = cont_level, shape = label)) +
+      scale_color_gradient(name = "Contamination Level", low = "orange", high = "red2") +
+      scale_shape_manual(values = c(15, 16, 17)) +
       coord_fixed(ratio = 1, xlim = xlim, ylim = ylim) +
       theme_bw()
   } else if (spread == "continuous"){
     ggplot() +
-      geom_point(data = subset(x = data, subset = label != "spread"), 
+      geom_point(data = subset(x = data, subset = label == "sample point"),
+                 aes(x = X, y = Y,
+                     shape = label),
+                 color = "darkgreen") +
+      geom_point(data = subset(x = data, subset = label == "spot"), 
                  aes(x = X, y = Y, 
-                     color = label, 
+                     color = cont_level, 
                      shape = label)) +
-      scale_color_manual(values = c("coral", "darkgreen")) +
-      scale_shape_manual(values = c(16, 15)) +
+      scale_color_gradient(name = "Contamination Level", low = "orange", high = "red2") +
+      scale_shape_manual(values = c(15, 16)) +
       geom_circle(data = subset(x = data, subset = label == "spot"),
                   aes(x0 = X, y0 = Y, r = r), 
                   fill = "coral", 
