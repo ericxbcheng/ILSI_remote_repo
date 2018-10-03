@@ -30,6 +30,7 @@ sessionInfo()
   * `y_lim` = the limits of the vertical axis  
   * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,10)`)
   * `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,10)`)  
+  * `cont_level` = a vector that indicates the mean contamination level (CFU/g or CFU/mL) and the standard deviation, assuming contamination level follows a log normal distribution. 
 
   **Mode 1: Discrete Spread** 
 
@@ -38,7 +39,8 @@ sessionInfo()
 
   **Mode 2: Continuous Spread**
 
-  * `spread_radius` = the radius of the contamination spread
+  * `spread_radius` = the radius of the contamination spread. 
+  * `LOC` = the limit of contribution of contamination. By default, it is set at 0.001.(Both `spread_radius` and `LOC` determine the shape of decay function that describes how much contamination from the source is contributed to a target point.)
 
 **Sampling Plan:**  
 
@@ -52,6 +54,7 @@ sessionInfo()
 n_contam = rpois(n = 1, lambda = 3)
 x_lim = c(0, 10)
 y_lim = c(0, 10)
+cont_level = c(10^7, 10)
 
 ### Mode 1
 n_affected = rpois(n = 1, lambda = 5)
@@ -59,6 +62,7 @@ covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
 
 ### Mode 2
 spread_radius = 2.5
+LOC = 10^(-3)
 
 ## Sampling plan
 n_sp = 15
@@ -67,53 +71,65 @@ n_strata = 5
 by = "row"
 ```
 
+3. Generate the simulation dataset.
+
 ```{r}
 # Generate the coordinates of contamination points
-contam_xy = sim_contam(n_contam = n_contam, xlim = x_lim, ylim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
+contam_xy = sim_contam(n_contam = n_contam, xlim = x_lim, ylim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius, cont_level = cont_level) 
 
 # Generate the coordinates of sample points
 sp_xy = sim_plan(method = "srs", n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius, by = by)
 
-# Generate the combined coordinates of contamination and sample points
-contam_sp_xy = rbind(contam_xy, sp_xy)
-rownames(contam_sp_xy) = NULL
+# Combine contam_xy and sp_xy
+contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC)
 ```
 
 ```{r}
+str(contam_sp_xy)
+
 summary(contam_sp_xy$label)
 ```
 
 ```{r}
-kable_styling(kable(subset(contam_sp_xy, select = -r), format = "html"), full_width = FALSE)
+kable_styling(kable(contam_sp_xy, format = "html"), full_width = FALSE)
 ```
-
-3. Calculate the Euclidean distance between sample points and contamination points. 
-
-```{r}
-calc_dist
-```
-
 
 ```{r, echo = FALSE}
-# # Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points.
-# calc_dist = function(df){
-#   
-#   a = dist(x = df[ ,1:2], method = "euclidean") %>% as.matrix()
-#   
-#   sp_ind = which(df$label == "sample point")
-#   
-#   b = a[-sp_ind, sp_ind] %>%
-#     melt(data = ., varnames = c("row_contam", "row_sp"), value.name = "Distance")
-#   
-#   return(b)
+# ## Calculate the percent of contamination a source contributes to a sample point
+# calc_perc_contam = function(df_dist, r, LOC){
+#   f_exp(d = df_dist[["Distance"]], spread_radius = r, LOC = LOC)
 # }
 ```
 
-```{r}
-dist_contam_sp = calc_dist(contam_sp_xy)
+```{r, echo = FALSE}
+# gen_sim_data = function(df_contam, df_sp, spread_radius, LOC){
+#   
+#    ## Generate the combined coordinates of contamination and sample points
+#   a = rbind(df_contam, df_sp)
+#   rownames(a) = NULL
+# 
+#   ## Calculate the Euclidean distance between sample points and contamination points.
+#   dist_contam_sp = calc_dist(a)
+#   
+#   ## Create a column that describes the contamination contribution of the source. Then match the row_contam with rows in contam_xy and show the corresponding cont_level. Calculate contamination contribution.
+#   b = dist_contam_sp %>%
+#     mutate(perc_contam = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC)) %>%
+#     mutate(source_level = contam_xy$cont_level[.$row_contam],
+#            source_contri = source_level * perc_contam)
+# 
+#   ## Sum up the source_contri for each sample point to represent the contamination level at that sample point
+#   c = b %>%
+#     group_by(row_sp) %>%
+#     summarise(cont_level = sum(source_contri))
+# 
+#   ## Update the contamination level for each sample point
+#   a$cont_level[c$row_sp] = c$cont_level
+#   
+#   return(a)
+# }
 ```
 
-4. Evaluate the performance of the sampling plan.
+4. Evaluate the rate of detection (ROD) of the sampling plan.
 
 **Mode 1: Discrete Spread:**  
 
@@ -129,48 +145,6 @@ cover
 calc_ROD
 ```
 
-
-```{r, echo = FALSE}
-# # Create a function to idenfity points that falls within a certain distance from another point
-# cover = function(df_dist, df_coord, r, method){
-#   
-#   ## Find the points that meet the distance criterion
-#   a = df_dist %>%
-#     filter(Distance <= r)
-#   
-#   ## Create columns that identify each observation
-#   contam_ID = df_coord$ID[a$row_contam]
-#   
-#   b = substr(x = contam_ID, start = 3, stop = 3)
-#   contam_type = ifelse(test = b == "0", yes = "spot", no = "spread")
-#   
-#   sp_ID = df_coord$ID[a$row_sp]
-#   
-#   c = cbind(a, contam_ID, sp_ID, contam_type)
-#   
-#   ## Create output based on the method.
-#   if(method == "discrete") {
-#     d = c %>%
-#       arrange(.data = ., contam_ID)
-#   } else if (method == "continuous") {
-#     d = c %>%
-#       dplyr::filter(contam_type == "spot") %>%
-#       arrange(.data = ., contam_ID)
-#   }
-#   
-#   return(d)
-# }
-# 
-# # Create a function that calculates the rate of detection
-# calc_ROD = function(df_cover, df_contam, n_sp, method){
-#   if(method == "discrete"){
-#     length(unique(df_cover$contam_ID)) / nrow(df_contam)
-#   } else if (method == "continuous"){
-#     length(unique(df_cover$sp_ID)) / n_sp
-#   }
-# }
-```
-
 ```{r}
 # Mode 1: Discrete Spread
 cover_dis = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = sp_radius, spread = "discrete")
@@ -178,7 +152,6 @@ cover_dis = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = sp_radi
 # Mode 2: Continuous Spread
 cover_cont = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = spread_radius, spread = "continuous")
 ```
-
 
 # Results  
 

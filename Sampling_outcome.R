@@ -1,15 +1,4 @@
-# Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points.
-calc_dist = function(df){
-  
-  a = dist(x = df[ ,1:2], method = "euclidean") %>% as.matrix()
-  
-  sp_ind = which(df$label == "sample point")
-  
-  b = a[-sp_ind, sp_ind] %>%
-    melt(data = ., varnames = c("row_contam", "row_sp"), value.name = "Distance")
-  
-  return(b)
-}
+
 
 # Create a function to idenfity points that falls within a certain distance from another point
 cover = function(df_dist, df_coord, r, spread){
