@@ -20,9 +20,18 @@ contam_draw = function(data, spread, xlim, ylim){
 }
 
 ## Draw the contamination level plot.
-contam_level_draw = function(spread_radius, LOC){
+contam_level_draw = function(method, spread_radius, LOC){
+  
+  if(method == "exp"){
+    f_chosen = f_exp
+  } else if (method == "norm"){
+    f_chosen = f_norm
+  } else {
+    stop("Method is undefined. Choose 'exp' or 'norm'.")
+  }
+  
   ggplot(data = data.frame(x = c(0, spread_radius)), aes(x = x))+
-    geom_line(stat = "function", fun = f_exp, args = list(spread_radius = spread_radius, LOC = LOC)) +
+    geom_line(stat = "function", fun = f_chosen, args = list(spread_radius = spread_radius, LOC = LOC)) +
     labs(x = "Distance from a contamination source", y = "Contamination contribution") +
     theme_bw()
 }
