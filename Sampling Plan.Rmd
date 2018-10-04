@@ -79,7 +79,7 @@ summary(contam_xy$label)
 n_sp = 15
 sp_radius = 1
 n_strata = 5
-by = "column"
+by = "row"
 ```
 
 4. Show all the functions that are necessary for generating sampling plans.
@@ -127,13 +127,13 @@ gen_sim_data
     
     c) `method = "ss"` generates a systematic sampling plan with `n_sp`, `sp_radius` and `by`.
     
-        i) Split the field into unit squares.
+        i) Split the field into `N` unit squares ($N = length \times width$).
         
-        ii) Calculate `k`. $k = (the number of unit squares) / (the number of sample points)$.
+        ii) Calculate `k`. $k = \frac {N} {n_{sp}}$.
         
         iii) In the first unit square, randomly select a sample point whose coordinates follow a uniform distribution.
         
-        iv) Generate the rest of the sample points either along the x-axis or y-axis with the equation: $$x = x_0 + (n-1)k, n = 1, 2, ..., n_sp $$
+        iv) Generate the rest of the sample points either along the x-axis or y-axis with the equation: $$x = x_0 + (n-1)k, n = 1, 2, ..., n_{sp} $$
         
         v) Arrange the sample points so that they distribute evenly within the field.
 
@@ -159,7 +159,7 @@ str(sp_xy)
     d) Update the `cont_level` column for sample points by matching row numbers.
 
 ```{r}
-contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC)
+contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = "norm")
 ```
 
 # Results

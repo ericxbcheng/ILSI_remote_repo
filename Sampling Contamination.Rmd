@@ -61,8 +61,12 @@ LOC = 10^(-3)
     
     b) If `n_affected` > 0, then generate contamination spread points that distribute around the contamination spots. The contamination spread points follow a bivariate normal distribution. If `n_affected` = 0, then skip this step.
     
-    c) Generate contamination levels for contamination spots. The contamination levels follow a log normal distribution. The spread of contamination level is defined by an exponential function `f_exp`. This function is affected by distance, `spread_radius` and `LOC`.
-    
+    c) Generate contamination levels for contamination spots. The contamination levels follow a log normal distribution. The spread of contamination level is defined by a decay function. This function is affected by distance, `spread_radius` and `LOC`.
+        
+        i) `f_exp()`: $$ f(d) = exp(- \frac {d} {\theta}) $$, where d = distance, $\theta = - \frac {spread radius} {ln(LOC)}$
+        
+        ii) `f_norm()`: $$ f(d) = exp(- \frac {spread radius^2} {\sigma^2})$$, where d = distance, $\sigma = \sqrt {- {\frac {spreadradius^2} {ln(LOC)}}}$.
+        
     d) Check for any points that fall outside the perimeter of the field.
     
     e) Remove those outliers.
@@ -105,9 +109,12 @@ plot_contam_cont
 ```
 
 ```{r}
-contam_level_draw(spread_radius = spread_radius, LOC = LOC)
-```
+## Choose an exponential function to describe the contamination spread
+contam_level_draw(method = "exp", spread_radius = spread_radius, LOC = LOC)
 
+## Choose a normal distribution-like function to describe the contamination spread
+contam_level_draw(method = "norm", spread_radius = spread_radius, LOC = LOC)
+```
 
 2. Visualization of the covariance matrix that describes the contamination spread.
 

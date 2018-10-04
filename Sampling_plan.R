@@ -17,8 +17,17 @@ naming_sp = function(n_sp, x_sp, y_sp, radius){
 }
 
 ## Calculate the percent of contamination a source contributes to a sample point
-calc_perc_contam = function(df_dist, r, LOC){
-  f_exp(d = df_dist[["Distance"]], spread_radius = r, LOC = LOC)
+calc_perc_contam = function(df_dist, r, LOC, fun){
+  
+  if(fun == "exp"){
+    f_chosen = f_exp
+  } else if(fun == "norm"){
+    f_chosen = f_norm
+  } else {
+    stop("Decay function is undefined. Choose 'exp' or 'norm'. ")
+  }
+  
+  f_chosen(x = df_dist[["Distance"]], spread_radius = r, LOC = LOC)
 }
 
 # Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points.
@@ -35,7 +44,7 @@ calc_dist = function(df){
 }
 
 # Create a function that calculates contamination levels for each sample point and combine "contam_xy" and "sp_xy"
-gen_sim_data = function(df_contam, df_sp, spread_radius, LOC){
+gen_sim_data = function(df_contam, df_sp, spread_radius, LOC, fun){
   
   ## Add the "cont_level" column to df_sp
   df_sp[["cont_level"]] = NA
@@ -49,7 +58,7 @@ gen_sim_data = function(df_contam, df_sp, spread_radius, LOC){
   
   ## Create a column that describes the contamination contribution of the source. Then match the row_contam with rows in contam_xy and show the corresponding cont_level. Calculate contamination contribution.
   b = dist_contam_sp %>%
-    mutate(perc_contam = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC)) %>%
+    mutate(perc_contam = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC, fun = fun)) %>%
     mutate(source_level = contam_xy$cont_level[.$row_contam],
            source_contri = source_level * perc_contam)
   

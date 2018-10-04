@@ -20,14 +20,24 @@ f_cont_level = function(n, param){
 }
 
 ## Calculate the contamination contribution using an exponential function.
-f_exp = function(d, spread_radius, LOC){
+f_exp = function(x, spread_radius, LOC){
   
   theta = - spread_radius/log(LOC)
-  exp(-d/theta)
+  exp(-x/theta)
 }
+
+## Calculate the contamination contribution using a normal distribution-like function
+f_norm = function(x, spread_radius, LOC){
+  sigma = sqrt(-spread_radius^2/log(LOC))
+  exp(-x^2/sigma^2)
+} 
 
 ## The simulation function for contamination spot and its spread
 sim_contam = function(n_contam, xlim, ylim, covariance, n_affected, radius, cont_level){
+  
+  if(n_contam == 0){
+    stop("n_contam = 0. Please select another n_contam.")
+  }
   
   ## Generate a matrix that contains contamination coordinates
   x = runif(n = n_contam, min = xlim[1], max = xlim[2])
