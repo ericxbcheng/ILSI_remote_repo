@@ -106,10 +106,10 @@ sim_contam = function(n_contam, xlim, ylim, covariance, n_affected, radius, cont
   }
   
   # Remove points that are outside the perimeter.
-  out = which(df_2[ ,1] < xlim[1] | 
-                df_2[ , 1] > xlim[2] | 
-                df_2[,2] < ylim[1] | 
-                df_2[,2] > ylim[2], arr.ind = TRUE)[1]
+  out = which(df_2$X < xlim[1] | 
+                df_2$X > xlim[2] | 
+                df_2$Y < ylim[1] | 
+                df_2$Y > ylim[2])
   if(is.na(out) == FALSE){
     df_3 = df_2[-out, ]
   } else {
