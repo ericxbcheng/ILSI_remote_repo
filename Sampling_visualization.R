@@ -19,8 +19,8 @@ contam_draw = function(data, spread, xlim, ylim){
   }
 }
 
-## Draw the contamination level plot.
-contam_level_draw = function(method, spread_radius, LOC){
+## Draw the contamination level plot for continuous spread in a 2D plane.
+contam_level_draw_2d = function(method, spread_radius, LOC){
   
   if(method == "exp"){
     f_chosen = f_exp
@@ -35,6 +35,52 @@ contam_level_draw = function(method, spread_radius, LOC){
     labs(x = "Distance from a contamination source", y = "Contamination contribution") +
     theme_bw()
 }
+
+## Draw thw contamination level plot for continuous spread in a 3D space
+contam_level_draw_3d = function(method, df_contam, xlim, ylim, spread_radius, LOC, interactive = FALSE){
+  
+  ### Extract the coordinates of contamination spots
+  spot_coord = df_contam %>%
+    dplyr::filter(label == "spot") %>%
+    dplyr::select(c(X, Y, cont_level))
+  
+  ### Create a grid that has the dimensions of the field
+  a = expand.grid(X = seq(xlim[1],xlim[2],0.1), Y = seq(ylim[1], ylim[2],0.1))
+  
+  ### Calculate the contamination contribution from each contamination spot on each point in the field and put them in a matrix
+  b = mapply(FUN = f_density, spot_coord$X, spot_coord$Y, MoreArgs = list(method = method, x = a$X, y = a$Y, spread_radius = spread_radius, LOC = LOC))
+  
+  ### Calculate the contamination level distribution from each contamination spot
+  I = matrix(data = 1, nrow = nrow(b))
+  scalars = I %*% spot_coord$cont_level
+  c = scalars * b
+  
+  ### Calculate the contamination level at each point in the field by summing up the contamination contributed by all sources
+  d = rowSums(c)
+  a$Z = log10(d)
+  
+  ### Make the 3D plot
+  if(interactive == FALSE){
+    scatter3D(x = a$X, y = a$Y, z = a$Z, colvar = a$Z, zlab = "log CFU/mL")
+  } else {
+    plot_ly(x = a$X, y = a$Y, z = a$Z, color = a$Z,type = "scatter3d") 
+  }
+}
+
+## Wrap-up funciton
+contam_level_draw = function(dimension, method, spread_radius, LOC, df_contam, xlim, ylim, ...){
+  if(dimension == "2d"){
+    contam_level_draw_2d(method = method, spread_radius = spread_radius, LOC = LOC)
+    
+  } else if (dimension == "3d"){
+    contam_level_draw_3d(method = method, df_contam = df_contam, spread_radius = spread_radius, LOC = LOC, xlim = xlim, ylim = ylim, ...)
+    
+  } else {
+    stop("we do not support this dimension. Please choose '2d' or '3d'.")
+  }
+}
+
+
 
 # Sampling plan plots
 
