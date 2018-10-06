@@ -13,6 +13,7 @@ output: html_document
 source(file = "Sampling_libraries.R")
 source(file = "Sampling_contamination.R")
 source(file = "Sampling_visualization.R")
+#library(plotly)
 ```
 
 ```{r}
@@ -61,11 +62,11 @@ LOC = 10^(-3)
     
     b) If `n_affected` > 0, then generate contamination spread points that distribute around the contamination spots. The contamination spread points follow a bivariate normal distribution. If `n_affected` = 0, then skip this step.
     
-    c) Generate contamination levels for contamination spots. The contamination levels follow a log normal distribution. The spread of contamination level is defined by a decay function. This function is affected by distance, `spread_radius` and `LOC`.
+    c) Generate contamination levels for contamination spots. The contamination levels follow a log normal distribution ($X\~logN(`r cont_level[1]`, `r cont_level[2]`)$). The spread of contamination level is defined by a decay function. This function is affected by distance, `spread_radius` and `LOC`.
         
-        i) `f_exp()`: $$ f(d) = exp(- \frac {d} {\theta}) $$, where d = distance, $\theta = - \frac {spread radius} {ln(LOC)}$
+        i) `f_exp()`: $$ f(d) = exp(- \frac {d} {\theta}) $$, where d = distance, $\theta = - \frac {spread\_radius} {ln(LOC)}$
         
-        ii) `f_norm()`: $$ f(d) = exp(- \frac {spread radius^2} {\sigma^2})$$, where d = distance, $\sigma = \sqrt {- {\frac {spreadradius^2} {ln(LOC)}}}$.
+        ii) `f_norm()`: $$ f(d) = exp(- \frac {d^2} {\sigma^2})$$, where d = distance, $\sigma = \sqrt {- {\frac {spread\_radius^2} {ln(LOC)}}}$.
         
     d) Check for any points that fall outside the perimeter of the field.
     
@@ -110,15 +111,17 @@ plot_contam_cont
 
 ```{r}
 ## Choose an exponential function to describe the contamination spread
-contam_level_draw(method = "exp", spread_radius = spread_radius, LOC = LOC)
+contam_level_draw(dimension = "2d", method = "exp", spread_radius = spread_radius, LOC = LOC)
+
+contam_level_draw(dimension = "3d", method = "exp", spread_radius = spread_radius, LOC = LOC, df_contam = contam_xy, xlim = x_lim, ylim = y_lim, interactive = FALSE)
 
 ## Choose a normal distribution-like function to describe the contamination spread
-contam_level_draw(method = "norm", spread_radius = spread_radius, LOC = LOC)
+contam_level_draw(dimension = "2d", method = "norm", spread_radius = spread_radius, LOC = LOC)
+
+contam_level_draw(dimension = "3d", method = "norm", spread_radius = spread_radius, LOC = LOC, df_contam = contam_xy, xlim = x_lim, ylim = y_lim, interactive = FALSE)
 ```
 
-2. Visualization of the covariance matrix that describes the contamination spread.
-
-```{r}
+```{r, eval = FALSE, echo = FALSE}
 ### Visualize the covariance matrix
 test = mvrnorm(n = 10000, mu = c(5,5), Sigma = covar_mat)
 test = as.data.frame(test)

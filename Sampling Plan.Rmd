@@ -152,9 +152,19 @@ str(sp_xy)
 
     a) Calculate the Euclidean distance between sample points and contamination points. 
     
-    b) Use the distance and f_exp() to calculate the contamination contribution from each contamination point.
+    b) Use the distance and decay function to calculate the contamination contribution from each contamination point.
     
     c) Sum up the contamination contribution from all source points for each sample point.
+
+        $$X_{sp_i} =  X_{cp1}*f(d_{i1})+ X_{cp2}*f(d_{i2})+ ...+X_{cpn}*f(d_{in})$$
+        
+        ,where $X_{sp_i}$ = contamination level of `sample point i`,  
+        
+        $X_{cpj}$ = contamination level of `contamination point j` (`j` = 1, 2, ..., n),   
+        
+        $d_{ij}$ = distance between `sample point i` and `contamination point j`,
+        
+        `f()` = decay function that calculates the contribution of contamination.
     
     d) Update the `cont_level` column for sample points by matching row numbers.
 

@@ -32,6 +32,25 @@ f_norm = function(x, spread_radius, LOC){
   exp(-x^2/sigma^2)
 } 
 
+## Calculate the contamination contribution on a 2D plane
+f_density = function(method, x, y, x0, y0, spread_radius, LOC){
+  
+  d = sqrt((x-x0)^2 + (y-y0)^2)
+  
+  if(method == "exp"){
+    
+    f_exp(x = d, spread_radius = spread_radius, LOC = LOC)
+    
+  } else if (method == "norm"){
+    
+    f_norm(x = d, spread_radius = spread_radius, LOC = LOC)
+    
+  } else {
+    stop("Method is undefined. Please choose 'exp' or 'norm'. ")
+  }
+}
+
+
 ## The simulation function for contamination spot and its spread
 sim_contam = function(n_contam, xlim, ylim, covariance, n_affected, radius, cont_level){
   
