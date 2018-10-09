@@ -168,31 +168,28 @@ str(sp_xy)
     
     d) Update the `cont_level` column for sample points by matching row numbers.
 
-```{r}
-## Add the "cont_level" column to df_sp. Remember, the cont_level for sample points only exist for the continuous spread case, so we should calculate the contamination contributions from contamination spots only.
+```{r, eval = FALSE, echo = FALSE}
+## Debug
 
-  sp_xy[["cont_level"]] = NA
+sp_xy[["cont_level"]] = NA
   
   ## Generate the combined coordinates of contamination and sample points
   a = rbind(contam_xy, sp_xy)
   rownames(a) = NULL
+  df = a
   
-  ## Calculate the Euclidean distance between sample points and contamination points.
-  dist_contam_sp = calc_dist(a)
+a = dist(x = df[ ,1:2], method = "euclidean") %>% as.matrix()
   
-  ## Create a column that describes the contamination contribution of the source. Then match the row_contam with rows in contam_xy and show the corresponding cont_level. Calculate contamination contribution.
-  b = dist_contam_sp %>%
-    mutate(perc_contam = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC, fun = fun)) %>%
-    mutate(source_level = contam_xy$cont_level[.$row_contam],
-           source_contri = source_level * perc_contam)
+  sp_ind = which(df$label == "sample point")
   
-  ## Sum up the source_contri for each sample point to represent the contamination level at that sample point
-  c = b %>%
-    group_by(row_sp) %>%
-    summarise(cont_level = sum(source_contri))
+  if(spotONLY == FALSE){
+    cont_ind = which(df$label %in% c("spot", "spread"))
+  } else {
+    cont_ind = which(df$label == "spot")
+  }
   
-  ## Update the contamination level for each sample point
-  a$cont_level[c$row_sp] = c$cont_level
+  b = a[cont_ind, sp_ind, drop = FALSE] %>% 
+    melt(data = ., varnames = c("row_contam", "row_sp"), value.name = "Distance")
 ```
 
 
@@ -200,6 +197,11 @@ str(sp_xy)
 ```{r}
 contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = "norm")
 ```
+
+```{r}
+kable_styling(kable(x = contam_sp_xy, format = "html"), full_width = FALSE)
+```
+
 
 # Results
 

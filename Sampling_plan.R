@@ -30,14 +30,20 @@ calc_perc_contam = function(df_dist, r, LOC, fun){
   f_chosen(x = df_dist[["Distance"]], spread_radius = r, LOC = LOC)
 }
 
-# Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points.
-calc_dist = function(df){
+# Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points. If spotONLY == TRUE, then only calculate the distance between spots and sample points
+calc_dist = function(df, spotONLY = FALSE){
   
   a = dist(x = df[ ,1:2], method = "euclidean") %>% as.matrix()
   
   sp_ind = which(df$label == "sample point")
   
-  b = a[-sp_ind, sp_ind] %>%
+  if(spotONLY == FALSE){
+    cont_ind = which(df$label %in% c("spot", "spread"))
+  } else {
+    cont_ind = which(df$label == "spot")
+  }
+  
+  b = a[cont_ind, sp_ind, drop = FALSE] %>% 
     melt(data = ., varnames = c("row_contam", "row_sp"), value.name = "Distance")
   
   return(b)
@@ -54,12 +60,12 @@ gen_sim_data = function(df_contam, df_sp, spread_radius, LOC, fun){
   rownames(a) = NULL
   
   ## Calculate the Euclidean distance between sample points and contamination points.
-  dist_contam_sp = calc_dist(a)
+  dist_contam_sp = calc_dist(a, spotONLY = TRUE)
   
   ## Create a column that describes the contamination contribution of the source. Then match the row_contam with rows in contam_xy and show the corresponding cont_level. Calculate contamination contribution.
   b = dist_contam_sp %>%
     mutate(perc_contam = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC, fun = fun)) %>%
-    mutate(source_level = contam_xy$cont_level[.$row_contam],
+    mutate(source_level = df_contam$cont_level[.$row_contam],
            source_contri = source_level * perc_contam)
   
   ## Sum up the source_contri for each sample point to represent the contamination level at that sample point
@@ -164,9 +170,9 @@ sim_plan_ss = function(xlim, ylim, n_sp, radius, by){
 # A function that includes all kinds of sampling plan
 sim_plan = function(method, n_sp, xlim, ylim, radius, n_strata, by){
   if(method == "srs"){
-    sim_plan_srs(n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = radius)
+    sim_plan_srs(n_sp = n_sp, xlim = xlim, ylim = ylim, radius = radius)
   } else if (method == "strs"){
-    sim_plan_strs(n_sp = n_sp, n_strata = n_strata, by = by, xlim = x_lim, ylim = y_lim, radius = radius)
+    sim_plan_strs(n_sp = n_sp, n_strata = n_strata, by = by, xlim = xlim, ylim = ylim, radius = radius)
   } else if (method == "ss"){
     sim_plan_ss(xlim = xlim, ylim = ylim, n_sp = n_sp, radius = radius, by = by)
   } else {
