@@ -27,12 +27,11 @@ sessionInfo()
 * `y_lim` = the limits of the vertical axis  
 * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,10)`)
 * `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,10)`)  
-* `cont_level` = a vector that indicates the mean contamination level (CFU/g or CFU/mL) and the standard deviation, assuming contamination level follows a log normal distribution. 
-
+* `cont_level` = a vector that indicates the mean contamination level (logCFU/g or logCFU/mL) and the standard deviation in a log scale, assuming contamination level follows a log normal distribution $ln(cont\_level)$~$N(\mu, \sigma^2)$. 
 
 **Mode 1: Discrete Spread**
 
-* `n_affected` = the number of affected plants near the contamination spot, which follows a Poisson distribution (`Pois(lambda = 5)`)   
+* `n_affected` = the number of affected plants near the contamination spot, which follows a Poisson distribution ($Pois(\lambda = 5)$)   
 * `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) = 0.25, var(Y) = 0.25 and cov(X, Y) = 0  
 
 **Mode 2: Continuous Spread**
@@ -45,7 +44,7 @@ sessionInfo()
 n_contam = rpois(n = 1, lambda = 3)
 x_lim = c(0, 10)
 y_lim = c(0, 10)
-cont_level = c(10^7, 10)
+cont_level = c(7, 1)
 
 ### Mode 1
 n_affected = rpois(n = 1, lambda = 5)
@@ -62,7 +61,7 @@ LOC = 10^(-3)
     
     b) If `n_affected` > 0, then generate contamination spread points that distribute around the contamination spots. The contamination spread points follow a bivariate normal distribution. If `n_affected` = 0, then skip this step.
     
-    c) Generate contamination levels for contamination spots. The contamination levels follow a log normal distribution ($X\~logN(`r cont_level[1]`, `r cont_level[2]`)$). The spread of contamination level is defined by a decay function. This function is affected by distance, `spread_radius` and `LOC`.
+    c) Generate contamination levels for contamination spots. The contamination levels follow a log normal distribution ($ln(X)$~$N(`r cont_level[1]`, `r cont_level[2]`)$). The spread of contamination level is defined by a decay function. This function is affected by distance, `spread_radius` and `LOC`.
         
         i) `f_exp()`: $$ f(d) = exp(- \frac {d} {\theta}) $$, where d = distance, $\theta = - \frac {spread\_radius} {ln(LOC)}$
         

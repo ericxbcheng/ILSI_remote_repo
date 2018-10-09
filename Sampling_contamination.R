@@ -14,9 +14,9 @@ naming_spot = function(df, spot){
   cbind(df, c)
 }
 
-## Create a function to generate contamination levels
+## Create a function to generate contamination levels. Remember that param contains log10(mean) and log10(sd). And log() in R means log(..., base = exp(1)).
 f_cont_level = function(n, param){
-  rlnorm(n = n, meanlog = log(param[1]), sdlog = log(param[2]))
+  rlnorm(n = n, meanlog = log(10^param[1]), sdlog = log(10^param[2]))
 }
 
 ## Calculate the contamination contribution using an exponential function.
