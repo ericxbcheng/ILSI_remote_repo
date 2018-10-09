@@ -40,20 +40,19 @@ calc_ROD = function(df_cover, df_contam, n_sp, spread){
 }
 
 # Create a function that runs the simulation once and gives an ROD
-sim_outcome = function(n_contam, xlim, ylim, n_affected, covar_mat, spread_radius, method, n_sp, sp_radius, spread, n_strata, by){
+sim_outcome = function(n_contam, xlim, ylim, n_affected, covar_mat, spread_radius, method, n_sp, sp_radius, spread, n_strata, by, cont_level, LOC, fun){
   
   # Generate the coordinates of contamination points
-  contam_xy = sim_contam(n_contam = n_contam, xlim = xlim, ylim = ylim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius) 
+  contam_xy = sim_contam(n_contam = n_contam, xlim = xlim, ylim = ylim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius, cont_level = cont_level) 
   
   # Generate the coordinates of sample points
-  sp_xy = sim_plan(method = method, n_sp = n_sp, xlim = xlim, ylim = ylim, r = sp_radius, n_strata = n_strata, by = by)
+  sp_xy = sim_plan(method = method, n_sp = n_sp, xlim = xlim, ylim = ylim, radius = sp_radius, n_strata = n_strata, by = by)
   
   # Generate the combined coordinates of contamination and sample points
-  contam_sp_xy = rbind(contam_xy, sp_xy)
-  rownames(contam_sp_xy) = NULL
+  contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun)
   
   # Calculate the distance between sample points and contamination points
-  dist_contam_sp = calc_dist(contam_sp_xy)
+  dist_contam_sp = calc_dist(df = contam_sp_xy, spotONLY = FALSE)
   
   # Determine whether contamination is detected and calculate ROD
   if(spread == "discrete"){

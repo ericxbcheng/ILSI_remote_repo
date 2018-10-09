@@ -81,7 +81,7 @@ contam_xy = sim_contam(n_contam = n_contam, xlim = x_lim, ylim = y_lim, covarian
 sp_xy = sim_plan(method = "srs", n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius, by = by)
 
 # Combine contam_xy and sp_xy
-contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC)
+contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = "norm")
 ```
 
 ```{r}
