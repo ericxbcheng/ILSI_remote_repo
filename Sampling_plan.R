@@ -68,13 +68,16 @@ gen_sim_data = function(df_contam, df_sp, spread_radius, LOC, fun){
     mutate(source_level = df_contam$cont_level[.$row_contam],
            source_contri = source_level * perc_contam)
   
-  ## Sum up the source_contri for each sample point to represent the contamination level at that sample point
+  ## Sum up the source_contri for each sample point to represent the actual contamination level at that sample point
   c = b %>%
     group_by(row_sp) %>%
     summarise(cont_level = sum(source_contri))
   
+  ## Simulate the sampling error, assuming sampling error follows a log normal distribution with meanlog = 0 and sdlog = 1.
+  d = rlnorm(n = nrow(c), meanlog = log(1), sdlog = log(10))
+  
   ## Update the contamination level for each sample point
-  a$cont_level[c$row_sp] = c$cont_level
+  a$cont_level[c$row_sp] = c$cont_level + d
   
   return(a)
 }

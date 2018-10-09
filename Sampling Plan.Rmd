@@ -27,7 +27,7 @@ sessionInfo()
 * `y_lim` = the limits of the vertical axis  
 * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,10)`)
 * `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,10)`)  
-* `cont_level` = a vector that indicates the mean contamination level (CFU/g or CFU/mL) and the standard deviation, assuming contamination level follows a log normal distribution. 
+* `cont_level` = a vector that indicates the mean contamination level (logCFU/g or logCFU/mL) and the standard deviation in a log scale, assuming contamination level follows a log normal distribution $ln(cont\_level)$~$N(\mu, \sigma^2)$.  
 
 ** Mode 1: Discrete Spread** 
 
@@ -44,7 +44,7 @@ sessionInfo()
 n_contam = rpois(n = 1, lambda = 3)
 x_lim = c(0, 10)
 y_lim = c(0, 10)
-cont_level = c(10^7, 10)
+cont_level = c(7, 1)
 
 ### Mode 1
 n_affected = rpois(n = 1, lambda = 5)
@@ -158,7 +158,7 @@ str(sp_xy)
 
         $$X_{sp_i} =  X_{cp1}*f(d_{i1})+ X_{cp2}*f(d_{i2})+ ...+X_{cpn}*f(d_{in})$$
         
-        ,where $X_{sp_i}$ = contamination level of `sample point i`,  
+        , where $X_{sp_i}$ = contamination level of `sample point i`,  
         
         $X_{cpj}$ = contamination level of `contamination point j` (`j` = 1, 2, ..., n),   
         
@@ -166,7 +166,10 @@ str(sp_xy)
         
         `f()` = decay function that calculates the contribution of contamination.
     
-    d) Update the `cont_level` column for sample points by matching row numbers.
+    d) Update the `cont_level` column for sample points by matching row numbers. Add in sampling error, assuming the sampling error follows a         log normal distribution with mean = 0 and sd = 1.
+        
+        $$X_{sp\_with\_error_i}=X_{sp_i}+\epsilon_i$$
+        , where $i = 1,2,...,n_{sp}$; $ln(\epsilon)$~$N(\mu=0, \sigma^2 =1)$ 
 
 ```{r, eval = FALSE, echo = FALSE}
 ## Debug
