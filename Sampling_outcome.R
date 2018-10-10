@@ -7,24 +7,23 @@ cover = function(df_dist, df_coord, r, spread){
   a = df_dist %>%
     filter(Distance <= r)
   
-  ## Create columns that identify each observation
-  contam_ID = df_coord$ID[a$row_contam]
-  
-  b = substr(x = contam_ID, start = 3, stop = 3)
-  contam_type = ifelse(test = b == "0", yes = "spot", no = "spread")
+  ## Match the points with corresponding metadata
+  b = df_coord[a$row_contam, c("X", "Y","ID", "label", "cont_level"), drop = FALSE]
   
   sp_ID = df_coord$ID[a$row_sp]
   
-  c = cbind(a, contam_ID, sp_ID, contam_type)
+  sp_cont_level = df_coord$cont_level[a$row_sp]
+  
+  c = cbind(a, b, sp_ID, sp_cont_level)
   
   ## Create output based on the type of spread.
   if(spread == "discrete") {
     d = c %>%
-      arrange(.data = ., contam_ID)
+      arrange(.data = ., ID)
   } else if (spread == "continuous") {
     d = c %>%
-      dplyr::filter(contam_type == "spot") %>%
-      arrange(.data = ., contam_ID)
+      dplyr::filter(label == "spot") %>%
+      arrange(.data = ., ID)
   }
   
   return(d)
@@ -33,7 +32,7 @@ cover = function(df_dist, df_coord, r, spread){
 # Create a function that calculates the rate of detection
 calc_ROD = function(df_cover, df_contam, n_sp, spread){
   if(spread == "discrete"){
-    length(unique(df_cover$contam_ID)) / nrow(df_contam)
+    length(unique(df_cover$ID)) / nrow(df_contam)
   } else if (spread == "continuous"){
     length(unique(df_cover$sp_ID)) / n_sp
   }

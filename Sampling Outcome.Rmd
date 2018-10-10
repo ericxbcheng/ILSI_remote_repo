@@ -15,6 +15,7 @@ source("Sampling_plan.R")
 source("Sampling_contamination.R")
 source("Sampling_outcome.R")
 source("Sampling_visualization.R")
+# library(plotly)
 ```
 
 ```{r}
@@ -30,7 +31,7 @@ sessionInfo()
   * `y_lim` = the limits of the vertical axis  
   * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,10)`)
   * `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,10)`)  
-  * `cont_level` = a vector that indicates the mean contamination level (CFU/g or CFU/mL) and the standard deviation, assuming contamination level follows a log normal distribution. 
+  * `cont_level` = a vector that indicates the mean contamination level (logCFU/g or logCFU/mL) and the standard deviation in a log scale, assuming contamination level follows a log normal distribution $ln(cont\_level)$~$N(\mu, \sigma^2)$. 
 
   **Mode 1: Discrete Spread** 
 
@@ -41,6 +42,7 @@ sessionInfo()
 
   * `spread_radius` = the radius of the contamination spread. 
   * `LOC` = the limit of contribution of contamination. By default, it is set at 0.001.(Both `spread_radius` and `LOC` determine the shape of decay function that describes how much contamination from the source is contributed to a target point.)
+  * `fun` = the decay function that describes the spread. It takes either "exp" or "norm".
 
 **Sampling Plan:**  
 
@@ -54,7 +56,7 @@ sessionInfo()
 n_contam = rpois(n = 1, lambda = 3)
 x_lim = c(0, 10)
 y_lim = c(0, 10)
-cont_level = c(10^7, 10)
+cont_level = c(7, 1)
 
 ### Mode 1
 n_affected = rpois(n = 1, lambda = 5)
@@ -63,6 +65,7 @@ covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
 ### Mode 2
 spread_radius = 2.5
 LOC = 10^(-3)
+fun = "norm"
 
 ## Sampling plan
 n_sp = 15
@@ -81,7 +84,7 @@ contam_xy = sim_contam(n_contam = n_contam, xlim = x_lim, ylim = y_lim, covarian
 sp_xy = sim_plan(method = "srs", n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius, by = by)
 
 # Combine contam_xy and sp_xy
-contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = "norm")
+contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun)
 ```
 
 ```{r}
@@ -146,6 +149,8 @@ calc_ROD
 ```
 
 ```{r}
+dist_contam_sp = calc_dist(df = contam_sp_xy, spotONLY = FALSE)
+
 # Mode 1: Discrete Spread
 cover_dis = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = sp_radius, spread = "discrete")
 
@@ -182,15 +187,13 @@ cover_cont = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = spread
 ```{r}
 # Systematic sampling
 plot_contam_dis = contam_draw(data = contam_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
-plot_sp_dis = sp_draw(method = "strs", data = sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
-plot_overlay_dis = overlay_draw(method = "strs", data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
+plot_sp_dis = sp_draw(method = "srs", data = sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
+plot_overlay_dis = overlay_draw(method = "srs", data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
 
 plot_contam_dis
 plot_sp_dis
 plot_overlay_dis
 ```
-
-
 
 ```{r}
 # Show the contamination points that are detected by sampling.
@@ -203,7 +206,7 @@ cover_dis %>%
 calc_ROD(df_cover = cover_dis, df_contam = contam_xy, n_sp = n_sp, spread = "discrete")
 ```
 
-* Therefore, we detected `r length(unique(cover_dis$contam_ID))` out of `r nrow(contam_xy)` contamination points. The rate of detection is `r length(unique(cover_dis$contam_ID)) / nrow(contam_xy)`.
+* Therefore, we detected `r length(unique(cover_dis$ID))` out of `r nrow(contam_xy)` contamination points. The rate of detection is `r length(unique(cover_dis$ID)) / nrow(contam_xy)`.
 
 
 2. **Mode 2: Continuous Spread**
@@ -217,6 +220,10 @@ plot_overlay_cont = overlay_draw(method = "srs", data = contam_sp_xy, spread = "
 plot_contam_cont
 plot_sp_cont
 plot_overlay_cont
+```
+
+```{r}
+contam_level_draw(dimension = "3d", method = fun, spread_radius = spread_radius, LOC = LOC, df_contam = contam_xy, xlim = x_lim, ylim = y_lim, interactive = FALSE)
 ```
 
 ```{r}
