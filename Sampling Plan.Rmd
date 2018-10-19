@@ -38,6 +38,7 @@ sessionInfo()
 
 * `spread_radius` = the radius of the contamination spread
 * `LOC` = the limit of contribution of contamination. By default, it is set at 0.001.(Both `spread_radius` and `LOC` determine the shape of decay function that describes how much contamination from the source is contributed to a target point.)
+* `fun` = the decay function that describes the spread. It takes either "exp" or "norm".
 
 ```{r}
 ## The input parameters
@@ -53,6 +54,7 @@ covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
 ### Mode 2
 spread_radius = 2.5
 LOC = 10^(-3)
+fun = "exp"
 ```
 
 ```{r}
@@ -195,10 +197,8 @@ a = dist(x = df[ ,1:2], method = "euclidean") %>% as.matrix()
     melt(data = ., varnames = c("row_contam", "row_sp"), value.name = "Distance")
 ```
 
-
-
 ```{r}
-contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = "norm")
+contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun)
 ```
 
 ```{r}
@@ -308,3 +308,6 @@ plot_overlay_dis_ss
 plot_overlay_cont_ss
 ```
 
+```{r}
+contam_level_draw(dimension = "3d", method = fun, spread_radius = spread_radius, LOC = LOC, df_contam = contam_xy, xlim = x_lim, ylim = y_lim, interactive = FALSE)
+```
