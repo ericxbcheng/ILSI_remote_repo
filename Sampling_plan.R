@@ -171,12 +171,12 @@ sim_plan_ss = function(xlim, ylim, n_sp, radius, by){
 }
 
 # A function that includes all kinds of sampling plan
-sim_plan = function(method, n_sp, xlim, ylim, radius, n_strata, by){
-  if(method == "srs"){
+sim_plan = function(method_sp, n_sp, xlim, ylim, radius, n_strata, by){
+  if(method_sp == "srs"){
     sim_plan_srs(n_sp = n_sp, xlim = xlim, ylim = ylim, radius = radius)
-  } else if (method == "strs"){
+  } else if (method_sp == "strs"){
     sim_plan_strs(n_sp = n_sp, n_strata = n_strata, by = by, xlim = xlim, ylim = ylim, radius = radius)
-  } else if (method == "ss"){
+  } else if (method_sp == "ss"){
     sim_plan_ss(xlim = xlim, ylim = ylim, n_sp = n_sp, radius = radius, by = by)
   } else {
     stop("Sampling method does not exist. Try 'srs', 'strs', or 'ss'.")
