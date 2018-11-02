@@ -118,10 +118,10 @@ sp_draw_strs = function(data, spread, xlim, ylim, n_strata, by){
 }
 
 ### A wrapper function
-sp_draw = function(method, data, spread, xlim, ylim, n_strata, by){
-  if(method %in% c("srs", "ss")){
+sp_draw = function(method_sp, data, spread, xlim, ylim, n_strata, by){
+  if(method_sp %in% c("srs", "ss")){
     sp_draw_srs(data = data, spread = spread, xlim = xlim, ylim = ylim)
-  } else if (method == "strs"){
+  } else if (method_sp == "strs"){
     sp_draw_strs(data = data, spread = spread, xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
   }
 }
@@ -177,11 +177,28 @@ overlay_draw_strs = function(data, spread, xlim, ylim, n_strata, by){
 }
 
 ### A wrapper function
-overlay_draw = function(method, data, spread, xlim, ylim, n_strata, by){
-  if(method %in% c("srs", "ss")){
+overlay_draw = function(method_sp, data, spread, xlim, ylim, n_strata, by){
+  if(method_sp %in% c("srs", "ss")){
     overlay_draw_srs(data = data, spread = spread, xlim = xlim, ylim = ylim)
-  } else if (method == "strs"){
+  } else if (method_sp == "strs"){
     overlay_draw_strs(data = data, spread = spread, xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
   }
 }
 
+# Create a function that draws the contamination level of samples and shows the microbiological criteria
+assay_draw = function(data, M, m, method_det){
+  temp = data.frame(Thresholds = c("M", "m", "LOD"), 
+                    val = c(M, m, get_LOD(method_det = method_det)))
+  
+  ggplot() +
+    geom_col(data = subset(x = data, subset = label == "sample point"), aes(x = ID, y = cont_level), fill = "darkgrey") +
+    geom_text(data = subset(x = data, subset = label == "sample point"), 
+              aes(x = ID, y = cont_level, 
+                  label = round(cont_level, digits = 2)), 
+              position = position_nudge(y = 0.2)) +
+    geom_hline(data = temp, aes(yintercept = val, color = Thresholds), size = 1.5) +
+    scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000), label = scientific_format()) +
+    scale_color_manual(values = c("#00BA38", "#D89000", "#F8766D" )) +
+    labs(x = "Sample point", y = "Contamination level (CFU/g)") +
+    theme_bw() 
+}
