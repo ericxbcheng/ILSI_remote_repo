@@ -1,4 +1,4 @@
-sim_iterate = function(n_sim, n_contam, xlim, ylim, n_affected, covar_mat, spread_radius, method, n_sp, sp_radius, spread, n_strata, by){
+sim_iterate = function(n_sim, n_contam, xlim, ylim, n_affected, covar_mat, spread_radius, method, n_sp, sp_radius, spread, n_strata, by, cont_level, LOC, fun){
   
   # Initialize a numeric vector to store RODs
   ROD = vector(mode = "numeric", length = n_sim)
@@ -17,7 +17,10 @@ sim_iterate = function(n_sim, n_contam, xlim, ylim, n_affected, covar_mat, sprea
       sp_radius = sp_radius,
       spread = spread,
       n_strata = n_strata,
-      by = by
+      by = by,
+      cont_level = cont_level,
+      LOC = LOC,
+      fun = fun
     )
   }
   
