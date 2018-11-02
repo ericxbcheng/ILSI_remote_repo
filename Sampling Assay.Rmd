@@ -1,0 +1,245 @@
+---
+title: 'Sampling: Assay'
+author: "Xianbin Cheng"
+date: "October 31, 2018"
+output: html_document
+---
+
+# Method
+
+1. Load libraries and source R code.
+
+```{r, message = FALSE, warning = FALSE}
+source("Sampling_libraries.R")
+source("Sampling_contamination.R")
+source("Sampling_plan.R")
+source("Sampling_visualization.R")
+```
+
+```{r}
+sessionInfo()
+```
+
+2. List important parameters from `Sampling_contamination.R` and `Sampling_plan.R`.
+
+**Contamination:**  
+
+  * `n_contam` = the number of contamination points 
+  * `x_lim` = the limits of the horizontal axis  
+  * `y_lim` = the limits of the vertical axis  
+  * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,10)`)
+  * `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,10)`)  
+  * `cont_level` = a vector that indicates the mean contamination level (logCFU/g or logCFU/mL) and the standard deviation in a log scale, assuming contamination level follows a log normal distribution $ln(cont\_level)$~$N(\mu, \sigma^2)$. 
+
+  **Mode 1: Discrete Spread** 
+
+  * `n_affected` = the number of affected plants near the contamination spot, which follows a Poisson distribution (`Pois(lambda = 5)`)   
+  * `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) =     0.25, var(Y) = 0.25 and cov(X, Y) = 0  
+
+  **Mode 2: Continuous Spread**
+
+  * `spread_radius` = the radius of the contamination spread. 
+  * `LOC` = the limit of contribution of contamination. By default, it is set at 0.001.(Both `spread_radius` and `LOC` determine the shape of decay function that describes how much contamination from the source is contributed to a target point.)
+  * `fun` = the decay function that describes the spread. It takes either "exp" or "norm".
+
+**Sampling Plan:**  
+  
+  * `method_sp` = the sampling method (SRS, STRS, SS)
+  * `n_sp` = the number of sampling points
+  * `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
+  * `n_strata` = the number of strata (applicable to *Stratified random sampling*)
+  * `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to *Stratified random sampling*) **OR** the side along which a sample is taken every k steps (applicable to *Systematic sampling*).
+
+```{r}
+## Contamination
+n_contam = rpois(n = 1, lambda = 3)
+x_lim = c(0, 10)
+y_lim = c(0, 10)
+cont_level = c(7, 1)
+
+### Mode 1
+n_affected = rpois(n = 1, lambda = 5)
+covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
+
+### Mode 2
+spread_radius = 2.5
+LOC = 10^(-3)
+fun = "exp"
+
+## Sampling plan
+method_sp = "srs"
+n_sp = 5
+sp_radius = 1
+n_strata = 5
+by = "row"
+```
+
+3. Generate the simulation dataset.
+
+```{r}
+# Generate the coordinates of contamination points
+contam_xy = sim_contam(n_contam = n_contam, xlim = x_lim, ylim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius, cont_level = cont_level) 
+
+# Generate the coordinates of sample points
+sp_xy = sim_plan(method_sp = method_sp, n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius, by = by)
+
+# Combine contam_xy and sp_xy
+contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun)
+```
+
+```{r}
+str(contam_sp_xy)
+
+summary(contam_sp_xy$label)
+```
+
+4. Define parameters.
+  
+  * `case` = 1 ~ 15 cases that define the stringency of the sampling plan.
+  * Attributes plans:
+      + `n` = number of analytical units (25g)
+      + `c` = maximum allowable number of analytical units yielding positive results
+      + `m` = microbial count or concentration above which an analytical unit is considered positive
+      + `M` = microbial count or concentration, if any analytical unit is above `M`, the lot is rejected.
+  * `method_det` = method of detection
+      + Plating: LOD = 2500 CFU/g
+      + Enrichment: LOD = 1 CFU/g
+  
+```{r}
+# Create a function that returns the proper attribute plan based on the case
+get_attr_plan = function(case, m, M){
+  stopifnot(is.double(case), is.double(m), is.double(M))
+  stopifnot(m >=0, M >= 0)
+  
+  ## Select the case
+  a = switch(EXPR = case, 
+         `1` = list(n = 5, c = 3),
+         `2` = list(n = 5, c = 2),
+         `3` = list(n = 5, c = 1),
+         `4` = list(n = 5, c = 3),
+         `5` = list(n = 5, c = 2),
+         `6` = list(n = 5, c = 1),
+         `7` = list(n = 5, c = 2),
+         `8` = list(n = 5, c = 1),
+         `9` = list(n = 10, c = 1),
+         `10` = list(n = 5, c = 0),
+         `11` = list(n = 10, c = 0),
+         `12` = list(n = 20, c = 0),
+         `13` = list(n = 15, c = 0),
+         `14` = list(n = 30, c = 0),
+         `15` = list(n = 60, c = 0),
+         stop("Unknown case", call. = FALSE)
+    )
+  
+  ## Make sure 2-class cases have m = M = 0
+  if(case %in% 10:15){
+    if(M != 0 | m != 0){
+      warning(paste0("Case ", case, ": 2-class plan. m and M are coerced to 0." ))
+      m = M = 0
+    }
+  }
+  
+  ## Append m and M to the list of n_asp and c
+  b = append(x = a, values = list(m = m, M = M))
+  
+  return(b)
+}
+
+# Create a function that provides a LOD value corresponding to the detection method. 
+get_LOD = function(method_det){
+  if(method_det == "plating"){
+    2500
+  } else if (method_det == "enrichment"){
+    1
+  } else {
+    stop("Unknown detection method")
+  }
+}
+```
+
+```{r}
+# Define parameters: e.g. S.aureus in shrimps
+case = 2
+m = 50
+M = 500
+method_det = "enrichment"
+```
+
+```{r}
+## No pooling
+
+# Attribute plan
+get_attr_plan(case = case, m = m, M = M)
+
+# LOD
+get_LOD(method_det = method_det)
+```
+
+5. Decision: accept or reject lot.
+
+```{r}
+# Create a function that decides whether to accept or reject the lot
+lot_decision = function(data, case, m, M, method_det){
+  
+  ## Get the appropriate attribute plan
+  micro_ct = get_attr_plan(case = case, m = m, M = M)
+  
+  ## Get LOD for the chosen method of detection
+  LOD = get_LOD(method_det = method_det)
+  
+  ## Subset out the contamination levels at the sample points
+  a = subset(x = data, subset = label == "sample point", select = cont_level, drop = FALSE)
+  
+  ## Check if n_sp == n in the microbiological criteria
+  if(nrow(a) != micro_ct[["n"]]){
+    warning("n_sp does not equal to n.")
+  }
+  
+  ## Find out the sample points with contamination level >= LOD
+  b = a >= LOD
+  
+  ## Decision: reject lot if any sample has contamination level >= M or if the number of samples with contamination level >= m is above c
+  if(any(a[b, ] >= micro_ct[["M"]])){
+    cat("Reject lot.")
+  } else {
+    if(sum(a[b, ] >= micro_ct[["m"]]) > micro_ct[["c"]]){
+      cat("Reject lot.")
+    } else {
+      cat("Accept lot.")
+    }
+  }
+}
+```
+
+# Result
+
+1. The data of sample points.
+
+```{r}
+kable_styling(kable(x = subset(x = contam_sp_xy, subset = label == "sample point"), format = "html"), full_width = FALSE)
+```
+
+2. Visualization.
+
+```{r}
+overlay_draw(method = method_sp, data = contam_sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
+```
+
+```{r}
+temp = data.frame(Thresholds = c("M", "m", "LOD"), 
+                  val = c(M, m, get_LOD(method_det = method_det)))
+
+ggplot() +
+  geom_col(data = subset(x = contam_sp_xy, subset = label == "sample point"), aes(x = ID, y = cont_level)) +
+  geom_hline(data = temp, aes(yintercept = val, color = Thresholds), size = 1.5) +
+  scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000)) +
+  labs(x = "Sample point", y = "Contamination level (CFU/g)") +
+  theme_bw() 
+```
+
+3. Decision.
+
+```{r}
+lot_decision(data = contam_sp_xy, case = case, m = m, M = M, method_det = method_det)
+```
+
