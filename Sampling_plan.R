@@ -82,8 +82,6 @@ gen_sim_data = function(df_contam, df_sp, spread_radius, LOC, fun){
   return(a)
 }
 
-
-
 # Create a function that calculates the boundaries of each stratum
 calc_bounds = function(xlim, ylim, n_strata, by){
   if(by == "row"){
@@ -182,3 +180,4 @@ sim_plan = function(method_sp, n_sp, xlim, ylim, radius, n_strata, by){
     stop("Sampling method does not exist. Try 'srs', 'strs', or 'ss'.")
   }
 }
+

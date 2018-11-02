@@ -46,10 +46,23 @@ sessionInfo()
 
 **Sampling Plan:**  
 
+  * `method_sp` = the sampling method (SRS, STRS, SS)
   * `n_sp` = the number of sampling points
   * `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
   * `n_strata` = the number of strata (applicable to *Stratified random sampling*)
   * `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to *Stratified random sampling*) **OR** the side along which a sample is taken every k steps (applicable to *Systematic sampling*).
+  * `case` = 1 ~ 15 cases that define the stringency of the sampling plan.
+  * Attributes plans:
+      + `n` = number of analytical units (25g)
+      + `c` = maximum allowable number of analytical units yielding positive results
+      + `m` = microbial count or concentration above which an analytical unit is considered positive
+      + `M` = microbial count or concentration, if any analytical unit is above `M`, the lot is rejected.
+
+**Sampling Assay:**
+  
+  * `method_det` = method of detection
+      + Plating: LOD = 2500 CFU/g
+      + Enrichment: LOD = 1 CFU/g
 
 ```{r}
 ## Contamination
@@ -65,13 +78,20 @@ covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
 ### Mode 2
 spread_radius = 2.5
 LOC = 10^(-3)
-fun = "norm"
+fun = "exp"
 
 ## Sampling plan
-n_sp = 15
+method_sp = "srs"
+n_sp = 5
 sp_radius = 1
 n_strata = 5
 by = "row"
+case = 2
+m = 50
+M = 500
+
+## Assay
+method_det = "plating"
 ```
 
 3. Generate the simulation dataset.
@@ -81,7 +101,7 @@ by = "row"
 contam_xy = sim_contam(n_contam = n_contam, xlim = x_lim, ylim = y_lim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius, cont_level = cont_level) 
 
 # Generate the coordinates of sample points
-sp_xy = sim_plan(method = "srs", n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius, by = by)
+sp_xy = sim_plan(method_sp = method_sp, n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius, by = by)
 
 # Combine contam_xy and sp_xy
 contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun)
@@ -95,41 +115,6 @@ summary(contam_sp_xy$label)
 
 ```{r}
 kable_styling(kable(contam_sp_xy, format = "html"), full_width = FALSE)
-```
-
-```{r, echo = FALSE}
-# ## Calculate the percent of contamination a source contributes to a sample point
-# calc_perc_contam = function(df_dist, r, LOC){
-#   f_exp(d = df_dist[["Distance"]], spread_radius = r, LOC = LOC)
-# }
-```
-
-```{r, echo = FALSE}
-# gen_sim_data = function(df_contam, df_sp, spread_radius, LOC){
-#   
-#    ## Generate the combined coordinates of contamination and sample points
-#   a = rbind(df_contam, df_sp)
-#   rownames(a) = NULL
-# 
-#   ## Calculate the Euclidean distance between sample points and contamination points.
-#   dist_contam_sp = calc_dist(a)
-#   
-#   ## Create a column that describes the contamination contribution of the source. Then match the row_contam with rows in contam_xy and show the corresponding cont_level. Calculate contamination contribution.
-#   b = dist_contam_sp %>%
-#     mutate(perc_contam = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC)) %>%
-#     mutate(source_level = contam_xy$cont_level[.$row_contam],
-#            source_contri = source_level * perc_contam)
-# 
-#   ## Sum up the source_contri for each sample point to represent the contamination level at that sample point
-#   c = b %>%
-#     group_by(row_sp) %>%
-#     summarise(cont_level = sum(source_contri))
-# 
-#   ## Update the contamination level for each sample point
-#   a$cont_level[c$row_sp] = c$cont_level
-#   
-#   return(a)
-# }
 ```
 
 4. Evaluate the rate of detection (ROD) of the sampling plan.
@@ -162,37 +147,8 @@ cover_cont = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = spread
 
 1. **Mode 1: Discrete Spread**
 
-```{r, echo = FALSE}
-# Simple random sampling
-# plot_contam_dis = contam_draw(data = contam_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
-# plot_sp_dis = sp_draw(data = sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
-# plot_overlay_dis = overlay_draw(data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
-# 
-# plot_contam_dis
-# plot_sp_dis
-# plot_overlay_dis
-```
-
-```{r, echo = FALSE}
-# Stratified random sampling
-# plot_contam_dis = contam_draw(data = contam_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
-# plot_sp_dis = sp_draw(method = "strs", data = sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
-# plot_overlay_dis = overlay_draw(method = "strs", data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
-# 
-# plot_contam_dis
-# plot_sp_dis
-# plot_overlay_dis
-```
-
 ```{r}
-# Systematic sampling
-plot_contam_dis = contam_draw(data = contam_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
-plot_sp_dis = sp_draw(method = "srs", data = sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
-plot_overlay_dis = overlay_draw(method = "srs", data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
-
-plot_contam_dis
-plot_sp_dis
-plot_overlay_dis
+overlay_draw(method_sp = method_sp, data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
 ```
 
 ```{r}
@@ -212,14 +168,7 @@ calc_ROD(df_cover = cover_dis, df_contam = contam_xy, n_sp = n_sp, spread = "dis
 2. **Mode 2: Continuous Spread**
 
 ```{r}
-# Continuous Spread
-plot_contam_cont = contam_draw(data = contam_xy, spread = "continuous", xlim = x_lim, ylim = y_lim)
-plot_sp_cont = sp_draw(method = "srs", data = sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim)
-plot_overlay_cont = overlay_draw(method = "srs", data = contam_sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim)
-
-plot_contam_cont
-plot_sp_cont
-plot_overlay_cont
+overlay_draw(method_sp = method_sp, data = contam_sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim)
 ```
 
 ```{r}
@@ -239,7 +188,7 @@ calc_ROD(df_cover = cover_cont, df_contam = contam_xy, n_sp = n_sp, spread = "co
 
 * Therefore, `r length(unique(cover_cont$sp_ID))` out of `r n_sp` sample points detected contamination. The rate of detection is `r length(unique(cover_cont$sp_ID)) / n_sp`.
 
-```{r, eval= FALSE}
+```{r, eval= FALSE, echo = FALSE}
 pdf(file = "Sampling Plots SS.pdf")
   plot_contam_dis
   plot_sp_dis
