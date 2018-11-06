@@ -9,13 +9,17 @@ naming_sp = function(n_sp, x_sp, y_sp, radius){
   ## Generate a column for sample radius
   r = rep(radius, times = n_sp)
   
-  data.frame(X = x_sp,
+  df = data.frame(X = x_sp,
              Y = y_sp,
              ID = ID,
              label = "sample point",
              r = r,
              cont_level = NA,
              dis_level = NA)
+  
+  df$ID = as.character(df$ID)
+  
+  return(df)
 }
 
 ## Calculate the percent of contamination a source contributes to a sample point
