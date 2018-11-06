@@ -116,6 +116,9 @@ sim_contam = function(n_contam, xlim, ylim, covariance, n_affected, radius, cont
   # Reset the row names
   rownames(df_3) = NULL
   
+  # Add a column for contamination level in discrete spread mode. For spots and spreads, the two types of level are identical.
+  df_3[["dis_level"]] = df_3[["cont_level"]]
+  
   return(df_3)
 }
 
