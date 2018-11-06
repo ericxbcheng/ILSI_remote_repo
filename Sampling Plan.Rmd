@@ -77,17 +77,20 @@ summary(contam_xy$label)
 * `n_strata` = the number of strata (applicable to *Stratified random sampling*)
 * `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to *Stratified random sampling*) **OR** the side along which a sample is taken every k steps (applicable to *Systematic sampling*).
 
+**Mode 1: Discrete Spread**   
+* `m_kbar` = averaged kernel weight (g)
+* `m_sp` = the analytical sample weight (25 g)
+* `conc_good` = concentration of toxin in healthy kernels
+
 ```{r}
 n_sp = 15
 sp_radius = 1
 n_strata = 5
 by = "row"
 
-
 m_kbar = 0.3
 m_sp = 25
 conc_good = 0.1
-
 ```
 
 4. Show all the functions that are necessary for generating sampling plans.
@@ -156,81 +159,105 @@ sp_xy = sim_plan(method = "ss", n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius 
 str(sp_xy)
 ```
 
-6. Combine the `sp_xy` and `contam_xy`.
+6. Calculate the contamination level of the sample points. Combine the `sp_xy` and `contam_xy`.
 
-    a) Calculate the Euclidean distance between sample points and contamination points. 
+    1) Calculate the Euclidean distance between sample points and contamination points. 
     
-    b) Use the distance and decay function to calculate the contamination contribution from each contamination point.
+    a) **Discrete Spread:**
     
-    c) Sum up the contamination contribution from all source points for each sample point.
-
-        $$X_{sp_i} =  X_{cp1}*f(d_{i1})+ X_{cp2}*f(d_{i2})+ ...+X_{cpn}*f(d_{in})$$
+        i) Use the distance to keep the sample points that fall within `sp_radius`.
         
-        , where $X_{sp_i}$ = contamination level of `sample point i`,  
+        ii) Calculate the contamination level of each sample point.
         
-        $X_{cpj}$ = contamination level of `contamination point j` (`j` = 1, 2, ..., n),   
+        $$C_i = \frac {\sum \limits_{j=1}^n C_{ij}\times \bar{m_{k}}} {m_{sp}} = \frac {\bar {m_k}} {m_{sp}} \times [C_{i1} + C_{i2} + ... + C_{ik} + (n_k - k)\times C_{good}] $$ 
+        
+        , where $C_i$ = contamination level of `sample point i`, 
+                        
+        $C_{ij}$ = contamination level of `kernel j` in `sample point i`,
+        
+        $\bar m_k$ = averaged weight of a single kernel,
+        
+        $m_{sp}$ = weight of an analytical unit,
+                        
+        $n_k$ = the total number of kernels in an analytical unit, calculated by $\frac {m_{sp}} {\bar m_k}$,
+                        
+        $k$ = the number of contamination spots or spreads in this sample,
+                        
+        $C_{good}$ = background contamination level.
+        
+    b) **Continuous Spread:**
+    
+        i) Use the distance and decay function to calculate the contamination contribution from each contamination point.
+        
+        ii) Sum up the contamination contribution from all source points for each sample point.
+        
+        $$C_{sp_i} = \sum \limits_{j=1}^n C_{cpj} \times f(d_{ij}) =  C_{cp1}\times f(d_{i1})+ C_{cp2}\times f(d_{i2})+ ...+C_{cpn}\times f(d_{in})$$ 
+        
+        , where $C_{sp_i}$ = contamination level of `sample point i`,  
+        
+        $C_{cpj}$ = contamination level of `contamination point j` (`j` = 1, 2, ..., n),   
         
         $d_{ij}$ = distance between `sample point i` and `contamination point j`,
         
         `f()` = decay function that calculates the contribution of contamination.
-    
-    d) Update the `cont_level` column for sample points by matching row numbers. Add in sampling error, assuming the sampling error follows a         log normal distribution with mean = 0 and sd = 1.
         
-        $$X_{sp\_with\_error_i}=X_{sp_i}+\epsilon_i$$
-        , where $i = 1,2,...,n_{sp}$; $ln(\epsilon)$~$N(\mu=0, \sigma^2 =1)$ 
+    2) Add in sampling error to the sample points, assuming the sampling error follows a log normal distribution with mean = 0 and sd = 1. In the discrete spread scenario, sampling error is only added to the sample points with at least one contamination point. Samples that didn't capture any contamination point will not get sampling error.
+        
+    $$C_{sp\_with\_error_i}=C_{sp_i}+\epsilon_i$$
+    , where $i = 1,2,...,n_{sp}$; $ln(\epsilon)$~$N(\mu=0, \sigma^2 =1)$ 
 
 ```{r, eval = FALSE, echo = FALSE}
-gen_sim_data = function(df_contam, df_sp, dist, spread_radius, sp_radius, LOC, fun, m_kbar, m_sp, conc_good){
-
-  ### Calculate the cont_level (continuous spread)
-    # Subset the dist_contam_sp to keep the rows that show distance between spots and sample points
-    # Calculate the percent contribution based on distance
-    # Attach the source contamination level
-    # Calculate the contamination level at each sample point, which is source level * percent contribution
-    #Sum up the source_contri for each sample point to represent the actual contamination level at that sample point
-
-  a = dist %>%
-    dplyr::filter(.data = ., label == "spot") %>%
-    mutate(perc_contri = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC, fun = fun),
-           source_level = df_contam$cont_level[match(x = .$ID_contam, table = df_contam$ID)],
-           source_contri = source_level * perc_contri) %>%
-    group_by(ID_sp) %>%
-    summarise(cont_level = sum(source_contri))
-
-  ### Calculate the dis_level (discrete spread)
-    # Estimate the number of kernels in each sample
-
-  n_k = round(x = m_sp/m_kbar, digits = 0)
-
-    # Subset the dist_contam_sp to keep rows where the contamination points fall within the sampling region
-    # Attach the source contamination level
-    # Calculate the sum of contamination point levels in each sample, and record the number of points in each sample
-    # Calculate the dis_level in each sample
-
-  b = dist %>%
-    dplyr::filter(Distance <= sp_radius) %>%
-    mutate(source_level = df_contam$dis_level[match(x = .$ID_contam, table = df_contam$ID)]) %>%
-    group_by(ID_sp) %>%
-    summarise(obs = n(),
-              sum_level = sum(source_level)) %>%
-    mutate(dis_level = m_kbar/m_sp*(sum_level + (n_k - obs) * conc_good))
-  
-  ### Define sampling error
-  c = rlnorm(n = nrow(df_sp), meanlog = 0, sdlog = 1)
-
-  ### Combine everything, fill the NAs with the corresponding contamination level.
-  df = rbind(df_contam, df_sp)
-  
-  # Add sampling error 
-  df$cont_level[match(x = a$ID_sp, table = df$ID)] = a$cont_level + c
-  df$dis_level[match(x = b$ID_sp, table = df$ID)] = b$dis_level + c[length(b$dis_level)]
-
-  if(anyNA(df$dis_level)){
-    df$dis_level[is.na(df$dis_level)] = conc_good
-  }
-
-  return(df)
-}
+# gen_sim_data = function(df_contam, df_sp, dist, spread_radius, sp_radius, LOC, fun, m_kbar, m_sp, conc_good){
+# 
+#   ### Calculate the cont_level (continuous spread)
+#     # Subset the dist_contam_sp to keep the rows that show distance between spots and sample points
+#     # Calculate the percent contribution based on distance
+#     # Attach the source contamination level
+#     # Calculate the contamination level at each sample point, which is source level * percent contribution
+#     #Sum up the source_contri for each sample point to represent the actual contamination level at that sample point
+# 
+#   a = dist %>%
+#     dplyr::filter(.data = ., label == "spot") %>%
+#     mutate(perc_contri = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC, fun = fun),
+#            source_level = df_contam$cont_level[match(x = .$ID_contam, table = df_contam$ID)],
+#            source_contri = source_level * perc_contri) %>%
+#     group_by(ID_sp) %>%
+#     summarise(cont_level = sum(source_contri))
+# 
+#   ### Calculate the dis_level (discrete spread)
+#     # Estimate the number of kernels in each sample
+# 
+#   n_k = round(x = m_sp/m_kbar, digits = 0)
+# 
+#     # Subset the dist_contam_sp to keep rows where the contamination points fall within the sampling region
+#     # Attach the source contamination level
+#     # Calculate the sum of contamination point levels in each sample, and record the number of points in each sample
+#     # Calculate the dis_level in each sample
+# 
+#   b = dist %>%
+#     dplyr::filter(Distance <= sp_radius) %>%
+#     mutate(source_level = df_contam$dis_level[match(x = .$ID_contam, table = df_contam$ID)]) %>%
+#     group_by(ID_sp) %>%
+#     summarise(obs = n(),
+#               sum_level = sum(source_level)) %>%
+#     mutate(dis_level = m_kbar/m_sp*(sum_level + (n_k - obs) * conc_good))
+# 
+#   ### Define sampling error
+#   c = rlnorm(n = nrow(df_sp), meanlog = 0, sdlog = 1)
+# 
+#   ### Combine everything, fill the NAs with the corresponding contamination level.
+#   df = rbind(df_contam, df_sp)
+# 
+#   # Add sampling error
+#   df$cont_level[match(x = a$ID_sp, table = df$ID)] = a$cont_level #+ c
+#   df$dis_level[match(x = b$ID_sp, table = df$ID)] = b$dis_level #+ c[length(b$dis_level)]
+# 
+#   if(anyNA(df$dis_level)){
+#     df$dis_level[is.na(df$dis_level)] = conc_good
+#   }
+# 
+#   return(df)
+# }
 ```
 
 ```{r}
@@ -248,7 +275,7 @@ kable_styling(kable(x = contam_sp_xy, format = "html"), full_width = FALSE)
 
 1. Show the simulated contamination.
 
-```{r}
+```{r, eval = FALSE}
 # Mode 1: Discrete Spread
 plot_contam_dis = contam_draw(data = contam_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
 
@@ -262,76 +289,16 @@ plot_contam_cont
 
 2. Show the sample points and sample regions.
 
-```{r, echo = FALSE}
-# Simple random sampling
-# plot_sp_dis_srs = sp_draw_srs(data = sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
-# 
-# plot_sp_cont_srs = sp_draw_srs(data = sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim)
-```
-
-```{r, echo = FALSE}
-# # Sampling plan for continuous spread
-# plot_sp_dis_srs
-# 
-# # Sampling plan for discrete spread
-# plot_sp_cont_srs
-```
-
-```{r, echo = FALSE}
-# Stratified random sampling
-# plot_sp_dis_strs = sp_draw(method = "strs", data = sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
-# 
-# plot_sp_cont_strs = sp_draw(method = "strs", data = sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
-```
-
-```{r, echo = FALSE}
-# plot_sp_dis_strs
-# 
-# plot_sp_cont_strs
-```
-
-```{r}
+```{r, eval = FALSE}
 # Systematic sampling
 plot_sp_dis_ss = sp_draw(method = "ss", data = sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, by = by)
-
 plot_sp_cont_ss = sp_draw(method = "ss", data = sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim, by = by)
-```
 
-```{r}
 plot_sp_dis_ss
-
 plot_sp_cont_ss
 ```
 
 3. Overlay the sampling plan on the simulated contamination plot.
-
-```{r}
-# Simple random sampling
-# plot_overlay_cont = overlay_draw(method = "srs", data = contam_sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim)
-# 
-# plot_overlay_dis = overlay_draw(method = "srs", data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
-```
-
-```{r}
-# # Sampling plan for continuous spread
-# plot_overlay_cont
-# # 
-# # # Sampling plan for discrete spread
-# plot_overlay_dis
-```
-
-```{r}
-# Stratified random sampling
-# plot_overlay_dis_strs = overlay_draw(method = "strs", data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
-# 
-# plot_overlay_cont_strs = overlay_draw(method = "strs", data = contam_sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
-```
-
-```{r}
-# plot_overlay_dis_strs
-# 
-# plot_overlay_cont_strs
-```
 
 ```{r}
 # Systematic sampling
