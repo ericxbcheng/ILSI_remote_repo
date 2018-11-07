@@ -39,43 +39,77 @@ get_attr_plan = function(case, m, M){
 
 # Create a function that provides a LOD value corresponding to the detection method. 
 get_LOD = function(method_det){
-  if(method_det == "plating"){
-    2500
-  } else if (method_det == "enrichment"){
-    1
+  switch(EXPR = method_det,
+         "plating" = 2500,
+         "enrichment" = 1,
+         "ELISA aflatoxin" = 1,
+         stop("Unknown detection method", call. = FALSE))
+}
+
+# Create a function that makes decisions for continuous spread scenarios
+decision_cont = function(df, LOD, case, m, M){
+  
+  ## Get the appropriate attribute plan
+  micro_ct = get_attr_plan(case = case, m = m, M = M)
+  
+  ## Check if n_sp == n in the microbiological criteria
+  if(nrow(df) != micro_ct[["n"]]){
+    warning("n_sp does not equal to n.")
+  }
+  
+  ## Find out the sample points with contamination level >= LOD
+  conc = df[["cont_level"]]
+  detected = conc >= LOD
+  
+  ## Decision: reject lot if any sample has contamination level >= M or if the number of samples with contamination level >= m is above c
+  if(!any(detected)){
+    cat("Accept lot. Microbial load < LOD.")
   } else {
-    stop("Unknown detection method")
+    
+    if(any(conc[detected] >= micro_ct[["M"]])){
+      cat("Reject lot. At least 1 sample has contamination level >= M.")
+    } else if (sum(conc[detected] >= micro_ct[["m"]]) > micro_ct[["c"]]){
+      cat("Reject lot. The number of positive samples is > c.")
+    } else {
+      cat("Accept lot.")
+    }
+  } 
+}
+
+# Create a function that makes decision for discrete spread scenarios
+decision_dis = function(df, LOD, Mc){
+  
+  ## Calculate the mean concentration of all samples
+  c_bar = mean(df[["dis_level"]])
+  
+  ## Determine whether c_bar is above LOD. If it is >= LOD, then determine if it exceeds Mc.
+  if(c_bar < LOD){
+    cat("Accept lot. Mean sample concentration < LOD.")
+  } else {
+    if(c_bar >= Mc){
+      cat("Reject lot. Mean sample concentration =", c_bar)
+    } else {
+      cat("Accept lot. Mean sample concentration =", c_bar)
+    }
   }
 }
 
 # Create a function that decides whether to accept or reject the lot
-lot_decision = function(data, case, m, M, method_det){
-  
-  ## Get the appropriate attribute plan
-  micro_ct = get_attr_plan(case = case, m = m, M = M)
+lot_decision = function(data, case, m, M, Mc, spread, method_det){
   
   ## Get LOD for the chosen method of detection
   LOD = get_LOD(method_det = method_det)
   
   ## Subset out the contamination levels at the sample points
-  a = subset(x = data, subset = label == "sample point", select = cont_level, drop = FALSE)
+  a = subset(x = data, subset = label == "sample point", select = c(cont_level, dis_level), drop = FALSE)
   
-  ## Check if n_sp == n in the microbiological criteria
-  if(nrow(a) != micro_ct[["n"]]){
-    warning("n_sp does not equal to n.")
-  }
-  
-  ## Find out the sample points with contamination level >= LOD
-  b = a >= LOD
-  
-  ## Decision: reject lot if any sample has contamination level >= M or if the number of samples with contamination level >= m is above c
-  if(any(a[b, ] >= micro_ct[["M"]])){
-    cat("Reject lot.")
+  ## Make decision based on the spread type
+  if(spread == "continuous"){
+    decision_cont(df = a, LOD = LOD, case = case, M = M, m = m)
+  } else if (spread == "discrete"){
+    decision_dis(df = a, LOD = LOD, Mc = Mc)
   } else {
-    if(sum(a[b, ] >= micro_ct[["m"]]) > micro_ct[["c"]]){
-      cat("Reject lot.")
-    } else {
-      cat("Accept lot.")
-    }
+    stop("Unknown type of spread. Choose either 'continuous' or 'discrete'.")
   }
+  
 }

@@ -50,6 +50,9 @@ sessionInfo()
   * `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
   * `n_strata` = the number of strata (applicable to *Stratified random sampling*)
   * `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to *Stratified random sampling*) **OR** the side along which a sample is taken every k steps (applicable to *Systematic sampling*).
+  * `m_kbar` = averaged kernel weight (g). By default, it's 0.3 g (estimated from Texas corn).
+  * `m_sp` = the analytical sample weight (25 g)
+  * `conc_good` = concentration of toxin in healthy kernels
 
 ```{r}
 ## Contamination
@@ -73,6 +76,9 @@ n_sp = 5
 sp_radius = 1
 n_strata = 5
 by = "row"
+m_kbar = 0.3
+m_sp = 25
+conc_good = 0.1
 ```
 
 3. Generate the simulation dataset.
@@ -84,8 +90,11 @@ contam_xy = sim_contam(n_contam = n_contam, xlim = x_lim, ylim = y_lim, covarian
 # Generate the coordinates of sample points
 sp_xy = sim_plan(method_sp = method_sp, n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius, by = by)
 
+# Generate the distance matrix
+dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy)
+
 # Combine contam_xy and sp_xy
-contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun)
+contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun, dist = dist_contam_sp, sp_radius = sp_radius, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good)
 ```
 
 ```{r}
@@ -96,16 +105,22 @@ summary(contam_sp_xy$label)
 
 4. Define parameters.
   
-  * `case` = 1 ~ 15 cases that define the stringency of the sampling plan.
-  * Attributes plans:
-      + `n` = number of analytical units (25g)
-      + `c` = maximum allowable number of analytical units yielding positive results
-      + `m` = microbial count or concentration above which an analytical unit is considered positive
-      + `M` = microbial count or concentration, if any analytical unit is above `M`, the lot is rejected.
-  * `method_det` = method of detection
-      + Plating: LOD = 2500 CFU/g
-      + Enrichment: LOD = 1 CFU/g
+  * `method_det` = method of detection  
+      + Plating: LOD = 2500 CFU/g  
+      + Enrichment: LOD = 1 CFU/g  
+      + ELISA: LOD = 1 ng/g (Helica Total Aflatoxins ELISA kit)  
   
+  **Mode 1: Discrete Spread:**  
+      * `Mc` = maximum concentration limit of mycotoxin (ng/g or ppb)
+  
+  **Mode 2: Continuous Spread:**  
+      * `case` = 1 ~ 15 cases that define the stringency of the sampling plan.  
+      * Attributes plans:  
+          + `n` = number of analytical units (25g)  
+          + `c` = maximum allowable number of analytical units yielding positive results  
+          + `m` = microbial count or concentration above which an analytical unit is considered positive  
+          + `M` = microbial count or concentration, if any analytical unit is above `M`, the lot is rejected.  
+      
 ```{r}
 get_attr_plan
 
@@ -117,12 +132,15 @@ get_LOD
 case = 2
 m = 50
 M = 500
-method_det = "plating"
+
+# Aflatoxin
+Mc = 20
+
+# Detection method: plating, enrichment, ELISA aflatoxin
+method_det = "ELISA aflatoxin"
 ```
 
 ```{r}
-## No pooling
-
 # Attribute plan
 get_attr_plan(case = case, m = m, M = M)
 
@@ -148,15 +166,18 @@ kable_styling(kable(x = subset(x = contam_sp_xy, subset = label == "sample point
 
 ```{r}
 overlay_draw(method = method_sp, data = contam_sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
+overlay_draw(method = method_sp, data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
 ```
 
 ```{r}
-assay_draw(data = contam_sp_xy, M = M, m = m, method_det = method_det)
+assay_draw(df = contam_sp_xy, M = M, m = m, method_det = method_det, Mc = Mc, spread = "continuous")
+assay_draw(df = contam_sp_xy, M = M, m = m, method_det = method_det, Mc = Mc, spread = "discrete")
 ```
 
 3. Decision.
 
 ```{r}
-lot_decision(data = contam_sp_xy, case = case, m = m, M = M, method_det = method_det)
+lot_decision(data = contam_sp_xy, case = case, m = m, M = M, method_det = method_det, Mc = Mc, spread = "continuous")
+lot_decision(data = contam_sp_xy, case = case, m = m, M = M, method_det = method_det, Mc = Mc, spread = "discrete")
 ```
 
