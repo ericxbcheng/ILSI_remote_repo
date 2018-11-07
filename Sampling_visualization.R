@@ -185,20 +185,51 @@ overlay_draw = function(method_sp, data, spread, xlim, ylim, n_strata, by){
   }
 }
 
-# Create a function that draws the contamination level of samples and shows the microbiological criteria
-assay_draw = function(data, M, m, method_det){
-  temp = data.frame(Thresholds = c("M", "m", "LOD"), 
+# Create a function that draws the contamination level of samples and shows the microbiological criteria in the continuous spread scenario
+assay_draw_cont = function(df, M, m, method_det){
+  
+  temp1 = subset(x = df, subset = label == "sample point")
+  temp2 = data.frame(Thresholds = c("M", "m", "LOD"), 
                     val = c(M, m, get_LOD(method_det = method_det)))
   
   ggplot() +
-    geom_col(data = subset(x = data, subset = label == "sample point"), aes(x = ID, y = cont_level), fill = "darkgrey") +
-    geom_text(data = subset(x = data, subset = label == "sample point"), 
+    geom_col(data = temp1, aes(x = ID, y = cont_level), fill = "darkgrey") +
+    geom_hline(data = temp2, aes(yintercept = val, color = Thresholds), size = 1.5) +
+    geom_text(data = temp1, 
               aes(x = ID, y = cont_level, 
                   label = round(cont_level, digits = 2)), 
               position = position_nudge(y = 0.2)) +
-    geom_hline(data = temp, aes(yintercept = val, color = Thresholds), size = 1.5) +
-    scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000), label = scientific_format()) +
+    scale_y_log10(label = scientific_format()) +
     scale_color_manual(values = c("#00BA38", "#D89000", "#F8766D" )) +
     labs(x = "Sample point", y = "Contamination level (CFU/g)") +
     theme_bw() 
+}
+
+# Create a function that draws the mean contamination level of all samples and the microbiological criteria in the discrete spread scenario
+assay_draw_dis = function(df, Mc, method_det){
+  
+  temp1 = subset(x = df, subset = label == "sample point")
+  temp2 = data.frame(Thresholds = c("Mc", "LOD"), 
+                     val = c(Mc, get_LOD(method_det = method_det)))
+  
+  ggplot()+
+    geom_col(aes(x = "Mean sample concentration", y = mean(temp1$dis_level)), width = 0.5, fill = "darkgrey") +
+    geom_hline(data = temp2, aes(yintercept = val, color = Thresholds), size = 1.5) +
+    geom_text(data = temp1, aes(x = "Mean sample concentration", 
+                                y = mean(temp1$dis_level), 
+                                label = round(mean(temp1$dis_level), digits = 2)), 
+              nudge_y = 0.2) +
+    scale_y_log10() +
+    scale_color_manual(values = c("#00BA38", "#F8766D")) +
+    labs(x = NULL, y = "Contamination level (ng/g)") +
+    theme_bw()
+}
+
+# A wrapper function that includes assay_draw_cont() and assay_draw_dis()
+assay_draw = function(df, M, m, Mc, method_det, spread){
+  if(spread == "discrete"){
+    assay_draw_dis(df = df, Mc = Mc, method_det = method_det)
+  } else if (spread == "continuous"){
+    assay_draw_cont(df = df, M = M, m = m, method_det = method_det)
+  }
 }
