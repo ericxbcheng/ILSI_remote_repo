@@ -201,7 +201,7 @@ str(sp_xy)
         
         `f()` = decay function that calculates the contribution of contamination.
         
-    2) Add in sampling error to the sample points, assuming the sampling error follows a log normal distribution with mean = 0 and sd = 1. In the discrete spread scenario, sampling error is only added to the sample points with at least one contamination point. Samples that didn't capture any contamination point will not get sampling error.
+    2) Add in sampling error to the sample points for the continuous spread case, assuming the sampling error follows a log normal distribution with mean = 0 and sd = 1. 
         
     $$C_{sp\_with\_error_i}=C_{sp_i}+\epsilon_i$$
     , where $i = 1,2,...,n_{sp}$; $ln(\epsilon)$~$N(\mu=0, \sigma^2 =1)$ 

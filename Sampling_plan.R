@@ -107,7 +107,6 @@ gen_sim_data = function(df_contam, df_sp, dist, spread_radius, sp_radius, LOC, f
   
   # Add sampling error 
   df$cont_level[match(x = a$ID_sp, table = df$ID)] = a$cont_level + c
-  df$dis_level[match(x = b$ID_sp, table = df$ID)] = b$dis_level + c[length(b$dis_level)]
   
   if(anyNA(df$dis_level)){
     df$dis_level[is.na(df$dis_level)] = conc_good
