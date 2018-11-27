@@ -26,8 +26,8 @@ calc_cover = function(df_dist, spread_radius, sp_radius, spread){
   }
 }
 
-# Create a function that calculates the probability of detection
-calc_POD = function(df_cover, n_sp, df_contam, spread){
+# Create a function that calculates the rate of detection
+calc_ROD = function(df_cover, n_sp, df_contam, spread){
   if(spread == "continuous"){
     length(unique(df_cover$ID_sp)) / n_sp
   } else if(spread == "discrete"){

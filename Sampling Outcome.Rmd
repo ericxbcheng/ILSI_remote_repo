@@ -129,7 +129,7 @@ summary(contam_sp_xy$label)
 kable_styling(kable(contam_sp_xy, format = "html"), full_width = FALSE)
 ```
 
-4. Evaluate the probability of detection (POD) of the sampling plan.
+4. Evaluate the rate of detection (POD) of the sampling plan.
 
 **Mode 1: Discrete Spread:**  
 
@@ -143,39 +143,7 @@ kable_styling(kable(contam_sp_xy, format = "html"), full_width = FALSE)
 calc_cover
 calc_cover_cont
 calc_cover_dis
-calc_POD
-```
-
-```{r}
-# calc_cover_cont = function(df_dist, r){
-#   a = subset(x = df_dist, subset = label == "spot", drop = FALSE)
-#   b = subset(x = a, subset = Distance <= r)
-#   return(b)
-# }
-# 
-# calc_cover_dis = function(df_dist, r){
-#   a = subset(x = df_dist, subset = Distance <= r)
-#   return(a)
-# }
-# 
-# calc_cover = function(df_dist, spread_radius, sp_radius, spread){
-#   
-#   if(spread == "discrete"){
-#       calc_cover_dis(df_dist = df_dist, r = sp_radius)
-#     } else if (spread == "continuous"){
-#       calc_cover_cont(df_dist = df_dist, r = spread_radius)
-#     } else {
-#     stop("Unknown spread type.")
-#   }
-# }
-# 
-# calc_POD = function(df_cover, n_sp, df_contam, spread){
-#   if(spread == "continuous"){
-#     length(unique(df_cover$ID_sp)) / n_sp
-#   } else if(spread == "discrete"){
-#     length(unique(df_cover$ID_contam)) / nrow(df_contam)
-#   }
-# }
+calc_ROD
 ```
 
 5. Evaluate the assay performance.
@@ -197,10 +165,10 @@ overlay_draw(method_sp = method_sp, data = contam_sp_xy, spread = "discrete", xl
 ```{r}
 # Evaluation: 
 cover_dis = calc_cover(df_dist = dist_contam_sp, spread_radius = spread_radius, sp_radius = sp_radius, spread = "discrete")
-calc_POD(df_cover = cover_dis, n_sp = n_sp, df_contam = contam_xy, spread = "discrete")
+calc_ROD(df_cover = cover_dis, n_sp = n_sp, df_contam = contam_xy, spread = "discrete")
 ```
 
-* Therefore, we detected `r length(unique(cover_dis$ID_contam))` out of `r nrow(contam_xy)` contamination points. The probability of detection is `r length(unique(cover_dis$ID_contam)) / nrow(contam_xy)`.
+* Therefore, we detected `r length(unique(cover_dis$ID_contam))` out of `r nrow(contam_xy)` contamination points. The rate of detection is `r length(unique(cover_dis$ID_contam)) / nrow(contam_xy)`.
 
 
 2. **Mode 2: Continuous Spread**
@@ -217,10 +185,10 @@ contam_level_draw(dimension = "3d", method = fun, spread_radius = spread_radius,
 ```{r}
 # Evaluation: 
 cover_cont = calc_cover(df_dist = dist_contam_sp, spread_radius = spread_radius, sp_radius = sp_radius, spread = "continuous")
-calc_POD(df_cover = cover_cont, n_sp = n_sp, df_contam = contam_xy, spread = "continuous")
+calc_ROD(df_cover = cover_cont, n_sp = n_sp, df_contam = contam_xy, spread = "continuous")
 ```
 
-* Therefore, `r length(unique(cover_cont$ID_sp))` out of `r n_sp` sample points detected contamination. The probability of detection is `r length(unique(cover_cont$ID_sp)) / n_sp`.
+* Therefore, `r length(unique(cover_cont$ID_sp))` out of `r n_sp` sample points detected contamination. The rate of detection is `r length(unique(cover_cont$ID_sp)) / n_sp`.
 
 ```{r, eval= FALSE, echo = FALSE}
 pdf(file = "Sampling Plots SS.pdf")
