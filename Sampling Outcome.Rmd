@@ -15,6 +15,7 @@ source("Sampling_plan.R")
 source("Sampling_contamination.R")
 source("Sampling_outcome.R")
 source("Sampling_visualization.R")
+source("Sampling_assay.R")
 # library(plotly)
 ```
 
@@ -22,7 +23,7 @@ source("Sampling_visualization.R")
 sessionInfo()
 ```
 
-2. List important parameters from `Sampling_contamination.R` and `Sampling_plan.R`.
+2. List important parameters from previous R files.
 
 **Contamination:**  
 
@@ -32,6 +33,7 @@ sessionInfo()
   * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,10)`)
   * `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,10)`)  
   * `cont_level` = a vector that indicates the mean contamination level (logCFU/g or logCFU/mL) and the standard deviation in a log scale, assuming contamination level follows a log normal distribution $ln(cont\_level)$~$N(\mu, \sigma^2)$. 
+  * `spread` = the type of spread: `continuous` or `discrete`.
 
   **Mode 1: Discrete Spread** 
 
@@ -51,6 +53,9 @@ sessionInfo()
   * `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
   * `n_strata` = the number of strata (applicable to *Stratified random sampling*)
   * `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to *Stratified random sampling*) **OR** the side along which a sample is taken every k steps (applicable to *Systematic sampling*).
+  * `m_kbar` = averaged kernel weight (g). By default, it's 0.3 g (estimated from Texas corn).
+  * `m_sp` = the analytical sample weight (25 g)
+  * `conc_good` = concentration of toxin in healthy kernels
   * `case` = 1 ~ 15 cases that define the stringency of the sampling plan.
   * Attributes plans:
       + `n` = number of analytical units (25g)
@@ -70,6 +75,7 @@ n_contam = rpois(n = 1, lambda = 3)
 x_lim = c(0, 10)
 y_lim = c(0, 10)
 cont_level = c(7, 1)
+spread = "continous"
 
 ### Mode 1
 n_affected = rpois(n = 1, lambda = 5)
@@ -82,11 +88,14 @@ fun = "exp"
 
 ## Sampling plan
 method_sp = "srs"
-n_sp = 5
+n_sp = 10
 sp_radius = 1
 n_strata = 5
 by = "row"
-case = 2
+m_kbar = 0.3
+m_sp = 25
+conc_good = 0.1
+case = 9
 m = 50
 M = 500
 
@@ -103,8 +112,11 @@ contam_xy = sim_contam(n_contam = n_contam, xlim = x_lim, ylim = y_lim, covarian
 # Generate the coordinates of sample points
 sp_xy = sim_plan(method_sp = method_sp, n_sp = n_sp, xlim = x_lim, ylim = y_lim, radius = sp_radius, by = by)
 
+# Generate the distance matrix
+dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy)
+
 # Combine contam_xy and sp_xy
-contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun)
+contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun, dist = dist_contam_sp, sp_radius = sp_radius, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good)
 ```
 
 ```{r}
@@ -117,7 +129,7 @@ summary(contam_sp_xy$label)
 kable_styling(kable(contam_sp_xy, format = "html"), full_width = FALSE)
 ```
 
-4. Evaluate the rate of detection (ROD) of the sampling plan.
+4. Evaluate the probability of detection (POD) of the sampling plan.
 
 **Mode 1: Discrete Spread:**  
 
@@ -128,20 +140,51 @@ kable_styling(kable(contam_sp_xy, format = "html"), full_width = FALSE)
 * Determine which sample points are within the contamination region with a radius of `r spread_radius`.
 
 ```{r}
-cover
-
-calc_ROD
+calc_cover
+calc_cover_cont
+calc_cover_dis
+calc_POD
 ```
 
 ```{r}
-dist_contam_sp = calc_dist(df = contam_sp_xy, spotONLY = FALSE)
-
-# Mode 1: Discrete Spread
-cover_dis = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = sp_radius, spread = "discrete")
-
-# Mode 2: Continuous Spread
-cover_cont = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = spread_radius, spread = "continuous")
+# calc_cover_cont = function(df_dist, r){
+#   a = subset(x = df_dist, subset = label == "spot", drop = FALSE)
+#   b = subset(x = a, subset = Distance <= r)
+#   return(b)
+# }
+# 
+# calc_cover_dis = function(df_dist, r){
+#   a = subset(x = df_dist, subset = Distance <= r)
+#   return(a)
+# }
+# 
+# calc_cover = function(df_dist, spread_radius, sp_radius, spread){
+#   
+#   if(spread == "discrete"){
+#       calc_cover_dis(df_dist = df_dist, r = sp_radius)
+#     } else if (spread == "continuous"){
+#       calc_cover_cont(df_dist = df_dist, r = spread_radius)
+#     } else {
+#     stop("Unknown spread type.")
+#   }
+# }
+# 
+# calc_POD = function(df_cover, n_sp, df_contam, spread){
+#   if(spread == "continuous"){
+#     length(unique(df_cover$ID_sp)) / n_sp
+#   } else if(spread == "discrete"){
+#     length(unique(df_cover$ID_contam)) / nrow(df_contam)
+#   }
+# }
 ```
+
+5. Evaluate the assay performance.
+
+**Mode 1: Discrete Spread:**
+
+**Mode 2: Continuous Spread:**
+
+
 
 # Results  
 
@@ -152,17 +195,12 @@ overlay_draw(method_sp = method_sp, data = contam_sp_xy, spread = "discrete", xl
 ```
 
 ```{r}
-# Show the contamination points that are detected by sampling.
-cover_dis %>%
-  dplyr::select(-c(row_contam, row_sp))
-```
-
-```{r}
 # Evaluation: 
-calc_ROD(df_cover = cover_dis, df_contam = contam_xy, n_sp = n_sp, spread = "discrete")
+cover_dis = calc_cover(df_dist = dist_contam_sp, spread_radius = spread_radius, sp_radius = sp_radius, spread = "discrete")
+calc_POD(df_cover = cover_dis, n_sp = n_sp, df_contam = contam_xy, spread = "discrete")
 ```
 
-* Therefore, we detected `r length(unique(cover_dis$ID))` out of `r nrow(contam_xy)` contamination points. The rate of detection is `r length(unique(cover_dis$ID)) / nrow(contam_xy)`.
+* Therefore, we detected `r length(unique(cover_dis$ID_contam))` out of `r nrow(contam_xy)` contamination points. The probability of detection is `r length(unique(cover_dis$ID_contam)) / nrow(contam_xy)`.
 
 
 2. **Mode 2: Continuous Spread**
@@ -175,18 +213,14 @@ overlay_draw(method_sp = method_sp, data = contam_sp_xy, spread = "continuous", 
 contam_level_draw(dimension = "3d", method = fun, spread_radius = spread_radius, LOC = LOC, df_contam = contam_xy, xlim = x_lim, ylim = y_lim, interactive = FALSE)
 ```
 
-```{r}
-# Show the sample points that detected contamination
-cover_cont %>%
-  dplyr::select(-c(row_contam, row_sp)) 
-```
 
 ```{r}
 # Evaluation: 
-calc_ROD(df_cover = cover_cont, df_contam = contam_xy, n_sp = n_sp, spread = "continuous")
+cover_cont = calc_cover(df_dist = dist_contam_sp, spread_radius = spread_radius, sp_radius = sp_radius, spread = "continuous")
+calc_POD(df_cover = cover_cont, n_sp = n_sp, df_contam = contam_xy, spread = "continuous")
 ```
 
-* Therefore, `r length(unique(cover_cont$sp_ID))` out of `r n_sp` sample points detected contamination. The rate of detection is `r length(unique(cover_cont$sp_ID)) / n_sp`.
+* Therefore, `r length(unique(cover_cont$ID_sp))` out of `r n_sp` sample points detected contamination. The probability of detection is `r length(unique(cover_cont$ID_sp)) / n_sp`.
 
 ```{r, eval= FALSE, echo = FALSE}
 pdf(file = "Sampling Plots SS.pdf")

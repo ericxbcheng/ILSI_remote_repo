@@ -1,40 +1,37 @@
 
 
 # Create a function to idenfity points that falls within a certain distance from another point
-cover = function(df_dist, df_coord, r, spread){
-  
-  ## Find the points that meet the distance criterion
-  a = df_dist %>%
-    filter(Distance <= r)
-  
-  ## Match the points with corresponding metadata
-  b = df_coord[a$row_contam, c("X", "Y","ID", "label", "cont_level"), drop = FALSE]
-  
-  sp_ID = df_coord$ID[a$row_sp]
-  
-  sp_cont_level = df_coord$cont_level[a$row_sp]
-  
-  c = cbind(a, b, sp_ID, sp_cont_level)
-  
-  ## Create output based on the type of spread.
-  if(spread == "discrete") {
-    d = c %>%
-      arrange(.data = ., ID)
-  } else if (spread == "continuous") {
-    d = c %>%
-      dplyr::filter(label == "spot") %>%
-      arrange(.data = ., ID)
-  }
-  
-  return(d)
+## Determine which sample points fall within the spread_radius in the continuous spread case.
+calc_cover_cont = function(df_dist, r){
+  a = subset(x = df_dist, subset = label == "spot", drop = FALSE)
+  b = subset(x = a, subset = Distance <= r)
+  return(b)
 }
 
-# Create a function that calculates the rate of detection
-calc_ROD = function(df_cover, df_contam, n_sp, spread){
+## Determine which spot and spread points fall within the sp_radius in the discrete spread case.
+calc_cover_dis = function(df_dist, r){
+  a = subset(x = df_dist, subset = Distance <= r)
+  return(a)
+}
+
+## Wrap up function
+calc_cover = function(df_dist, spread_radius, sp_radius, spread){
+  
   if(spread == "discrete"){
-    length(unique(df_cover$ID)) / nrow(df_contam)
+    calc_cover_dis(df_dist = df_dist, r = sp_radius)
   } else if (spread == "continuous"){
-    length(unique(df_cover$sp_ID)) / n_sp
+    calc_cover_cont(df_dist = df_dist, r = spread_radius)
+  } else {
+    stop("Unknown spread type.")
+  }
+}
+
+# Create a function that calculates the probability of detection
+calc_POD = function(df_cover, n_sp, df_contam, spread){
+  if(spread == "continuous"){
+    length(unique(df_cover$ID_sp)) / n_sp
+  } else if(spread == "discrete"){
+    length(unique(df_cover$ID_contam)) / nrow(df_contam)
   }
 }
 
