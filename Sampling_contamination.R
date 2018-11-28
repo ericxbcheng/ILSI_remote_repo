@@ -19,9 +19,19 @@ f_cont_level = function(n, param){
   rlnorm(n = n, meanlog = log(10^param[1]), sdlog = log(10^param[2]))
 }
 
+## Define a function that calculates contamination contribution when a point is within spread_radius and reduces to almost 0 when beyond spread_radius
+### We are 97% confident that the cont_level of contamination spot is within (0, mean+2*sd)
+### 1/(mean+2*sd) * cont_level of any contamination spot is assumed to be the background contamination level. 
+f_decay = function(x, fun, spread_radius, LOC, cont_level){
+  if(x <= spread_radius){
+    fun(x = x, spread_radius = spread_radius, LOC = LOC)
+  } else {
+    1/exp(log(10^cont_level[1])+2*10^cont_level[2])
+  }
+}
+
 ## Calculate the contamination contribution using an exponential function.
 f_exp = function(x, spread_radius, LOC){
-  
   theta = - spread_radius/log(LOC)
   exp(-x/theta)
 }
