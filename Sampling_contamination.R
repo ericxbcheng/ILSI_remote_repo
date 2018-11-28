@@ -26,7 +26,7 @@ f_decay = function(x, fun, spread_radius, LOC, cont_level){
   if(x <= spread_radius){
     fun(x = x, spread_radius = spread_radius, LOC = LOC)
   } else {
-    1/exp(log(10^cont_level[1])+2*10^cont_level[2])
+    1/exp(log(10^cont_level[1])+2*log(10^cont_level[2]))
   }
 }
 
