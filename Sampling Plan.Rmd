@@ -97,9 +97,6 @@ conc_good = 0.1
 
 
 ```{r}
-# Create a helper function that gives unique identifers
-naming_sp
-
 # Create a function that calculates the boundaries of each stratum
 calc_bounds
 
@@ -112,8 +109,8 @@ sim_plan_strs
 # Create a function that generates a systematic sampling plan
 sim_plan_ss
 
-# Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points.
-calc_dist
+# A function that calculates contamination contribution
+f_decay
 
 ## Calculate the percent of contamination a source contributes to a sample point
 calc_perc_contam
@@ -206,64 +203,10 @@ str(sp_xy)
     $$C_{sp\_with\_error_i}=C_{sp_i}+\epsilon_i$$
     , where $i = 1,2,...,n_{sp}$; $ln(\epsilon)$~$N(\mu=0, \sigma^2 =1)$ 
 
-```{r, eval = FALSE, echo = FALSE}
-# gen_sim_data = function(df_contam, df_sp, dist, spread_radius, sp_radius, LOC, fun, m_kbar, m_sp, conc_good){
-# 
-#   ### Calculate the cont_level (continuous spread)
-#     # Subset the dist_contam_sp to keep the rows that show distance between spots and sample points
-#     # Calculate the percent contribution based on distance
-#     # Attach the source contamination level
-#     # Calculate the contamination level at each sample point, which is source level * percent contribution
-#     #Sum up the source_contri for each sample point to represent the actual contamination level at that sample point
-# 
-#   a = dist %>%
-#     dplyr::filter(.data = ., label == "spot") %>%
-#     mutate(perc_contri = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC, fun = fun),
-#            source_level = df_contam$cont_level[match(x = .$ID_contam, table = df_contam$ID)],
-#            source_contri = source_level * perc_contri) %>%
-#     group_by(ID_sp) %>%
-#     summarise(cont_level = sum(source_contri))
-# 
-#   ### Calculate the dis_level (discrete spread)
-#     # Estimate the number of kernels in each sample
-# 
-#   n_k = round(x = m_sp/m_kbar, digits = 0)
-# 
-#     # Subset the dist_contam_sp to keep rows where the contamination points fall within the sampling region
-#     # Attach the source contamination level
-#     # Calculate the sum of contamination point levels in each sample, and record the number of points in each sample
-#     # Calculate the dis_level in each sample
-# 
-#   b = dist %>%
-#     dplyr::filter(Distance <= sp_radius) %>%
-#     mutate(source_level = df_contam$dis_level[match(x = .$ID_contam, table = df_contam$ID)]) %>%
-#     group_by(ID_sp) %>%
-#     summarise(obs = n(),
-#               sum_level = sum(source_level)) %>%
-#     mutate(dis_level = m_kbar/m_sp*(sum_level + (n_k - obs) * conc_good))
-# 
-#   ### Define sampling error
-#   c = rlnorm(n = nrow(df_sp), meanlog = 0, sdlog = 1)
-# 
-#   ### Combine everything, fill the NAs with the corresponding contamination level.
-#   df = rbind(df_contam, df_sp)
-# 
-#   # Add sampling error
-#   df$cont_level[match(x = a$ID_sp, table = df$ID)] = a$cont_level #+ c
-#   df$dis_level[match(x = b$ID_sp, table = df$ID)] = b$dis_level #+ c[length(b$dis_level)]
-# 
-#   if(anyNA(df$dis_level)){
-#     df$dis_level[is.na(df$dis_level)] = conc_good
-#   }
-# 
-#   return(df)
-# }
-```
-
 ```{r}
 dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy)
 
-contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, dist = dist_contam_sp, spread_radius = spread_radius, sp_radius = sp_radius, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good)
+contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, dist = dist_contam_sp, spread_radius = spread_radius, sp_radius = sp_radius, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, cont_level = cont_level)
 ```
 
 ```{r}

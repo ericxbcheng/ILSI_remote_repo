@@ -56,18 +56,24 @@ sessionInfo()
   * `m_kbar` = averaged kernel weight (g). By default, it's 0.3 g (estimated from Texas corn).
   * `m_sp` = the analytical sample weight (25 g)
   * `conc_good` = concentration of toxin in healthy kernels
-  * `case` = 1 ~ 15 cases that define the stringency of the sampling plan.
-  * Attributes plans:
-      + `n` = number of analytical units (25g)
-      + `c` = maximum allowable number of analytical units yielding positive results
-      + `m` = microbial count or concentration above which an analytical unit is considered positive
-      + `M` = microbial count or concentration, if any analytical unit is above `M`, the lot is rejected.
 
 **Sampling Assay:**
   
-  * `method_det` = method of detection
-      + Plating: LOD = 2500 CFU/g
-      + Enrichment: LOD = 1 CFU/g
+* `method_det` = method of detection  
+      + Plating: LOD = 2500 CFU/g  
+      + Enrichment: LOD = 1 CFU/g  
+      + ELISA: LOD = 1 ng/g (Helica Total Aflatoxins ELISA kit)  
+  
+  **Mode 1: Discrete Spread:**  
+      * `Mc` = maximum concentration limit of mycotoxin (ng/g or ppb)
+  
+  **Mode 2: Continuous Spread:**  
+      * `case` = 1 ~ 15 cases that define the stringency of the sampling plan.  
+      * Attributes plans:  
+          + `n` = number of analytical units (25g)  
+          + `c` = maximum allowable number of analytical units yielding positive results  
+          + `m` = microbial count or concentration above which an analytical unit is considered positive  
+          + `M` = microbial count or concentration, if any analytical unit is above `M`, the lot is rejected.  
 
 ```{r}
 ## Contamination
@@ -95,11 +101,12 @@ by = "row"
 m_kbar = 0.3
 m_sp = 25
 conc_good = 0.1
+
+## Assay
 case = 9
 m = 50
 M = 500
-
-## Assay
+Mc = 20
 method_det = "plating"
 ```
 
@@ -116,7 +123,7 @@ sp_xy = sim_plan(method_sp = method_sp, n_sp = n_sp, xlim = x_lim, ylim = y_lim,
 dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy)
 
 # Combine contam_xy and sp_xy
-contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun, dist = dist_contam_sp, sp_radius = sp_radius, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good)
+contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun, dist = dist_contam_sp, sp_radius = sp_radius, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, cont_level = cont_level)
 ```
 
 ```{r}
@@ -129,7 +136,7 @@ summary(contam_sp_xy$label)
 kable_styling(kable(contam_sp_xy, format = "html"), full_width = FALSE)
 ```
 
-4. Evaluate the rate of detection (POD) of the sampling plan.
+4. Evaluate the rate of detection (ROD) of the sampling plan.
 
 **Mode 1: Discrete Spread:**  
 
@@ -146,13 +153,7 @@ calc_cover_dis
 calc_ROD
 ```
 
-5. Evaluate the assay performance.
-
-**Mode 1: Discrete Spread:**
-
-**Mode 2: Continuous Spread:**
-
-
+5. Decide whether to accept or reject a lot.
 
 # Results  
 
@@ -169,6 +170,14 @@ calc_ROD(df_cover = cover_dis, n_sp = n_sp, df_contam = contam_xy, spread = "dis
 ```
 
 * Therefore, we detected `r length(unique(cover_dis$ID_contam))` out of `r nrow(contam_xy)` contamination points. The rate of detection is `r length(unique(cover_dis$ID_contam)) / nrow(contam_xy)`.
+
+```{r}
+assay_draw(df = contam_sp_xy, M = M, m = m, Mc = Mc, method_det = method_det, spread = "discrete")
+```
+
+```{r}
+words(x = lot_decision(data = contam_sp_xy, case = case, m = m, M = M, Mc = Mc, spread = "discrete", method_det = method_det))
+```
 
 
 2. **Mode 2: Continuous Spread**
@@ -189,6 +198,15 @@ calc_ROD(df_cover = cover_cont, n_sp = n_sp, df_contam = contam_xy, spread = "co
 ```
 
 * Therefore, `r length(unique(cover_cont$ID_sp))` out of `r n_sp` sample points detected contamination. The rate of detection is `r length(unique(cover_cont$ID_sp)) / n_sp`.
+
+```{r}
+assay_draw(df = contam_sp_xy, M = M, m = m, Mc = Mc, method_det = method_det, spread = "continuous")
+```
+
+```{r}
+words(x = lot_decision(data = contam_sp_xy, case = case, m = m, M = M, Mc = Mc, spread = "continuous", method_det = method_det))
+```
+
 
 ```{r, eval= FALSE, echo = FALSE}
 pdf(file = "Sampling Plots SS.pdf")

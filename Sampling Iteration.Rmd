@@ -78,7 +78,7 @@ n_contam = rpois(n = 1, lambda = 3)
 x_lim = c(0, 10)
 y_lim = c(0, 10)
 cont_level = c(7, 1)
-spread = "continous"
+spread = "continuous"
 
 ### Mode 1
 n_affected = rpois(n = 1, lambda = 5)
@@ -130,7 +130,7 @@ sim_outcome = function(n_contam, xlim, ylim, n_affected, covar_mat, spread_radiu
   dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy)
   
   # Combine contam_xy and sp_xy
-  contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun, dist = dist_contam_sp, sp_radius = sp_radius, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good)
+  contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun, dist = dist_contam_sp, sp_radius = sp_radius, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, cont_level = cont_level)
   
   # Determine which contamination points are detected or which sample points detect contamination
   cover = calc_cover(df_dist = dist_contam_sp, spread_radius = spread_radius, sp_radius = sp_radius, spread = spread)

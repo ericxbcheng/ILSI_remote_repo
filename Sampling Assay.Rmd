@@ -94,7 +94,7 @@ sp_xy = sim_plan(method_sp = method_sp, n_sp = n_sp, xlim = x_lim, ylim = y_lim,
 dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy)
 
 # Combine contam_xy and sp_xy
-contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun, dist = dist_contam_sp, sp_radius = sp_radius, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good)
+contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun, dist = dist_contam_sp, sp_radius = sp_radius, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, cont_level = cont_level)
 ```
 
 ```{r}
@@ -150,87 +150,11 @@ get_LOD(method_det = method_det)
 
 5. Decision: accept or reject lot.
 
-```{r, echo = FALSE}
-# words = function(x){
-#   switch(EXPR = x,
-#         `1` = cat("Accept lot. Microbial load < LOD."),
-#         `2` = cat("Reject lot. At least 1 sample has contamination level >= M."),
-#         `3` = cat("Reject lot. The number of positive samples is > c."),
-#         `4` = cat("Accept lot."),
-#         `5` = cat("Accept lot. Mean sample concentration < LOD."),
-#         `6` = cat("Reject lot. Mean sample concentration >= Mc"),
-#         `7` = cat("Accept lot."),
-#         warning("Unknown lot decision.", call. = FALSE))
-# }
-# 
-# 
-# # Create a function that makes decisions for continuous spread scenarios
-# decision_cont = function(df, LOD, case, m, M){
-#   
-#   ## Get the appropriate attribute plan
-#   micro_ct = get_attr_plan(case = case, m = m, M = M)
-#   
-#   ## Check if n_sp == n in the microbiological criteria
-#   if(nrow(df) != micro_ct[["n"]]){
-#     warning("n_sp does not equal to n.")
-#   }
-#   
-#   ## Find out the sample points with contamination level >= LOD
-#   conc = df[["cont_level"]]
-#   detected = conc >= LOD
-#   
-#   ## Decision: reject lot if any sample has contamination level >= M or if the number of samples with contamination level >= m is above c
-#   if(!any(detected)){
-#     return(1)
-#   } else {
-#     
-#     if(any(conc[detected] >= micro_ct[["M"]])){
-#       return(2)
-#     } else if (sum(conc[detected] >= micro_ct[["m"]]) > micro_ct[["c"]]){
-#       return(3)
-#     } else {
-#       return(4)
-#     }
-#   } 
-# }
-# 
-# # Create a function that makes decision for discrete spread scenarios
-# decision_dis = function(df, LOD, Mc){
-#   
-#   ## Calculate the mean concentration of all samples
-#   c_bar = mean(df[["dis_level"]])
-#   
-#   ## Determine whether c_bar is above LOD. If it is >= LOD, then determine if it exceeds Mc.
-#   if(c_bar < LOD){
-#     return(5)
-#   } else {
-#     if(c_bar >= Mc){
-#       return(6)
-#     } else {
-#       return(7)
-#     }
-#   }
-# }
-# 
-# # Create a function that decides whether to accept or reject the lot
-# lot_decision = function(data, case, m, M, Mc, spread, method_det){
-#   
-#   ## Get LOD for the chosen method of detection
-#   LOD = get_LOD(method_det = method_det)
-#   
-#   ## Subset out the contamination levels at the sample points
-#   a = subset(x = data, subset = label == "sample point", select = c(cont_level, dis_level), drop = FALSE)
-#   
-#   ## Make decision based on the spread type
-#   if(spread == "continuous"){
-#     decision_cont(df = a, LOD = LOD, case = case, M = M, m = m)
-#   } else if (spread == "discrete"){
-#     decision_dis(df = a, LOD = LOD, Mc = Mc)
-#   } else {
-#     stop("Unknown type of spread. Choose either 'continuous' or 'discrete'.")
-#   }
-#   
-# }
+```{r}
+decision_cont
+decision_dis
+lot_decision
+words
 ```
 
 # Result
@@ -243,22 +167,25 @@ kable_styling(kable(x = subset(x = contam_sp_xy, subset = label == "sample point
 
 2. Visualization.
 
-```{r}
+```{r, fig.keep = TRUE, size = "50%"}
 overlay_draw(method = method_sp, data = contam_sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
 overlay_draw(method = method_sp, data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
 ```
 
-```{r}
-assay_draw(df = contam_sp_xy, M = M, m = m, method_det = method_det, Mc = Mc, spread = "continuous")
-assay_draw(df = contam_sp_xy, M = M, m = m, method_det = method_det, Mc = Mc, spread = "discrete")
-```
-
 3. Decision.
 
+*Continuous spread*  
+
 ```{r}
+assay_draw(df = contam_sp_xy, M = M, m = m, method_det = method_det, Mc = Mc, spread = "continuous")
 deci_cont = lot_decision(data = contam_sp_xy, case = case, m = m, M = M, method_det = method_det, Mc = Mc, spread = "continuous")
 words(x = deci_cont)
+```
 
+*Discrete spread*  
+
+```{r}
+assay_draw(df = contam_sp_xy, M = M, m = m, method_det = method_det, Mc = Mc, spread = "discrete")
 deci_dis = lot_decision(data = contam_sp_xy, case = case, m = m, M = M, method_det = method_det, Mc = Mc, spread = "discrete")
 words(x = deci_dis)
 ```
