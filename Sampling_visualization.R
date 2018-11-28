@@ -231,5 +231,7 @@ assay_draw = function(df, M, m, Mc, method_det, spread){
     assay_draw_dis(df = df, Mc = Mc, method_det = method_det)
   } else if (spread == "continuous"){
     assay_draw_cont(df = df, M = M, m = m, method_det = method_det)
+  } else {
+    warning("Unknown type of spread.")
   }
 }
