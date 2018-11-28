@@ -23,7 +23,7 @@ naming_sp = function(n_sp, x_sp, y_sp, radius){
 }
 
 ## Calculate the percent of contamination a source contributes to a sample point
-calc_perc_contam = function(df_dist, r, LOC, fun){
+calc_perc_contam = function(df_dist, r, LOC, fun, cont_level){
   
   if(fun == "exp"){
     f_chosen = f_exp
@@ -33,7 +33,7 @@ calc_perc_contam = function(df_dist, r, LOC, fun){
     stop("Decay function is undefined. Choose 'exp' or 'norm'. ")
   }
   
-  f_chosen(x = df_dist[["Distance"]], spread_radius = r, LOC = LOC)
+  map_dbl(.x = df_dist[["Distance"]], .f = f_decay, fun = f_chosen, spread_radius = spread_radius, LOC = LOC, cont_level = cont_level)
 }
 
 # Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points. If spotONLY == TRUE, then only calculate the distance between spots and sample points
@@ -64,7 +64,7 @@ calc_dist = function(df_contam, df_sp){
 }
 
 # Create a function that calculates contamination levels for each sample point and combine "contam_xy" and "sp_xy"
-gen_sim_data = function(df_contam, df_sp, dist, spread_radius, sp_radius, LOC, fun, m_kbar, m_sp, conc_good){
+gen_sim_data = function(df_contam, df_sp, dist, spread_radius, sp_radius, LOC, fun, m_kbar, m_sp, conc_good, cont_level){
   
   ### Calculate the cont_level (continuous spread)
   # Subset the dist_contam_sp to keep the rows that show distance between spots and sample points
@@ -75,7 +75,7 @@ gen_sim_data = function(df_contam, df_sp, dist, spread_radius, sp_radius, LOC, f
   
   a = dist %>%
     dplyr::filter(.data = ., label == "spot") %>%
-    mutate(perc_contri = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC, fun = fun),
+    mutate(perc_contri = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC, fun = fun, cont_level = cont_level),
            source_level = df_contam$cont_level[match(x = .$ID_contam, table = df_contam$ID)],
            source_contri = source_level * perc_contri) %>%
     group_by(ID_sp) %>%
