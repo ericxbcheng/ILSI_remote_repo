@@ -7,7 +7,7 @@ output: html_document
 
 # Method
 
-1. Source R code from `Sampling_libraries.R`, `Sampling_contamination.R`, `Sampling_plan.R` and `Sampling_outcome.R`.
+1. Source R code from `Sampling_libraries.R`, `Sampling_contamination.R`, `Sampling_plan.R`, `Sampling_assay.R` and `Sampling_outcome.R`.
 
 ```{r, warning = FALSE, message = FALSE}
 source(file = "Sampling_libraries.R")
@@ -15,44 +15,62 @@ source(file = "Sampling_contamination.R")
 source(file = "Sampling_plan.R")
 source(file = "Sampling_outcome.R")
 source(file = "Sampling_iteration.R")
+source(file = "Sampling_assay.R")
 ```
 
 ```{r}
 sessionInfo()
 ```
 
-2. List important parameters from `Sampling_contamination.R` and `Sampling_plan.R`. Create a new variable `n_sim`.
+2. List important parameters from previous R files. Create a new parameter called `n_iter`.
 
 **Contamination:**  
 
-  * `n_contam` = the number of contamination spots, which follows a Poisson distribution (`Pois(lambda = 3)`) 
+  * `n_contam` = the number of contamination points 
   * `x_lim` = the limits of the horizontal axis  
   * `y_lim` = the limits of the vertical axis  
   * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,10)`)
   * `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,10)`)  
   * `cont_level` = a vector that indicates the mean contamination level (logCFU/g or logCFU/mL) and the standard deviation in a log scale, assuming contamination level follows a log normal distribution $ln(cont\_level)$~$N(\mu, \sigma^2)$. 
+  * `spread` = the type of spread: `continuous` or `discrete`.
 
   **Mode 1: Discrete Spread** 
 
   * `n_affected` = the number of affected plants near the contamination spot, which follows a Poisson distribution (`Pois(lambda = 5)`)   
-  * `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) = 0.25, var(Y) = 0.25 and cov(X, Y) = 0  
+  * `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) =     0.25, var(Y) = 0.25 and cov(X, Y) = 0  
 
   **Mode 2: Continuous Spread**
 
-  * `spread_radius` = the radius of the contamination spread
+  * `spread_radius` = the radius of the contamination spread. 
   * `LOC` = the limit of contribution of contamination. By default, it is set at 0.001.(Both `spread_radius` and `LOC` determine the shape of decay function that describes how much contamination from the source is contributed to a target point.)
   * `fun` = the decay function that describes the spread. It takes either "exp" or "norm".
 
 **Sampling Plan:**  
 
+  * `method_sp` = the sampling method (SRS, STRS, SS)
   * `n_sp` = the number of sampling points
   * `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
-  * `n_strata` = the number of strata (applicable to **Stratified random sampling**)
-  * `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to **Stratified random sampling**).
+  * `n_strata` = the number of strata (applicable to *Stratified random sampling*)
+  * `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to *Stratified random sampling*) **OR** the side along which a sample is taken every k steps (applicable to *Systematic sampling*).
+  * `m_kbar` = averaged kernel weight (g). By default, it's 0.3 g (estimated from Texas corn).
+  * `m_sp` = the analytical sample weight (25 g)
+  * `conc_good` = concentration of toxin in healthy kernels
+  * `case` = 1 ~ 15 cases that define the stringency of the sampling plan.
+  * Attributes plans:
+      + `n` = number of analytical units (25g)
+      + `c` = maximum allowable number of analytical units yielding positive results
+      + `m` = microbial count or concentration above which an analytical unit is considered positive
+      + `M` = microbial count or concentration, if any analytical unit is above `M`, the lot is rejected.
+
+**Sampling Assay:**
+  
+  * `method_det` = method of detection
+      + Plating: LOD = 2500 CFU/g
+      + Enrichment: LOD = 1 CFU/g
 
 **Iteration:**
 
-  * `n_sim` = the number of simulations
+  * `n_iter` = the number of iterations per simulation.
 
 ```{r}
 ## Contamination
@@ -60,128 +78,188 @@ n_contam = rpois(n = 1, lambda = 3)
 x_lim = c(0, 10)
 y_lim = c(0, 10)
 cont_level = c(7, 1)
+spread = "continous"
 
-### Discrete spread
+### Mode 1
 n_affected = rpois(n = 1, lambda = 5)
 covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
 
-### Continuous spread
+### Mode 2
 spread_radius = 2.5
 LOC = 10^(-3)
 fun = "exp"
 
 ## Sampling plan
+method_sp = "srs"
 n_sp = 10
 sp_radius = 1
 n_strata = 5
 by = "row"
+m_kbar = 0.3
+m_sp = 25
+conc_good = 0.1
+case = 9
+m = 50
+M = 500
+Mc = 20
+
+## Assay
+method_det = "plating"
 
 ## Sampling outcome
-n_sim = 1000
+n_iter = 100
+```
+
+3. Create a master function called `sim_outcome()` that takes the inputs above and iterate the simulation once.
+
+* Intermediate data output includes `contam_xy`, `sp_xy`, `contam_sp_xy`, `dist_contam_sp`, and `cover`.
+* `I_det` = A binary indicator for whether any contamination has been detected (1 = yes, 0 = no).
+* `ROD` = rate of detection (how many contamination points have been detected or how many samples have captured contamination).
+* `decision` = a number that represents a decision for the lot (accept or reject).
+
+```{r}
+sim_outcome = function(n_contam, xlim, ylim, n_affected, covar_mat, spread_radius, method, n_sp, sp_radius, spread, n_strata, by, cont_level, LOC, fun, m_kbar, m_sp, conc_good, case, m, M, Mc, method_det){
+  
+  # Generate the coordinates of contamination points
+  contam_xy = sim_contam(n_contam = n_contam, xlim = xlim, ylim = ylim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius, cont_level = cont_level) 
+  
+  # Generate the coordinates of sample points
+  sp_xy = sim_plan(method_sp = method_sp, n_sp = n_sp, xlim = xlim, ylim = ylim, radius = sp_radius, by = by)
+  
+  # Generate the distance matrix
+  dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy)
+  
+  # Combine contam_xy and sp_xy
+  contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun, dist = dist_contam_sp, sp_radius = sp_radius, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good)
+  
+  # Determine which contamination points are detected or which sample points detect contamination
+  cover = calc_cover(df_dist = dist_contam_sp, spread_radius = spread_radius, sp_radius = sp_radius, spread = spread)
+  
+  ## Determine whether the contamination is detected or not. If detected, I_det = 1; if not detected, I_det = 0.
+  I_det = {nrow(cover) > 0} %>% as.integer()
+  
+  ## Calculate ROD per iteration
+  ROD = calc_ROD(df_cover = cover, n_sp = n_sp, df_contam = contam_xy, spread = spread)
+  
+  ## Determine lot decision
+  decision = lot_decision(data = contam_sp_xy, case = case, m = m, M = M, Mc = Mc, spread = spread, method_det = method_det)
+  
+  # Output
+  list(I_det, ROD, decision)
+}
+```
+
+4. Create a function factory called `gen_sim_outcome()` that creates a child function `sim_outcome()` which has been loaded with input parameters. 
+
+```{r}
+gen_sim_outcome = function(n_contam, xlim, ylim, n_affected, covar_mat, spread_radius,
+                           method, n_sp, sp_radius, spread, n_strata, by, cont_level, 
+                           LOC, fun, m_kbar, m_sp, conc_good, case, m, M, Mc, method_det){
+  function(...){
+    sim_outcome(n_contam = n_contam, xlim = xlim, ylim = ylim, n_affected = n_affected,
+                covar_mat = covar_mat, spread_radius = spread_radius, method = method_sp,
+                n_sp = n_sp, sp_radius = sp_radius, spread = spread, n_strata = n_strata, 
+                by = by, cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar, 
+                m_sp = m_sp, conc_good = conc_good, case = case, m = m, M = M, 
+                Mc = Mc, method_det = method_det)
+  }
+}
+
+f_outcome = gen_sim_outcome(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = method_sp, n_sp = n_sp, sp_radius = sp_radius, spread = spread, n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, case = case, m = m, M = M, Mc = Mc, method_det = method_det)
+```
+
+5. Iterate the simulation with the same input parameters. Variability exists in the coordinates of contamination points, the coordinates of sample points, and specific contamination levels. Each iteration produces three numbers: `I_det`, `ROD`, and `decision`.
+
+```{r}
+# Rearrange the data in the nested list so that data of the same category are grouped together.
+clean = function(data){
+  # Convert the data into a vector
+  a = unlist(data)
+  
+  #Produce a sequence of indices for element extraction
+  ind = seq(from = 1, by = 3, length.out = length(a)/3)
+  
+  # Extract elements respectively
+  I_det = a[ind]
+  ROD = a[ind + 1]
+  decision = a[ind + 2]
+  
+  # Output
+  b = list("I_det" = I_det, "ROD" = ROD, "decision" = decision)
+  
+  return(b)
+}
+
+calc_Prej = function(data){
+  # Extract out the decision vector
+  a = data$decision
+  
+  # Based on the lookup table, numbers 2,3,6 mean rejection while the others mean acceptance. 
+  # Convert the decision vector into a logical vector. 1 = rejection, 0 = acceptance.
+  b = {a %in% c(2, 3, 6)}
+  
+  # Calculate the probability of rejection
+  c = mean(b)
+  
+  return(c)
+}
+
+calc_Pdet = function(data){
+  # Extract out the I_det vector
+  a = data$I_det
+  
+  # Calculate the probability of detection
+  b = mean(a)
+  
+  return(b)
+}
 ```
 
 ```{r}
-n_contam
-n_affected
-```
-
-
-3. Create a master function called `sim_outcome()` that takes the inputs above and outputs the rate of detection.
-
-* Intermediate data output includes `contam_xy`, `sp_xy`, `contam_sp_xy`, `dist_contam_sp`, `cover_dis` and `cover_cont`.
-
-```{r}
-sim_outcome
-```
-
-4. Create a function that iterates `sim_outcome()` and returns a vector of RODs.
-
-```{r}
-sim_iterate
-```
-
-```{r}
-# # Register (n-2) cores for parallelization
-# cl = makeCluster(detectCores() - 2)
-# registerDoParallel(cl)
-# 
-# # List the packages needed
-# packages = c("dplyr", "MASS", "ggforce", "reshape2")
-# 
-# # Iterate the simulation with parallelization
-# foreach(i = 1:n_sim, .combine = c, .packages = packages) %dopar%
-#   sim_outcome(
-#     n_contam = n_contam,
-#     x_lim = x_lim,
-#     y_lim = y_lim,
-#     n_affected = n_affected,
-#     covar_mat = covar_mat,
-#     spread_radius = spread_radius,
-#     n_sp = n_sp,
-#     sp_radius = sp_radius,
-#     method = "continuous"
-#   )
-# 
-# # Stop the cores
-# stopCluster(cl)
+results = map(.x = 1:n_iter, .f = f_outcome)
+results2 = clean(results)
 ```
 
 # Results
 
-1. Run the simulation once and generate the rate of detection.
+1. Iterate the simulation once using two different methods. With the same random number seed, they should produce the same results.
 
 ```{r}
-# For debug or reproducibility only
-# set.seed(123)
+# Run once using the bare function sim_outcome()
+set.seed(123)
+sim_outcome(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = method_sp, n_sp = n_sp, sp_radius = sp_radius, spread = spread, n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, case = case, m = m, M = M, Mc = Mc, method_det = method_det)
 
-sim_outcome(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = "strs", n_sp = n_sp, sp_radius = sp_radius, spread = "continuous", n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun)
+# Run once using the child function f_outcome()
+set.seed(123)
+f_outcome()
 ```
 
-2. Run the simulation for `r n_sim` times.
+2. Iterate the simulation for `r n_iter` times.  
+
+    2.1. Calculate the probability of detection.  
 
 ```{r}
-ROD = sim_iterate(n_sim = n_sim, n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = "strs", n_sp = n_sp, sp_radius = sp_radius, spread = "discrete", n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun)
-```
-
-```{r, eval = FALSE, echo = FALSE}
-## map()
-wrap_func = function(...){
-  sim_outcome(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = "strs", n_sp = n_sp, sp_radius = sp_radius, spread = "continuous", n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun)
-}
-
-## sim_iterate()
-system.time(sim_iterate(n_sim = n_sim, n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = "strs", n_sp = n_sp, sp_radius = sp_radius, spread = "discrete", n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun))
-
-## map()
-system.time(map_dbl(.x = 1:n_sim, .f = wrap_func))
-
-## vapply()
-system.time(vapply(X = rep(10, times = 100), FUN = sim_iterate, n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = "strs", n_sp = n_sp, sp_radius = sp_radius, spread = "discrete", n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun, FUN.VALUE = double(10)))
-
-### possible reps
-a = 1:n_sim
-times = n_sim/a
-times[n_sim %% a == 0]
-```
-
-```{r, echo = FALSE, echo = FALSE}
-## Wrap arguments in a list
-ArgList = list(n_sim = n_sim, n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = "strs", n_sp = n_sp, sp_radius = sp_radius, spread = "discrete", n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun)
-
-do.call(what = sim_iterate, args = ArgList)
+calc_Pdet(results2)
 ```
 
 
-3. Boxplot of the rate of detection.
+    2.2. Boxplot of the rate of detection.  
 
 ```{r}
 ggplot() +
-  stat_boxplot(aes(x = "Continuous", y = ROD), geom = "errorbar") +
-  geom_boxplot(aes(x = "Continuous", y = ROD)) +
-  geom_point(aes(x = "Continuous", y = mean(ROD)), color = "coral", shape = 4, size = 5) +
-  labs(title = paste("n_contam = ", n_contam, ", n_sp = ", n_sp, ", n_sim = ", n_sim , sep = "")) +
+  stat_boxplot(aes(x = spread, y = results2$ROD), geom = "errorbar") +
+  geom_boxplot(aes(x = spread, y = results2$ROD)) +
+  geom_point(aes(x = spread, y = mean(results2$ROD)), color = "coral", shape = 4, size = 5) +
+  labs(title = paste("n_contam = ", n_contam, ", n_affected <= ", n_affected,", n_sp = ", n_sp, ", n_iter = ", n_iter , sep = ""), 
+       x = NULL,
+       y = "ROD") +
   coord_fixed(ratio = 1, ylim = c(0,1)) +
   theme_bw()
 ```
 
+    2.3. Calculate the probability of acceptance.
+
+```{r}
+1 - calc_Prej(results2)
+```
 
