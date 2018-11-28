@@ -63,15 +63,15 @@ decision_cont = function(df, LOD, case, m, M){
   
   ## Decision: reject lot if any sample has contamination level >= M or if the number of samples with contamination level >= m is above c
   if(!any(detected)){
-    cat("Accept lot. Microbial load < LOD.")
+    return(1)
   } else {
     
     if(any(conc[detected] >= micro_ct[["M"]])){
-      cat("Reject lot. At least 1 sample has contamination level >= M.")
+      return(2)
     } else if (sum(conc[detected] >= micro_ct[["m"]]) > micro_ct[["c"]]){
-      cat("Reject lot. The number of positive samples is > c.")
+      return(3)
     } else {
-      cat("Accept lot.")
+      return(4)
     }
   } 
 }
@@ -84,12 +84,12 @@ decision_dis = function(df, LOD, Mc){
   
   ## Determine whether c_bar is above LOD. If it is >= LOD, then determine if it exceeds Mc.
   if(c_bar < LOD){
-    cat("Accept lot. Mean sample concentration < LOD.")
+    return(5)
   } else {
     if(c_bar >= Mc){
-      cat("Reject lot. Mean sample concentration =", c_bar)
+      return(6)
     } else {
-      cat("Accept lot. Mean sample concentration =", c_bar)
+      return(7)
     }
   }
 }
@@ -112,4 +112,17 @@ lot_decision = function(data, case, m, M, Mc, spread, method_det){
     stop("Unknown type of spread. Choose either 'continuous' or 'discrete'.")
   }
   
+}
+
+# Create texts for lot decisions.
+words = function(x){
+  switch(EXPR = x,
+         `1` = cat("Accept lot. Microbial load < LOD."),
+         `2` = cat("Reject lot. At least 1 sample has contamination level >= M."),
+         `3` = cat("Reject lot. The number of positive samples is > c."),
+         `4` = cat("Accept lot."),
+         `5` = cat("Accept lot. Mean sample concentration < LOD."),
+         `6` = cat("Reject lot. Mean sample concentration >= Mc"),
+         `7` = cat("Accept lot."),
+         warning("Unknown lot decision.", call. = FALSE))
 }
