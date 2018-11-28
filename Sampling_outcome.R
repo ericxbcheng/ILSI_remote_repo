@@ -36,30 +36,32 @@ calc_ROD = function(df_cover, n_sp, df_contam, spread){
 }
 
 # Create a function that runs the simulation once and gives an ROD
-sim_outcome = function(n_contam, xlim, ylim, n_affected, covar_mat, spread_radius, method, n_sp, sp_radius, spread, n_strata, by, cont_level, LOC, fun){
+sim_outcome = function(n_contam, xlim, ylim, n_affected, covar_mat, spread_radius, method, n_sp, sp_radius, spread, n_strata, by, cont_level, LOC, fun, m_kbar, m_sp, conc_good, case, m, M, Mc, method_det){
   
   # Generate the coordinates of contamination points
   contam_xy = sim_contam(n_contam = n_contam, xlim = xlim, ylim = ylim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius, cont_level = cont_level) 
   
   # Generate the coordinates of sample points
-  sp_xy = sim_plan(method = method, n_sp = n_sp, xlim = xlim, ylim = ylim, radius = sp_radius, n_strata = n_strata, by = by)
+  sp_xy = sim_plan(method_sp = method_sp, n_sp = n_sp, xlim = xlim, ylim = ylim, radius = sp_radius, by = by)
   
-  # Generate the combined coordinates of contamination and sample points
-  contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun)
+  # Generate the distance matrix
+  dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy)
   
-  # Calculate the distance between sample points and contamination points
-  dist_contam_sp = calc_dist(df = contam_sp_xy, spotONLY = FALSE)
+  # Combine contam_xy and sp_xy
+  contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun, dist = dist_contam_sp, sp_radius = sp_radius, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, cont_level = cont_level)
   
-  # Determine whether contamination is detected and calculate ROD
-  if(spread == "discrete"){
-    
-    cover_dis = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = sp_radius, spread = spread)
-    calc_ROD(df_cover = cover_dis, df_contam = contam_xy, n_sp = n_sp, spread = spread)
-    
-  } else if (spread == "continuous"){
-    
-    cover_cont = cover(df_dist = dist_contam_sp, df_coord = contam_sp_xy, r = spread_radius, spread = spread)
-    calc_ROD(df_cover = cover_cont, df_contam = contam_xy, n_sp = n_sp, spread = spread)
-    
-  }
+  # Determine which contamination points are detected or which sample points detect contamination
+  cover = calc_cover(df_dist = dist_contam_sp, spread_radius = spread_radius, sp_radius = sp_radius, spread = spread)
+  
+  ## Determine whether the contamination is detected or not. If detected, I_det = 1; if not detected, I_det = 0.
+  I_det = {nrow(cover) > 0} %>% as.integer()
+  
+  ## Calculate ROD per iteration
+  ROD = calc_ROD(df_cover = cover, n_sp = n_sp, df_contam = contam_xy, spread = spread)
+  
+  ## Determine lot decision
+  decision = lot_decision(data = contam_sp_xy, case = case, m = m, M = M, Mc = Mc, spread = spread, method_det = method_det)
+  
+  # Output
+  list(I_det, ROD, decision)
 }
