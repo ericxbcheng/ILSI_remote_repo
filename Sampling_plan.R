@@ -99,14 +99,11 @@ gen_sim_data = function(df_contam, df_sp, dist, spread_radius, sp_radius, LOC, f
               sum_level = sum(source_level)) %>%
     mutate(dis_level = m_kbar/m_sp*(sum_level + (n_k - obs) * conc_good))
   
-  ### Define sampling error
-  c = rlnorm(n = nrow(df_sp), meanlog = 0, sdlog = 1)
-  
   ### Combine everything, fill the NAs with the corresponding contamination level.
   df = rbind(df_contam, df_sp)
   
-  # Update the cont_level column for the sample points. Add sampling error.
-  df$cont_level[match(x = a$ID_sp, table = df$ID)] = a$cont_level + c
+  # Update the cont_level column for the sample points.
+  df$cont_level[match(x = a$ID_sp, table = df$ID)] = a$cont_level 
   
   # Update the dis_level column for the sample points.
   df$dis_level[match(x = b$ID_sp, table = df$ID)] = b$dis_level

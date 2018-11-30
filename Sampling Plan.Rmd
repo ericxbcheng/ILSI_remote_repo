@@ -196,12 +196,7 @@ str(sp_xy)
         
         $d_{ij}$ = distance between `sample point i` and `contamination point j`,
         
-        `f()` = decay function that calculates the contribution of contamination.
-        
-    2) Add in sampling error to the sample points for the continuous spread case, assuming the sampling error follows a log normal distribution with mean = 0 and sd = 1. 
-        
-    $$C_{sp\_with\_error_i}=C_{sp_i}+\epsilon_i$$
-    , where $i = 1,2,...,n_{sp}$; $ln(\epsilon)$~$N(\mu=0, \sigma^2 =1)$ 
+        $f(d)$ = decay function that calculates the contribution of contamination. When $d_{ij} > spread\_radius$, $f^*(d) = f(d)\times \frac {1} {\mu}$, where $\mu$ is the absolute value of mean contamination level. This process would reduce $C_{sp_i}$ to almost 0.
 
 ```{r}
 dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy)
