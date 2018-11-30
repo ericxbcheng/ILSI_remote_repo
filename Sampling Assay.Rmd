@@ -177,7 +177,7 @@ overlay_draw(method = method_sp, data = contam_sp_xy, spread = "discrete", xlim 
 *Continuous spread*  
 
 ```{r}
-assay_draw(df = contam_sp_xy, M = M, m = m, method_det = method_det, Mc = Mc, spread = "continuous")
+assay_draw(df = contam_sp_xy, M = M, m = m, method_det = method_det, Mc = Mc, spread = "continuous", case = case)
 deci_cont = lot_decision(data = contam_sp_xy, case = case, m = m, M = M, method_det = method_det, Mc = Mc, spread = "continuous")
 words(x = deci_cont)
 ```
