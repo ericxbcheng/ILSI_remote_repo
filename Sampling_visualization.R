@@ -186,19 +186,23 @@ overlay_draw = function(method_sp, data, spread, xlim, ylim, n_strata, by){
 }
 
 # Create a function that draws the contamination level of samples and shows the microbiological criteria in the continuous spread scenario
-assay_draw_cont = function(df, M, m, method_det){
+assay_draw_cont = function(df, M, m, method_det, case){
+  
+  a = get_attr_plan(case = case, m = m, M = M)
+  M1 = a$M
+  m1 = a$m
   
   temp1 = subset(x = df, subset = label == "sample point")
   temp2 = data.frame(Thresholds = c("M", "m", "LOD"), 
-                    val = c(M, m, get_LOD(method_det = method_det)))
+                    val = c(M1, m1, get_LOD(method_det = method_det)))
   
   ggplot() +
     geom_col(data = temp1, aes(x = ID, y = cont_level), fill = "darkgrey") +
     geom_hline(data = temp2, aes(yintercept = val, color = Thresholds), size = 1.5) +
     geom_text(data = temp1, 
               aes(x = ID, y = cont_level, 
-                  label = round(cont_level, digits = 2)), 
-              position = position_nudge(y = 0.2)) +
+                  label = scientific(cont_level, digits = 2)), 
+              position = position_nudge(y = 0.3)) +
     scale_y_log10(label = scientific_format()) +
     scale_color_manual(values = c("#00BA38", "#D89000", "#F8766D" )) +
     labs(x = "Sample point", y = "Contamination level (CFU/g)") +
@@ -217,8 +221,8 @@ assay_draw_dis = function(df, Mc, method_det){
     geom_hline(data = temp2, aes(yintercept = val, color = Thresholds), size = 1.5) +
     geom_text(data = temp1, aes(x = "Mean sample concentration", 
                                 y = mean(temp1$dis_level), 
-                                label = round(mean(temp1$dis_level), digits = 2)), 
-              nudge_y = 0.2) +
+                                label = scientific(mean(temp1$dis_level), digits = 2)), 
+              nudge_y = 0.3) +
     scale_y_log10() +
     scale_color_manual(values = c("#00BA38", "#F8766D")) +
     labs(x = NULL, y = "Contamination level (ng/g)") +
@@ -226,11 +230,11 @@ assay_draw_dis = function(df, Mc, method_det){
 }
 
 # A wrapper function that includes assay_draw_cont() and assay_draw_dis()
-assay_draw = function(df, M, m, Mc, method_det, spread){
+assay_draw = function(df, M, m, Mc, method_det, spread, case){
   if(spread == "discrete"){
     assay_draw_dis(df = df, Mc = Mc, method_det = method_det)
   } else if (spread == "continuous"){
-    assay_draw_cont(df = df, M = M, m = m, method_det = method_det)
+    assay_draw_cont(df = df, M = M, m = m, method_det = method_det, case = case)
   } else {
     warning("Unknown type of spread.")
   }
