@@ -239,3 +239,48 @@ assay_draw = function(df, M, m, Mc, method_det, spread, case){
     warning("Unknown type of spread.")
   }
 }
+
+# Plot the ROD for multiple values of a single parameter
+plot_ROD = function(data, param_name){
+  
+  temp = data.frame(param = data$param, ROD = data$ROD)
+  
+  ggplot(data = temp, aes(x = param, y = ROD, group = param)) +
+    stat_boxplot(geom = "errorbar") +
+    geom_boxplot() +
+    labs(x = param_name, y = "Rate of detection (ROD)") +
+    theme_bw()
+}
+
+# Plot the detection probability for multiple values of a single parameter
+plot_Pdet = function(data, param_name){
+  
+  temp = split(x = data$I_det, f = data$param) %>%
+    map(.x = ., .f = calc_Pdet) %>%
+    unlist() %>%
+    data.frame(param = as.integer(names(.)), Pdet = .)
+  
+  ggplot(data = temp, aes(x = param, y = Pdet)) +
+    geom_line() +
+    geom_point() +
+    scale_x_continuous(breaks = temp$param) +
+    labs(x = param_name, y = "Detection probability") +
+    theme_bw()
+}
+
+# Plot the Probability of acceptance for multiple values of a single parameter
+plot_Paccept = function(data, param_name){
+  
+  temp = split(x = data$decision, f = data$param) %>% 
+    map(.x = ., .f = calc_Prej) %>%
+    unlist() %>%
+    data.frame(param = as.integer(names(.)), Prej = .) %>%
+    mutate(Paccept = 1 - Prej)
+  
+  ggplot(data = temp, aes(x = param, y = Paccept)) +
+    geom_line() +
+    geom_point() +
+    scale_x_continuous(breaks = temp$param) +
+    labs(x = param_name, y = "P(accept)") +
+    theme_bw()
+}
