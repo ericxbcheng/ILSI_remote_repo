@@ -1,0 +1,141 @@
+---
+title: 'Sampling: Analysis'
+author: "Xianbin Cheng"
+date: "December 6, 2018"
+output: html_document
+---
+
+# Method  
+
+1. Load the libraries and functions.
+
+```{r, warning = FALSE, message = FALSE}
+source("Sampling_libraries.R")
+source("Sampling_contamination.R")
+source("Sampling_plan.R")
+source("Sampling_assay.R")
+source("Sampling_outcome.R")
+source("Sampling_iteration.R")
+```
+
+2. List important parameters from previous R files. 
+
+**Contamination:**  
+
+  * `n_contam` = the number of contamination points 
+  * `x_lim` = the limits of the horizontal axis  
+  * `y_lim` = the limits of the vertical axis  
+  * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,10)`)
+  * `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,10)`)  
+  * `cont_level` = a vector that indicates the mean contamination level (logCFU/g or logCFU/mL) and the standard deviation in a log scale, assuming contamination level follows a log normal distribution $ln(cont\_level)$~$N(\mu, \sigma^2)$. 
+  * `spread` = the type of spread: `continuous` or `discrete`.
+
+  **Mode 1: Discrete Spread** 
+
+  * `n_affected` = the number of affected plants near the contamination spot, which follows a Poisson distribution (`Pois(lambda = 5)`)   
+  * `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) =     0.25, var(Y) = 0.25 and cov(X, Y) = 0  
+
+  **Mode 2: Continuous Spread**
+
+  * `spread_radius` = the radius of the contamination spread. 
+  * `LOC` = the limit of contribution of contamination. By default, it is set at 0.001.(Both `spread_radius` and `LOC` determine the shape of decay function that describes how much contamination from the source is contributed to a target point.)
+  * `fun` = the decay function that describes the spread. It takes either "exp" or "norm".
+
+**Sampling Plan:**  
+
+  * `method_sp` = the sampling method (SRS, STRS, SS)
+  * `n_sp` = the number of sampling points
+  * `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
+  * `n_strata` = the number of strata (applicable to *Stratified random sampling*)
+  * `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to *Stratified random sampling*) **OR** the side along which a sample is taken every k steps (applicable to *Systematic sampling*).
+  * `m_kbar` = averaged kernel weight (g). By default, it's 0.3 g (estimated from Texas corn).
+  * `m_sp` = the analytical sample weight (25 g)
+  * `conc_good` = concentration of toxin in healthy kernels
+  * `case` = 1 ~ 15 cases that define the stringency of the sampling plan.
+  * Attributes plans:
+      + `n` = number of analytical units (25g)
+      + `c` = maximum allowable number of analytical units yielding positive results
+      + `m` = microbial count or concentration above which an analytical unit is considered positive
+      + `M` = microbial count or concentration, if any analytical unit is above `M`, the lot is rejected.
+
+**Sampling Assay:**
+  
+  * `method_det` = method of detection
+      + Plating: LOD = 2500 CFU/g
+      + Enrichment: LOD = 1 CFU/g
+
+**Iteration:**
+
+  * `n_iter` = the number of iterations per simulation.
+  
+3. Choose the parameter to iterate on.
+
+```{r}
+## We choose "n_contam" to iterate on.
+n_contam = c(1, 2, 3, 4, 5, 6)
+
+## Other fixed parameters
+## Contamination
+x_lim = c(0, 10)
+y_lim = c(0, 10)
+cont_level = c(7, 1)
+spread = "continuous"
+
+### Mode 1
+n_affected = rpois(n = 1, lambda = 5)
+covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
+
+### Mode 2
+spread_radius = 2.5
+LOC = 10^(-3)
+fun = "exp"
+
+## Sampling plan
+method_sp = "srs"
+n_sp = 10
+sp_radius = 1
+n_strata = 5
+by = "row"
+m_kbar = 0.3
+m_sp = 25
+conc_good = 0.1
+case = 9
+m = 50
+M = 500
+Mc = 20
+
+## Assay
+method_det = "plating"
+
+## Sampling outcome
+n_iter = 100
+```
+ 
+4. Iterate the simulation on different values of a single parameter
+
+```{r}
+tune_param
+
+result = tune_param(val = n_contam, n_iter = n_iter, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = method_sp, n_sp = n_sp, sp_radius = sp_radius, spread = spread, n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, case = case, m = m, M = M, Mc = Mc, method_det = method_det)
+```
+
+# Results
+
+1. Create a boxplot for rate of detections using simple random sampling.
+
+```{r}
+plot_ROD(data = result, param_name = "Number of contamination points")
+```
+
+2.  Create a plot for probability of detection.  
+
+```{r}
+plot_Pdet(data = result, param_name = "Number of contamination points")
+```
+
+3. Create a plot for probability of acceptance.  
+
+```{r}
+plot_Paccept(data = result, param_name = "Number of contamination points")
+```
+
