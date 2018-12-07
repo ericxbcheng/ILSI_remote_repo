@@ -161,7 +161,7 @@ f_outcome()
     2.1. Calculate the probability of detection.  
 
 ```{r}
-calc_Pdet(results2)
+calc_Pdet(results2$I_det)
 ```
 
 
@@ -182,6 +182,6 @@ ggplot() +
     2.3. Calculate the probability of acceptance.
 
 ```{r}
-1 - calc_Prej(results2)
+1 - calc_Prej(results2$decision)
 ```
 

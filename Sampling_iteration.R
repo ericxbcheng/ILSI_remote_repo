@@ -32,29 +32,30 @@ clean = function(data){
 }
 
 # Calculate the probability of rejection
-calc_Prej = function(data){
-  # Extract out the decision vector
-  a = data$decision
+calc_Prej = function(decision){
   
+  # Check point
+  stopifnot(decision %in% 1:7)
+
   # Based on the lookup table, numbers 2,3,6 mean rejection while the others mean acceptance. 
   # Convert the decision vector into a logical vector. 1 = rejection, 0 = acceptance.
-  b = {a %in% c(2, 3, 6)}
+  a = {decision %in% c(2, 3, 6)}
   
   # Calculate the probability of rejection
-  c = mean(b)
-  
-  return(c)
-}
-
-# Calculate the probability of detection (whether any of the contamination is detected)
-calc_Pdet = function(data){
-  # Extract out the I_det vector
-  a = data$I_det
-  
-  # Calculate the probability of detection
   b = mean(a)
   
   return(b)
+}
+
+# Calculate the probability of detection (whether any of the contamination is detected)
+calc_Pdet = function(I_det){
+  
+  # Check point
+  stopifnot(I_det %in% c(0,1))
+  
+  # Calculate the probability of detection
+  mean(I_det)
+  
 }
 
 # Create a function that can iterate the simulation for n_iter times
