@@ -172,7 +172,7 @@ calc_ROD(df_cover = cover_dis, n_sp = n_sp, df_contam = contam_xy, spread = "dis
 * Therefore, we detected `r length(unique(cover_dis$ID_contam))` out of `r nrow(contam_xy)` contamination points. The rate of detection is `r length(unique(cover_dis$ID_contam)) / nrow(contam_xy)`.
 
 ```{r}
-assay_draw(df = contam_sp_xy, M = M, m = m, Mc = Mc, method_det = method_det, spread = "discrete")
+assay_draw(df = contam_sp_xy, M = M, m = m, Mc = Mc, method_det = method_det, spread = "discrete", case = case)
 ```
 
 ```{r}
@@ -200,7 +200,7 @@ calc_ROD(df_cover = cover_cont, n_sp = n_sp, df_contam = contam_xy, spread = "co
 * Therefore, `r length(unique(cover_cont$ID_sp))` out of `r n_sp` sample points detected contamination. The rate of detection is `r length(unique(cover_cont$ID_sp)) / n_sp`.
 
 ```{r}
-assay_draw(df = contam_sp_xy, M = M, m = m, Mc = Mc, method_det = method_det, spread = "continuous")
+assay_draw(df = contam_sp_xy, M = M, m = m, Mc = Mc, method_det = method_det, spread = "continuous", case = case)
 ```
 
 ```{r}
