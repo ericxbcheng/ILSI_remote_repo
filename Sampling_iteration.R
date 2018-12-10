@@ -60,5 +60,12 @@ calc_Pdet = function(I_det){
 
 # Create a function that can iterate the simulation for n_iter times
 sim_iterate = function(n_iter, fun){
+  
+  # Check point: Is n_iter >= 1 and is it an integer?
+  if(! any(n_iter >=1, is.integer(integer))){
+    stop("n_iter is either not >= 1 or not an integer.")
+  }
+  
+  # Iterate the function for n_iter times
   map(.x = 1:n_iter, .f = fun)
 }
