@@ -15,3 +15,34 @@ tune_param = function(val, n_iter, ...){
   
   return(c)
 }
+
+## Create a function that removes one of the arguments. This is important for iterating the simulation on different values of a single parameter.
+one_arg_less = function(name, Args_default){
+  
+  # Check point: Is the parame_name included in the list below?
+  if(! any(name %in% c("n_contam", "xlim", "ylim", "n_affected", 
+                       "covar_mat", "spread_radius", "method", 
+                       "n_sp", "sp_radius", "spread", "n_strata", 
+                       "by", "cont_level", "LOC", "fun", "m_kbar", 
+                       "m_sp", "conc_good", "case", "m", "M", "Mc", "method_det"))){
+    stop("Unknown tuning parameter.")
+  }
+  
+  a = Args_default
+  
+  # Set the chosen parameter to NULL
+  a[[name]] = NULL
+  return(a)
+}
+
+## Create a function that can tune a single parameter given the parameter name and values
+tune_param2 = function(val, name, Args_default, n_iter){
+  
+  # Produce a list of arguments with the tuning parameter removed
+  a = one_arg_less(name = name, Args_default = Args_default)
+  
+  # Tune the chosen parameter for n_iter times. !!!a means splicing the list "a" and releasing all the remaining arguments.
+  b = exec(f = tune_param, val = val, n_iter = n_iter, !!!a)
+  
+  return(b)
+}
