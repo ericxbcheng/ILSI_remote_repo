@@ -17,6 +17,7 @@ source("Sampling_assay.R")
 source("Sampling_outcome.R")
 source("Sampling_iteration.R")
 source("Sampling_analysis.R")
+source("Sampling_visualization.R")
 ```
 
 2. List important parameters from previous R files. 
@@ -73,7 +74,7 @@ source("Sampling_analysis.R")
 
 ```{r}
 ## We choose "n_contam" to iterate on.
-n_contam = c(1, 2, 3, 4, 5, 6)
+n_contam = rpois(n = 1, lambda = 3)
 
 ## Other fixed parameters
 ## Contamination
@@ -87,7 +88,7 @@ n_affected = rpois(n = 1, lambda = 5)
 covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
 
 ### Mode 2
-spread_radius = 2.5
+spread_radius = 1
 LOC = 10^(-3)
 fun = "exp"
 
@@ -106,32 +107,62 @@ M = 500
 Mc = 20
 
 ## Assay
-method_det = "plating"
+method_det = "enrichment"
 
 ## Sampling outcome
 n_iter = 100
 ```
+
+4. Create a `ArgList` to keep all the default arguments. Create a vector to hold values for the tuning parameter.
  
-4. Iterate the simulation on different values of a single parameter
+```{r}
+ArgList = list(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = method_sp, n_sp = n_sp, sp_radius = sp_radius, spread = spread, n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, case = case, m = m, M = M, Mc = Mc, method_det = method_det)
+
+param_name = "n_contam"
+vals = c(1,2,3,4,5,6)
+```
+
+ 
+5. Iterate the simulation on different values of a single parameter
 
 ```{r}
 tune_param
-
-result = tune_param(val = n_contam, n_iter = n_iter, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = method_sp, n_sp = n_sp, sp_radius = sp_radius, spread = spread, n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, case = case, m = m, M = M, Mc = Mc, method_det = method_det)
+one_arg_less
+tune_param2
 ```
+
+```{r}
+result = tune_param2(val = vals, name = param_name, Args_default = ArgList, n_iter = n_iter)
+```
+
+6. For visualization and debug purposes.
+
+```{r}
+one_iteration = do.call(what = sim_outcome2, args = ArgList)
+```
+
 
 # Results
 
-1. Create a boxplot for rate of detections using simple random sampling.
+1. Visualization of one iteration.
 
-```{r}
-plot_ROD(data = result, param_name = "Number of contamination points")
+```{r, warning = FALSE, echo = FALSE, out.width = "50%"}
+overlay_draw(method_sp = method_sp, data = one_iteration, spread = spread, xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
+contam_level_draw(dimension = "2d", method = fun, spread_radius = spread_radius, LOC = LOC, df_contam = one_iteration, xlim = x_lim, ylim = y_lim)
+contam_level_draw(dimension = "3d", method = fun, spread_radius = spread_radius, LOC = LOC, df_contam = one_iteration, xlim = x_lim, ylim = y_lim)
+assay_draw(df = one_iteration, M = M, m = m, Mc = Mc, method_det = method_det, spread = spread, case = case)
 ```
 
-2.  Create a plot for probability of detection.  
+1.  Create a plot for probability of detection.  
 
 ```{r}
 plot_Pdet(data = result, param_name = "Number of contamination points")
+```
+
+2. Create a boxplot for rate of detections using simple random sampling.
+
+```{r}
+plot_ROD(data = result, param_name = "Number of contamination points")
 ```
 
 3. Create a plot for probability of acceptance.  
@@ -139,4 +170,5 @@ plot_Pdet(data = result, param_name = "Number of contamination points")
 ```{r}
 plot_Paccept(data = result, param_name = "Number of contamination points")
 ```
+
 
