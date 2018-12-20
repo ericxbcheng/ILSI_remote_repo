@@ -123,7 +123,7 @@ vals = c(1,2,3,4,5,6)
 ```
 
  
-5. Iterate the simulation on different values of a single parameter
+5. Iterate the simulation on different values of a single parameter for `n_iter` batches. Total number of iterations = `r length(vals)*n_iter*n_iter`.
 
 ```{r}
 tune_param
@@ -132,7 +132,15 @@ tune_param2
 ```
 
 ```{r}
-result = tune_param2(val = vals, name = param_name, Args_default = ArgList, n_iter = n_iter)
+# Iterate 100 times for each value of param_name for 1 batch
+#result = tune_param2(val = vals, name = param_name, Args_default = ArgList, n_iter = n_iter)
+```
+
+```{r}
+# Iterate 100 times for each value of param_name, treat it as one batch, and then iterate for 100 batches
+result = map(.x = 1:n_iter, .f = tune_param2, val = vals, name = param_name, Args_default = ArgList, n_iter = n_iter)
+saveRDS(object = result, file = "Iterate_100x100.rds")
+# result = readRDS(file = "Iterate_10x10.rds")
 ```
 
 6. For visualization and debug purposes.
@@ -156,19 +164,19 @@ assay_draw(df = one_iteration, M = M, m = m, Mc = Mc, method_det = method_det, s
 1.  Create a plot for probability of detection.  
 
 ```{r}
-plot_Pdet(data = result, param_name = "Number of contamination points")
+plot_mean_Pdet(data = result, param_name = "Number of contamination points")
 ```
 
 2. Create a boxplot for rate of detections using simple random sampling.
 
 ```{r}
-plot_ROD(data = result, param_name = "Number of contamination points")
+plot_mean_ROD(data = result, param_name = "Number of contamination points")
 ```
 
 3. Create a plot for probability of acceptance.  
 
 ```{r}
-plot_Paccept(data = result, param_name = "Number of contamination points")
+plot_mean_Paccept(data = result, param_name = "Number of contamination points")
 ```
 
 

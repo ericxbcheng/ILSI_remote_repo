@@ -36,7 +36,7 @@ one_arg_less = function(name, Args_default){
 }
 
 ## Create a function that can tune a single parameter given the parameter name and values
-tune_param2 = function(val, name, Args_default, n_iter){
+tune_param2 = function(val, name, Args_default, n_iter, ...){
   
   # Produce a list of arguments with the tuning parameter removed
   a = one_arg_less(name = name, Args_default = Args_default)
@@ -45,4 +45,25 @@ tune_param2 = function(val, name, Args_default, n_iter){
   b = exec(f = tune_param, val = val, n_iter = n_iter, !!!a)
   
   return(b)
+}
+
+# Calculate detection probability for simulations with each tuning value
+calc_Pdet2 = function(data){
+  split(x = data$I_det, f = data$param) %>%
+    map(.x = ., .f = calc_Pdet) %>%
+    unlist()
+}
+
+# Calculate probability of rejection for simulations with each tuning value
+calc_Prej2 = function(data){
+  split(x = data$decision, f = data$param) %>%
+    map(.x = ., .f = calc_Prej) %>%
+    unlist()
+}
+
+# Calculate mean rate of detection for simulations with each tuning value
+calc_mean_ROD = function(data){
+  split(x = data$ROD, f = data$param) %>%
+    map(.x = ., .f = mean) %>%
+    unlist()
 }
