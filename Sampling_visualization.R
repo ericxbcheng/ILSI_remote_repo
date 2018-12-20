@@ -284,3 +284,43 @@ plot_Paccept = function(data, param_name){
     labs(x = param_name, y = "P(accept)") +
     theme_bw()
 }
+
+# Plot the mean detection probability for multiple values of a single parameter
+plot_mean_Pdet = function(data, param_name){
+  temp = map(.x = data, .f = calc_Pdet2) %>%
+    unlist() %>%
+    data.frame(param = as.integer(names(.)), P_det = .)
+  
+  ggplot(data = temp) +
+    geom_boxplot(aes(x = param, y = P_det, group = param)) +
+    scale_x_continuous(breaks = temp$param) +
+    labs(x = param_name, y = "Mean detection probability") +
+    theme_bw()
+}
+
+# Plot the mean probability of acceptance for multiple values of a single parameter
+plot_mean_Paccept = function(data, param_name){
+  temp = map(.x = data, .f = calc_Prej2) %>%
+    unlist() %>%
+    data.frame(param = as.integer(names(.)), P_rej = .) %>%
+    mutate(Paccept = 1 - P_rej)
+  
+  ggplot(data = temp) +
+    geom_boxplot(aes(x = param, y = Paccept, group = param)) +
+    scale_x_continuous(breaks = temp$param) +
+    labs(x = param_name, y = "Mean probability of acceptance") +
+    theme_bw()
+}
+
+# Plot the mean rate of detection for multiple values of a single parameter 
+plot_mean_ROD = function(data, param_name){
+  temp = map(.x = data, .f = calc_mean_ROD) %>%
+    unlist() %>%
+    data.frame(param = as.integer(names(.)), mean_ROD = .)
+  
+  ggplot(data = temp) +
+    geom_boxplot(aes(x = param, y = mean_ROD, group = param)) +
+    scale_x_continuous(breaks = temp$param) +
+    labs(x = param_name, y = "Mean rate of detection") +
+    theme_bw()
+}
