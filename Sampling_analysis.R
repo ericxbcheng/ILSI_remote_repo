@@ -21,7 +21,7 @@ one_arg_less = function(name, Args_default){
   
   # Check point: Is the parame_name included in the list below?
   if(! any(name %in% c("n_contam", "xlim", "ylim", "n_affected", 
-                       "covar_mat", "spread_radius", "method", 
+                       "covar_mat", "spread_radius", "method_sp", 
                        "n_sp", "sp_radius", "spread", "n_strata", 
                        "by", "cont_level", "LOC", "fun", "m_kbar", 
                        "m_sp", "conc_good", "case", "m", "M", "Mc", "method_det"))){

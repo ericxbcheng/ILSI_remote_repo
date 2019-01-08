@@ -116,7 +116,7 @@ n_iter = 100
 4. Create a `ArgList` to keep all the default arguments. Create a vector to hold values for the tuning parameter.
  
 ```{r}
-ArgList = list(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method = method_sp, n_sp = n_sp, sp_radius = sp_radius, spread = spread, n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, case = case, m = m, M = M, Mc = Mc, method_det = method_det)
+ArgList = list(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method_sp = method_sp, n_sp = n_sp, sp_radius = sp_radius, spread = spread, n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, case = case, m = m, M = M, Mc = Mc, method_det = method_det)
 
 param_name = "n_contam"
 vals = c(1,2,3,4,5,6)
@@ -136,11 +136,14 @@ tune_param2
 #result = tune_param2(val = vals, name = param_name, Args_default = ArgList, n_iter = n_iter)
 ```
 
-```{r}
+```{r, eval = FALSE}
 # Iterate 100 times for each value of param_name, treat it as one batch, and then iterate for 100 batches
 result = map(.x = 1:n_iter, .f = tune_param2, val = vals, name = param_name, Args_default = ArgList, n_iter = n_iter)
 saveRDS(object = result, file = "Iterate_100x100.rds")
-# result = readRDS(file = "Iterate_10x10.rds")
+```
+
+```{r, echo = FALSE}
+result = readRDS(file = "Iterate_100x100.rds")
 ```
 
 6. For visualization and debug purposes.
