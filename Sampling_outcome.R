@@ -35,20 +35,48 @@ calc_ROD = function(df_cover, n_sp, df_contam, spread){
   }
 }
 
-# Create a function that runs the simulation once and gives an ROD
-sim_outcome = function(n_contam, xlim, ylim, n_affected, covar_mat, spread_radius, method, n_sp, sp_radius, spread, n_strata, by, cont_level, LOC, fun, m_kbar, m_sp, conc_good, case, m, M, Mc, method_det){
+# Create a function that runs the simulation once and produce the simulated data (for visualization and debug purposes)
+sim_outcome_temp = function(n_contam, xlim, ylim, n_affected, covar_mat, spread_radius, method_sp, n_sp, sp_radius, spread, n_strata, by, cont_level, LOC, fun, m_kbar, m_sp, conc_good, case, m, M, Mc, method_det){
   
   # Generate the coordinates of contamination points
   contam_xy = sim_contam(n_contam = n_contam, xlim = xlim, ylim = ylim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius, cont_level = cont_level) 
   
   # Generate the coordinates of sample points
-  sp_xy = sim_plan(method_sp = method_sp, n_sp = n_sp, xlim = xlim, ylim = ylim, radius = sp_radius, by = by)
+  sp_xy = sim_plan(method_sp = method_sp, n_sp = n_sp, xlim = xlim, ylim = ylim, radius = sp_radius, by = by, n_strata = n_strata)
   
   # Generate the distance matrix
   dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy)
   
   # Combine contam_xy and sp_xy
   contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun, dist = dist_contam_sp, sp_radius = sp_radius, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, cont_level = cont_level)
+  
+  return(list(contam_xy, sp_xy, dist_contam_sp, contam_sp_xy))
+}
+
+# Create a function that runs the simulation once and gives an ROD
+sim_outcome = function(n_contam, xlim, ylim, n_affected, covar_mat, spread_radius, method_sp, n_sp, sp_radius, spread, n_strata, by, cont_level, LOC, fun, m_kbar, m_sp, conc_good, case, m, M, Mc, method_det){
+  
+  # # Generate the coordinates of contamination points
+  # contam_xy = sim_contam(n_contam = n_contam, xlim = xlim, ylim = ylim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius, cont_level = cont_level) 
+  # 
+  # # Generate the coordinates of sample points
+  # sp_xy = sim_plan(method_sp = method_sp, n_sp = n_sp, xlim = xlim, ylim = ylim, radius = sp_radius, by = by, n_strata = n_strata)
+  # 
+  # # Generate the distance matrix
+  # dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy)
+  # 
+  # # Combine contam_xy and sp_xy
+  # contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun, dist = dist_contam_sp, sp_radius = sp_radius, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, cont_level = cont_level)
+  
+  # Produce the intermediate outputs
+  a = sim_outcome_temp(n_contam = n_contam, xlim = xlim, ylim = ylim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method_sp = method_sp, 
+                   n_sp = n_sp, sp_radius = sp_radius, spread = spread, n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar,
+                   m_sp = m_sp, conc_good = conc_good, case = case, m = m, M = M, Mc = Mc, method_det = method_det)
+  
+  contam_xy = a[[1]]
+  sp_xy = a[[2]]
+  dist_contam_sp = a[[3]]
+  contam_sp_xy = a[[4]]
   
   # Determine which contamination points are detected or which sample points detect contamination
   cover = calc_cover(df_dist = dist_contam_sp, spread_radius = spread_radius, sp_radius = sp_radius, spread = spread)
@@ -66,20 +94,4 @@ sim_outcome = function(n_contam, xlim, ylim, n_affected, covar_mat, spread_radiu
   list(I_det, ROD, decision)
 }
 
-# Create a function that runs the simulation once and produce the simulated data (for visualization and debug purposes)
-sim_outcome2 = function(n_contam, xlim, ylim, n_affected, covar_mat, spread_radius, method, n_sp, sp_radius, spread, n_strata, by, cont_level, LOC, fun, m_kbar, m_sp, conc_good, case, m, M, Mc, method_det){
-  
-  # Generate the coordinates of contamination points
-  contam_xy = sim_contam(n_contam = n_contam, xlim = xlim, ylim = ylim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius, cont_level = cont_level) 
-  
-  # Generate the coordinates of sample points
-  sp_xy = sim_plan(method_sp = method_sp, n_sp = n_sp, xlim = xlim, ylim = ylim, radius = sp_radius, by = by)
-  
-  # Generate the distance matrix
-  dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy)
-  
-  # Combine contam_xy and sp_xy
-  contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun, dist = dist_contam_sp, sp_radius = sp_radius, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, cont_level = cont_level)
-  
-  return(contam_sp_xy)
-}
+
