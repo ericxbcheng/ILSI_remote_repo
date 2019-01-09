@@ -294,6 +294,7 @@ plot_mean_Pdet = function(data, param_name){
   ggplot(data = temp) +
     geom_boxplot(aes(x = param, y = P_det, group = param)) +
     scale_x_continuous(breaks = temp$param) +
+    coord_cartesian(ylim = c(0, 1)) +
     labs(x = param_name, y = "Mean detection probability") +
     theme_bw()
 }
@@ -308,6 +309,7 @@ plot_mean_Paccept = function(data, param_name){
   ggplot(data = temp) +
     geom_boxplot(aes(x = param, y = Paccept, group = param)) +
     scale_x_continuous(breaks = temp$param) +
+    coord_cartesian(ylim = c(0, 1)) +
     labs(x = param_name, y = "Mean probability of acceptance") +
     theme_bw()
 }
@@ -321,6 +323,30 @@ plot_mean_ROD = function(data, param_name){
   ggplot(data = temp) +
     geom_boxplot(aes(x = param, y = mean_ROD, group = param)) +
     scale_x_continuous(breaks = temp$param) +
+    coord_cartesian(ylim = c(0, 1)) +
     labs(x = param_name, y = "Mean rate of detection") +
     theme_bw()
 }
+
+# Plot probability of detection for different values of the tuning parameter and different sampling strategies
+plot_mean_Pdet2 = function(data, param_name){
+  ggplot(data = data, aes(x = param, y = P_det, group = interaction(param, method_sp))) +
+    geom_boxplot(aes(color = method_sp)) +
+    scale_x_continuous(breaks = data$param) +
+    coord_cartesian(ylim = c(0,1)) +
+    labs(x = param_name, y = "Probability of detection") +
+    theme_bw()
+}
+
+# Plot probability of acceptance for different values of the tuning parameter and different sampling strategies
+plot_mean_Paccept2 = function(data, param_name){
+  ggplot(data = data, aes(x = param, y = Paccept, group = interaction(param, method_sp))) +
+    geom_boxplot(aes(color = method_sp)) +
+    scale_x_continuous(breaks = data$param) +
+    coord_cartesian(ylim = c(0,1)) +
+    labs(x = param_name, y = "Probability of acceptance") +
+    theme_bw()
+}
+
+
+
