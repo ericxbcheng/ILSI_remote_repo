@@ -1,0 +1,257 @@
+---
+title: "Sampling: Data Generation"
+author: "Xianbin Cheng"
+date: "January 7, 2019"
+output: html_document
+---
+
+# Objective  
+
+  * To generate simulated data for three sampling strategies (SRS, STRS, SS) with different combinations of `n_contam` and `n_sp`
+  
+# Method  
+
+1. Load the libraries and functions.
+
+```{r, warning = FALSE, message = FALSE}
+source("Sampling_libraries.R")
+source("Sampling_contamination.R")
+source("Sampling_plan.R")
+source("Sampling_assay.R")
+source("Sampling_outcome.R")
+source("Sampling_iteration.R")
+source("Sampling_analysis.R")
+source("Simulation_data.R")
+source("Sampling_visualization.R")
+```
+
+```{r}
+sessionInfo()
+```
+
+
+2. List important parameters from previous R files. 
+
+**Contamination:**  
+
+  * `n_contam` = the number of contamination points 
+  * `x_lim` = the limits of the horizontal axis  
+  * `y_lim` = the limits of the vertical axis  
+  * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution (`U(0,10)`)
+  * `y` = the vertical coordinate of the contamination center, which follows a uniform distribution(`U(0,10)`)  
+  * `cont_level` = a vector that indicates the mean contamination level (logCFU/g or logCFU/mL) and the standard deviation in a log scale, assuming contamination level follows a log normal distribution $ln(cont\_level)$~$N(\mu, \sigma^2)$. 
+  * `spread` = the type of spread: `continuous` or `discrete`.
+
+  **Mode 1: Discrete Spread** 
+
+  * `n_affected` = the number of affected plants near the contamination spot, which follows a Poisson distribution (`Pois(lambda = 5)`)   
+  * `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) =     0.25, var(Y) = 0.25 and cov(X, Y) = 0  
+
+  **Mode 2: Continuous Spread**
+
+  * `spread_radius` = the radius of the contamination spread. 
+  * `LOC` = the limit of contribution of contamination. By default, it is set at 0.001.(Both `spread_radius` and `LOC` determine the shape of decay function that describes how much contamination from the source is contributed to a target point.)
+  * `fun` = the decay function that describes the spread. It takes either "exp" or "norm".
+
+**Sampling Plan:**  
+
+  * `method_sp` = the sampling method (SRS, STRS, SS)
+  * `n_sp` = the number of sampling points
+  * `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
+  * `n_strata` = the number of strata (applicable to *Stratified random sampling*)
+  * `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to *Stratified random sampling*) **OR** the side along which a sample is taken every k steps (applicable to *Systematic sampling*).
+  * `m_kbar` = averaged kernel weight (g). By default, it's 0.3 g (estimated from Texas corn).
+  * `m_sp` = the analytical sample weight (25 g)
+  * `conc_good` = concentration of toxin in healthy kernels
+  * `case` = 1 ~ 15 cases that define the stringency of the sampling plan.
+  * Attributes plans:
+      + `n` = number of analytical units (25g)
+      + `c` = maximum allowable number of analytical units yielding positive results
+      + `m` = microbial count or concentration above which an analytical unit is considered positive
+      + `M` = microbial count or concentration, if any analytical unit is above `M`, the lot is rejected.
+
+**Sampling Assay:**
+  
+  * `method_det` = method of detection
+      + Plating: LOD = 2500 CFU/g
+      + Enrichment: LOD = 1 CFU/g
+
+**Iteration:**
+
+  * `n_iter` = the number of iterations per simulation.
+
+```{r}
+## We choose "n_contam" to iterate on.
+n_contam = rpois(n = 1, lambda = 3)
+
+## Other fixed parameters
+## Contamination
+x_lim = c(0, 10)
+y_lim = c(0, 10)
+cont_level = c(7, 1)
+spread = "continuous"
+
+### Mode 1
+n_affected = rpois(n = 1, lambda = 5)
+covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
+
+### Mode 2
+spread_radius = 1
+LOC = 10^(-3)
+fun = "exp"
+
+## Sampling plan
+method_sp = "srs"
+n_sp = 15
+sp_radius = 1
+n_strata = 5
+by = "row"
+m_kbar = 0.3
+m_sp = 25
+conc_good = 0.1
+case = 12
+m = 0
+M = 0
+Mc = 20
+
+## Assay
+method_det = "enrichment"
+
+## Sampling outcome
+n_iter = 100
+```
+
+3. Set up the tuning parameters, including `n_contam`, `n_sp`, `method_sp`, and `case`.
+
+  * First layer: We iterate the simulation on 6 values of `n_contam` with a single sampling strategy and a single `n_sp` (and also a single `case` as `n_sp` and `case` are conjugated) for `n_iter`x`n_iter` times. 
+  
+      * The first `n_iter` iterations produce `r n_iter` binary indicators that can be calculated as 1 probability of detection
+      
+      * The second `n_iter` iterations produce `r n_iter` probabilities of detection. The same rule applies to probability of acceptance.
+  
+  * Second layer: We iterate the first layer over 3 values of `method_sp` (i.e. three sampling strategies) with a single `n_sp`
+  
+  * Third layer: We iterate the second layer over 5 values of `n_sp`
+  
+  * Note that `n_sp` must be consistent with `case`, otherwise the lot rejection decisions are no longer valid.
+
+```{r}
+# First layer
+param_name = "n_contam"
+vals = c(1,2,3,4,5,6)
+
+# Second layer
+strategy_list = c("srs", "strs", "ss")
+
+# Third layer
+n_sp_list = c(5, 10, 15, 20, 30, 60)
+case_list = c(10, 11, 13, 12, 14, 15) # According to the attribute plan
+```
+
+```{r, echo = FALSE}
+temp = data.frame(n_contam = "1:6",
+                  n_sp = n_sp_list,
+                  n_strata = n_strata,
+                  by = by,
+                  spread = spread,
+                  method_sp = "srs/strs/ss",
+                  case = case_list,
+                  c = 0, 
+                  m = m, 
+                  iteration = n_iter*n_iter)
+
+kable_styling(kable(temp, format = "html", 
+                    caption = "TABLE. Combinations of input parameters"),
+              full_width = FALSE)
+```
+
+
+4. Create a `ArgList` to keep all the default arguments. Then create a function that produces different `ArgList`s for different combinations of input.
+
+```{r}
+# A function that produces argument lists for combinations of n_sp and sampling strategies
+Set_ArgList
+```
+
+```{r, eval = FALSE}
+# Set the default arguments list
+ArgList = list(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, 
+               covar_mat = covar_mat, spread_radius = spread_radius, method_sp = method_sp, 
+               n_sp = n_sp, sp_radius = sp_radius, spread = spread, n_strata = n_strata, by = by, 
+               cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, 
+               conc_good = conc_good, case = case, m = m, M = M, Mc = Mc, method_det = method_det)
+
+# Produce all the argument lists
+ArgList_all = map2(.x = n_sp_list, .y = case_list, .f = Set_ArgList, Args_default = ArgList)
+names(ArgList_all) = as.character(n_sp_list)
+```
+
+5. Run the simulation once for visualization and debug purposes.
+
+```{r, eval = FALSE}
+# Simple random sampling
+one_iter_srs = do.call(what = sim_outcome_temp, args = ArgList_all$`15`$srs) %>% .[[4]]
+
+# Stratified random sampling
+one_iter_strs = do.call(what = sim_outcome_temp, args = ArgList_all$`15`$strs) %>% .[[4]]
+
+# Systematic sampling
+one_iter_ss = do.call(what = sim_outcome_temp, args = ArgList_all$`15`$ss) %>% .[[4]]
+```
+
+6. Iterate the simulations on the third layer.
+
+  * Total number of iteration = `r length(n_sp_list)` x `r length(strategy_list)` x `r length(vals)` x `r n_iter` x `r n_iter`
+  
+  * Set the seed at 123
+  
+```{r}
+output_rds
+```
+
+```{r, eval = FALSE}
+pmap(.l = list(Args_default = ArgList_all, sp = n_sp_list, case = case_list), .f = output_rds, seed = 123, n_iter = n_iter, val = vals, name = param_name, contam = "1to6")
+```
+
+# Result
+
+1. Read the RDS files.
+
+```{r}
+# Find all files with the suffix ".rds"
+rds_files = dir(pattern = ".rds")
+
+# Read all the RDS files and save them into rds2var
+rds2var = map(.x = rds_files, .f = readRDS)
+names(rds2var) = rds_files
+```
+
+2. Check the data. There should be 18 RDS files, each containing 100 lists. Each of these lists contains four sub-lists. Each of these sub-lists contains 600 numbers.
+
+```{r}
+# The root level
+str(rds2var, max.level = 1)
+
+# The primary branch level
+str(rds2var[[1]], max.level = 1, list.len = 5)
+
+# The secondary branch level
+str(rds2var[[1]][[1]])
+```
+
+```{r}
+# Check to see if each list in the secondary branch has the correct length. If TRUE is returned, it means at least one list in the branch has different lengths.
+f_sec
+
+# Check each list in the primary branch
+f_pri
+
+# Check each list in the root level
+f_root
+```
+
+```{r}
+f_root(data = rds2var, length = 600)
+```
+
+
