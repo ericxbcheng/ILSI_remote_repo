@@ -67,3 +67,18 @@ calc_mean_ROD = function(data){
     map(.x = ., .f = mean) %>%
     unlist()
 }
+
+# Clean up the probability of detection. "data" takes a list.
+clean_Pdet = function(data, method_sp){
+  map(.x = data, .f = calc_Pdet2) %>%
+    unlist() %>%
+    data.frame(param = as.integer(names(.)), P_det = ., method_sp = method_sp, stringsAsFactors = FALSE)
+}
+
+# Clean up the probability of acceptance. "data" takes a list.
+clean_Paccept = function(data, method_sp){
+  map(.x = data, .f = calc_Prej2) %>%
+    unlist() %>%
+    data.frame(param = as.integer(names(.)), P_rej = ., method_sp = method_sp, stringsAsFactors = FALSE) %>%
+    mutate(Paccept = 1 - P_rej)
+}
