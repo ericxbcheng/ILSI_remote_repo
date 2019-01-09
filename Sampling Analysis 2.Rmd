@@ -1,0 +1,12 @@
+---
+title: 'Sampling: Analysis 2'
+author: "Xianbin Cheng"
+date: "January 9, 2019"
+output: html_document
+---
+
+# Objective  
+
+  * To visualize and analyze the probability of detection and acceptance for 18 scenarios.
+  
+  
