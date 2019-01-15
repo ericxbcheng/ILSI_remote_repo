@@ -1,5 +1,5 @@
 ---
-title: 'Sampling: Analysis 2'
+title: 'Sampling: Analysis 3'
 author: "Xianbin Cheng"
 date: "January 9, 2019"
 output: html_document
@@ -7,7 +7,7 @@ output: html_document
 
 # Objective  
 
-  * To analyze the simulated data (high prevalence) using linear regression.
+  * To analyze the simulated data (low prevalence) using linear regression.
   
 # Methods
 
@@ -97,7 +97,7 @@ n_affected = rpois(n = 1, lambda = 5)
 covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
 
 ### Mode 2
-spread_radius = 1
+spread_radius = 0.2
 LOC = 10^(-3)
 fun = "exp"
 
@@ -127,7 +127,7 @@ n_iter = 100
 ```{r}
 # First layer
 param_name = "n_contam"
-vals = c(1,2,3,4,5,6)
+vals = c(1,4,8,16,40,80)
 
 # Second layer
 strategy_list = c("srs", "strs", "ss")
@@ -138,8 +138,8 @@ case_list = c(10, 11, 13, 12, 14, 15) # According to the attribute plan
 ```
 
 ```{r, echo = FALSE}
-temp = data.frame(n_contam = "1,2,3,4,5,6",
-                  prevalence = "3%,6%,9%,13%,16%,19%",
+temp = data.frame(n_contam = "1,4,8,16,40,80",
+                  prevalence = "0.1%,0.5%,1%,2%,5%,10%",
                   n_sp = n_sp_list,
                   n_strata = n_strata,
                   by = by,
@@ -158,16 +158,8 @@ kable_styling(kable(temp, format = "html",
 4. Read the simulation data.
 
 ```{r}
-full_data = read.csv(file = "sim_data_1to6_5to60_3_10to15.csv", header = TRUE, stringsAsFactors = FALSE)
+full_data = read.csv(file = "sim_data_1to80_5to60_3_10to15.csv", header = TRUE, stringsAsFactors = FALSE)
 ```
-
-5. Build a linear regression model on the simulation data.
-
-  * Model: $Y = \beta_0 + \beta_1X_1+\beta_2X_2+ \beta_3X_3 + \beta_4X_1X_2+\beta_5X_1X_3+\beta_6X_2X_3+\varepsilon$
-  
-  * Main effects: `n_contam`, `method_sp`, `n_sp`. `method_sp` is a categorical variable with three levels: `srs`, `strs`, `ss`.
-  
-  * Interaction effects: two-way interactions of the above parameters
 
 5. Build a linear regression model on the simulation data.
 
@@ -207,7 +199,7 @@ summary(model)
 plot(model)
 ```
 
-3. Comparison among three sampling strategies across different prevalence levels.
+3. Comparison among three sampling strategies across different prevalence levels or different sample sizes.
 
 ```{r}
 ggplot(data = full_data, aes(x = param, y = P_det, group = interaction(param, method_sp))) +
@@ -217,16 +209,35 @@ ggplot(data = full_data, aes(x = param, y = P_det, group = interaction(param, me
     labs(x = "Number of contamination points", y = "Probability of detection") +
     theme_bw()
 ```
+```{r}
+ggplot(data = full_data, aes(x = n_sp, y = P_det, group = interaction(n_sp, method_sp))) +
+    geom_boxplot(aes(color = method_sp)) +
+    scale_x_log10(breaks = full_data$n_sp) +
+    coord_cartesian(ylim = c(0,1)) +
+    labs(x = "Number of samples", y = "Probability of detection") +
+    theme_bw()
+```
+
+
 
 4. Run ANOVA to compare the mean probability of detection for three sampling strategies.
 
 ```{r}
+# Different prevalence levels
 f_anova = function(val){
   mod = aov(formula = P_det ~ as.factor(method_sp), data = subset(x = full_data, subset = param == val))
   summary(mod)
 }
 
 map(.x = vals, .f = f_anova)
+
+# Different sample sizes
+f_anova2 = function(val){
+  mod = aov(formula = P_det ~ as.factor(method_sp), data = subset(x = full_data, subset = n_sp == val))
+  summary(mod)
+}
+
+map(.x = n_sp_list, .f = f_anova2)
 ```
 
 5. Compare the variances among the three sampling strategies using Brown-Forsythe Levene's test.
@@ -238,3 +249,6 @@ f_bfl = function(val){
 
 map(.x = vals, .f = f_bfl)
 ```
+
+
+  
