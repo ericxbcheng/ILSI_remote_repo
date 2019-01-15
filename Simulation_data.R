@@ -64,3 +64,32 @@ f_root = function(data, length){
     which(b)
   }
 }
+
+# Capture the rds name and extract n_sp, method_sp, case
+arg_extract = function(name){
+  
+  # Split the name by "_"
+  a = str_split(string = name, pattern = "_") %>%
+    unlist()
+  
+  # Extract n_sp, method_sp, case
+  n_sp = as.integer(a[2])
+  method_sp = a[3]
+  case = str_remove(string = a[4], pattern = ".rds") %>%
+    as.integer()
+  
+  return(list(n_sp = n_sp, method_sp = method_sp, case = case))
+}
+
+# A function that cleans each rds file by putting P_det, Paccept, n_contam, n_sp, case, method_sp together in a data frame
+clean_rds = function(data, name){
+  
+  temp = arg_extract(name = name)
+  
+  a = clean_Pdet(data = data, method_sp = temp$method_sp)
+  b = clean_Paccept(data = data, method_sp = temp$method_sp)
+  c = bind_cols(a, b["Paccept"]) %>%
+    mutate(n_sp = temp$n_sp, case = temp$case)
+  
+  return(c)
+}

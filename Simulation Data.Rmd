@@ -213,9 +213,7 @@ output_rds
 pmap(.l = list(Args_default = ArgList_all, sp = n_sp_list, case = case_list), .f = output_rds, seed = 123, n_iter = n_iter, val = vals, name = param_name, contam = "1to6")
 ```
 
-# Result
-
-1. Read the RDS files.
+7. Read the RDS files.
 
 ```{r}
 # Find all files with the suffix ".rds"
@@ -226,7 +224,25 @@ rds2var = map(.x = rds_files, .f = readRDS)
 names(rds2var) = rds_files
 ```
 
-2. Check the data. There should be 18 RDS files, each containing 100 lists. Each of these lists contains four sub-lists. Each of these sub-lists contains 600 numbers.
+8. Clean up `rds2var` to extract probability of detection, probability of acceptance for each combination.
+
+```{r}
+arg_extract
+clean_rds
+```
+
+```{r}
+cleaned_data = map2(.x = rds2var, .y = names(rds2var), .f = clean_rds)
+full_data = bind_rows(cleaned_data)
+```
+
+```{r, echo = FALSE, eval = FALSE}
+write.csv(x = full_data, file = "sim_data_1to6_5to60_3_10to15.csv")
+```
+
+# Result
+
+1. Check the data. There should be 18 RDS files, each containing 100 lists. Each of these lists contains four sub-lists. Each of these sub-lists contains 600 numbers.
 
 ```{r}
 # The root level
@@ -252,6 +268,12 @@ f_root
 
 ```{r}
 f_root(data = rds2var, length = 600)
+```
+
+2. Check the final data frame.
+
+```{r}
+str(full_data)
 ```
 
 
