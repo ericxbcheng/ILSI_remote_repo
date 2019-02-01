@@ -1,0 +1,77 @@
+---
+title: "Sampling Contamination 3D"
+author: "Xianbin Cheng"
+date: "January 29, 2019"
+output: html_document
+---
+
+# Method #
+
+1. Load in libraries, visualization functions and check the session info.
+
+```{r, warning = FALSE, message= FALSE}
+source(file = "Sampling_libraries.R")
+source(file = "Sampling_contamination.R")
+source(file = "Sampling_visualization.R")
+library(plotly)
+```
+
+2. Define the input paramaters and create a simulation function.
+
+* `n_contam` = the number of contamination points  
+* `x_lim` = the limits of the x-axis  
+* `y_lim` = the limits of the y-axis  
+* `z_lim` = the limits of the z-axis
+* `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution by default
+* `y` = the vertical coordinate of the contamination center, which follows a uniform distribution by default
+* `z` = the vertical coordinate of the contamination center, which follows a uniform distribution by default
+* `cont_level` = a vector that indicates the mean contamination level (logCFU/g or logCFU/mL) and the standard deviation in a log scale, assuming contamination level follows a log normal distribution $ln(cont\_level)$~$N(\mu, \sigma^2)$. 
+
+**Discrete Spread**
+
+* `n_affected` = the number of affected kernels near the contamination spot, which follows a Poisson distribution ($Pois(\lambda = 5)$)   
+* `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) = 0.25, var(Y) = 0.25 and cov(X, Y) = 0  
+
+
+```{r}
+## The input parameters
+n_contam = rpois(n = 1, lambda = 3)
+x_lim = c(0, 10)
+y_lim = c(0, 10)
+z_lim = c(0, 10)
+lims = list(xlim = x_lim, ylim = y_lim, zlim = z_lim)
+cont_level = c(7, 1)
+
+### Mode 1
+n_affected = rpois(n = 1, lambda = 5)
+covar_mat = matrix(data = c(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25), nrow = 3, ncol = 3)
+
+```
+
+3. Generate contamination.
+
+```{r}
+unif_contam = function(n_contam, lims){
+  x = runif(n = n_contam, min = lims$xlim[1], max = lims$xlim[2])
+  y = runif(n = n_contam, min = lims$ylim[1], max = lims$ylim[2])
+  z = runif(n = n_contam, min = lims$zlim[1], max = lims$zlim[2])
+  
+  data.frame(x = x, y = y, z = z)
+}
+
+spot_coord = unif_contam(n_contam = n_contam, lims = lims)
+
+
+
+
+```
+
+
+# Result
+
+```{r}
+scatter3D(x = test$V1, y = test$V2, z = test$V3, type = "p", col = "black", 
+          xlim = c(0, 10), ylim = c(0, 10), zlim = c(0, 10), phi = 20, theta = 40 )
+
+```
+
