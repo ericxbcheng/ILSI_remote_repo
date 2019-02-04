@@ -41,37 +41,43 @@ y_lim = c(0, 10)
 z_lim = c(0, 10)
 lims = list(xlim = x_lim, ylim = y_lim, zlim = z_lim)
 cont_level = c(7, 1)
+spread = "discrete"
 
-### Mode 1
+### Discrete
 n_affected = rpois(n = 1, lambda = 5)
-covar_mat = matrix(data = c(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25), nrow = 3, ncol = 3)
+covar_mat = make_covar_mat(dim = 3, varx = 0.25, vary = 0.25, varz = 0.25, covxy = 0, covxz = 0, covyz = 0)
 
+### Continuous
+spread_radius = 1
+LOC = 10^(-3)
 ```
 
 3. Generate contamination.
 
 ```{r}
-unif_contam = function(n_contam, lims){
-  x = runif(n = n_contam, min = lims$xlim[1], max = lims$xlim[2])
-  y = runif(n = n_contam, min = lims$ylim[1], max = lims$ylim[2])
-  z = runif(n = n_contam, min = lims$zlim[1], max = lims$zlim[2])
-  
-  data.frame(x = x, y = y, z = z)
-}
-
-spot_coord = unif_contam(n_contam = n_contam, lims = lims)
-
-
-
-
+sim_contam_new
 ```
 
+```{r}
+contam_xy = sim_contam_new(n_contam = n_contam, lims = lims, spread = spread, covar = covar_mat, n_affected = n_affected, spread_radius = spread_radius, cont_level = cont_level)
+```
 
 # Result
 
-```{r}
-scatter3D(x = test$V1, y = test$V2, z = test$V3, type = "p", col = "black", 
-          xlim = c(0, 10), ylim = c(0, 10), zlim = c(0, 10), phi = 20, theta = 40 )
+1. Simulated data.
 
+```{r}
+kable_styling(kable(contam_xy, format = "html"), full_width = TRUE)
+```
+
+2. Visualization.
+
+```{r}
+# 2D projection
+contam_draw(data = contam_xy, spread = spread, xlim = lims$xlim, ylim = lims$ylim)
+
+# 3D view
+scatter3D(x = contam_xy$X, y = contam_xy$Y, z = contam_xy$Z, type = "p", colvar = as.numeric(contam_xy$label), 
+          xlim = lims$xlim, ylim = lims$ylim, zlim = lims$zlim, phi = 20, theta = 40 )
 ```
 
