@@ -133,13 +133,13 @@ sim_contam = function(n_contam, xlim, ylim, covariance, n_affected, radius, cont
 
 ################################## NEW ##############################################
 # A function that generates the covariance matrix
-make_covar_mat = function(dim, varx, vary, varz, covxy, covxz, covyz){
-  if(dim == 3){
-    matrix(data = c(varx, covxy, covxz, covxy, vary, covyz, covxz, covyz, varz), nrow = dim, ncol = dim)
-  } else if (dim == 2){
-    matrix(data = c(varx, covxy, covxy, vary), nrow = dim, ncol = dim)
+make_covar_mat = function(spread, varx, vary, varz, covxy, covxz, covyz){
+  if(spread == "discrete"){
+    matrix(data = c(varx, covxy, covxz, covxy, vary, covyz, covxz, covyz, varz), nrow = 3, ncol = 3)
+  } else if (spread == "continuous"){
+    matrix(data = c(varx, covxy, covxy, vary), nrow = 2, ncol = 2)
   } else {
-    stop("Wrong dimension. Choose either 2 or 3.")
+    stop("Unknown type of spread. Choose either 'discrete' or 'continuous'.")
   }
 }
 
@@ -227,7 +227,7 @@ naming_total = function(spot_coord, spread_coord, spread, label, spread_radius, 
   # Combine spot and spread by row
   df = rbind(spot_coord, spread_coord)
   colnames(df) =  header
-  df2 = cbind(df, label, spread_radius) %>%
+  df2 = cbind(df, label, r = spread_radius) %>%
     mutate(cont_level = f_cont_level(n = nrow(.), param = cont_level),
            dis_level = cont_level)
   
