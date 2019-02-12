@@ -1,5 +1,5 @@
 # Create a helper function that gives unique identifers
-naming_sp = function(n_sp, x_sp, y_sp, radius){
+naming_sp_2d = function(n_sp, x_sp, y_sp, radius){
   
   # Generate a unique identifier for each sample point
   a = rep("sp", times = n_sp)
@@ -37,7 +37,7 @@ calc_perc_contam = function(df_dist, r, LOC, fun, cont_level){
 }
 
 # Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points. If spotONLY == TRUE, then only calculate the distance between spots and sample points
-calc_dist = function(df_contam, df_sp){
+calc_dist_2d = function(df_contam, df_sp){
   
   df = rbind(df_contam, df_sp)
   df$label = as.character(df$label)
@@ -116,7 +116,7 @@ gen_sim_data = function(df_contam, df_sp, dist, spread_radius, sp_radius, LOC, f
 }
 
 # Create a function that calculates the boundaries of each stratum
-calc_bounds = function(xlim, ylim, n_strata, by){
+calc_bounds_2d = function(xlim, ylim, n_strata, by){
   if(by == "row"){
     seq(from = ylim[1], to = ylim[2], by = (ylim[2] - ylim[1])/n_strata)
   } else if(by == "column"){
@@ -125,17 +125,17 @@ calc_bounds = function(xlim, ylim, n_strata, by){
 }
 
 # Create a function that generates a simple random sampling plan
-sim_plan_srs = function(n_sp, xlim, ylim, radius){
+sim_plan_srs_2d = function(n_sp, xlim, ylim, radius){
   
   ## Generate a data frame that contains the coordinates of the sampling points
   x_sp = runif(n = n_sp, min = xlim[1], max = xlim[2])
   y_sp = runif(n = n_sp, min = ylim[1], max = ylim[2])
   
-  naming_sp(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, radius = radius)
+  naming_sp_2d(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, radius = radius)
 }
 
 # Create a function that generates a stratified random sampling plan
-sim_plan_strs = function(n_sp, n_strata, by, xlim, ylim, radius){
+sim_plan_strs_2d = function(n_sp, n_strata, by, xlim, ylim, radius){
   
   if (n_sp %% n_strata != 0) {
     stop("n_sp is not a multiple of n_strata.")
@@ -150,12 +150,12 @@ sim_plan_strs = function(n_sp, n_strata, by, xlim, ylim, radius){
       y_sp = runif(n = n_sp, min = ylim[1], max = ylim[2])
     }
     
-    naming_sp(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, radius = radius)
+    naming_sp_2d(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, radius = radius)
   }
 }
 
 # Create a function that generates a systematic sampling plan
-sim_plan_ss = function(xlim, ylim, n_sp, radius, by){
+sim_plan_ss_2d = function(xlim, ylim, n_sp, radius, by){
   
   # k = sampling interval
   k = xlim[2]*ylim[2]/n_sp
@@ -198,17 +198,17 @@ sim_plan_ss = function(xlim, ylim, n_sp, radius, by){
     stop("Please select either row or column by which samples are taken every kth step.")
   }
 
-  naming_sp(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, radius = radius)
+  naming_sp_2d(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, radius = radius)
 }
 
 # A function that includes all kinds of sampling plan
-sim_plan = function(method_sp, n_sp, xlim, ylim, radius, n_strata, by){
+sim_plan_2d = function(method_sp, n_sp, xlim, ylim, radius, n_strata, by){
   if(method_sp == "srs"){
-    sim_plan_srs(n_sp = n_sp, xlim = xlim, ylim = ylim, radius = radius)
+    sim_plan_srs_2d(n_sp = n_sp, xlim = xlim, ylim = ylim, radius = radius)
   } else if (method_sp == "strs"){
-    sim_plan_strs(n_sp = n_sp, n_strata = n_strata, by = by, xlim = xlim, ylim = ylim, radius = radius)
+    sim_plan_strs_2d(n_sp = n_sp, n_strata = n_strata, by = by, xlim = xlim, ylim = ylim, radius = radius)
   } else if (method_sp == "ss"){
-    sim_plan_ss(xlim = xlim, ylim = ylim, n_sp = n_sp, radius = radius, by = by)
+    sim_plan_ss_2d(xlim = xlim, ylim = ylim, n_sp = n_sp, radius = radius, by = by)
   } else {
     stop("Sampling method does not exist. Try 'srs', 'strs', or 'ss'.")
   }
