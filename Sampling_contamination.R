@@ -269,7 +269,7 @@ rm_outlier = function(df, lims){
 sim_contam_new = function(n_contam, lims, spread, covar, n_affected, spread_radius, cont_level){
   
   # Checkpoints
-  stopifnot(n_contam > 0 | spread_radius >= 0 | n_affected >= 0 |length(lims) %in% c(2,3))
+  stopifnot(n_contam > 0 & spread_radius >= 0 & n_affected >= 0 & length(lims) %in% c(2,3))
   stopifnot(spread %in% c("continuous", "discrete"))
   
   # Create spot contaminations
