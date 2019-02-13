@@ -2,8 +2,13 @@
 title: 'Sampling: Sampling Plan 3D'
 author: "Xianbin Cheng"
 date: "February 12, 2019"
-output: html_document
+output:
+  html_document: default
 ---
+
+# Objective
+
+  * Add a 3D component to the sampling plan module
 
 # Method
 
@@ -14,6 +19,7 @@ source(file = "Sampling_libraries.R")
 source(file = "Sampling_contamination.R")
 source(file = "Sampling_visualization.R")
 source(file = "Sampling_plan.R")
+library(plotly)
 ```
 
 ```{r}
@@ -42,7 +48,7 @@ We do not consider such type of spread in a 3D space.
 
 ```{r}
 ## The input parameters
-n_contam = rpois(n = 1, lambda = 3)
+n_contam = 3
 x_lim = c(0, 10)
 y_lim = c(0, 10)
 z_lim = c(0, 10)
@@ -51,8 +57,8 @@ cont_level = c(7, 1)
 spread = "discrete"
 
 ### Discrete
-n_affected = rpois(n = 1, lambda = 5)
-covar_mat = make_covar_mat(spread = "discrete", varx = 0.25, vary = 0.25, varz = 0.25, covxy = 0, covxz = 0, covyz = 0)
+n_affected = 3
+covar_mat = make_covar_mat(spread = spread, varx = 0.25, vary = 0.25, varz = 0.25, covxy = 0, covxz = 0, covyz = 0)
 
 ### Continuous
 spread_radius = 1
@@ -61,8 +67,13 @@ fun = "exp"
 ```
 
 ```{r}
+# Run this if we want reproducibility
+set.seed(123)
+```
+
+```{r}
 # Generate the coordinates of contamination points
-contam_xy = sim_contam_new(n_contam = n_contam, lims = lims, spread = "discrete", covar = covar_mat, n_affected = n_affected, spread_radius = spread_radius, cont_level = cont_level) 
+contam_xy = sim_contam_new(n_contam = n_contam, lims = lims, spread = spread, covar = covar_mat, n_affected = n_affected, spread_radius = spread_radius, cont_level = cont_level) 
 ```
 
 ```{r}
@@ -76,8 +87,9 @@ summary(contam_xy$label)
 
 * `n_sp` = the number of sampling points
 * `sp_radius` = the radius (m) of a circular region around the sample point. (Only applicable to **Mode 1: Discrete Spread**)
-* `n_strata` = the number of strata (applicable to *Stratified random sampling*)
-* `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to *Stratified random sampling*) **OR** the side along which a sample is taken every k steps (applicable to *Systematic sampling*).
+* `n_strata` = the number of strata (applicable to *2D and 3D Stratified random sampling*)
+* `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to *2D Stratified random sampling*) **OR** the side along which a sample is taken every k steps (applicable to *2D Systematic sampling*).
+* `method_sp` = sampling strategy, including `srs`, `strs`, `ss`.
 
 **Mode 1: Discrete Spread**   
 * `m_kbar` = averaged kernel weight (g)
@@ -89,39 +101,14 @@ n_sp = 15
 sp_radius = 2
 n_strata = 5
 by = "row"
+method_sp = "srs"
 
 m_kbar = 0.3
 m_sp = 25
 conc_good = 0.7 # We could use gen_elisa_af() from STD_simulation.R
 ```
 
-4. Show all the functions that are necessary for generating sampling plans.
-
-
-```{r}
-# Create a function that calculates the boundaries of each stratum
-calc_bounds
-
-# Create a function that generates a simple random sampling plan
-sim_plan_srs
-
-# Create a function that generates a stratified random sampling plan
-sim_plan_strs
-
-# Create a function that generates a systematic sampling plan
-sim_plan_ss
-
-# A function that calculates contamination contribution
-f_decay
-
-## Calculate the percent of contamination a source contributes to a sample point
-calc_perc_contam
-
-# Create a function that calculates contamination levels for each sample point and combine "contam_xy" and "sp_xy"
-gen_sim_data
-```
-
-5. Generate a sampling plan.
+4. Generate a sampling plan.
 
     a) `method = "srs"` generates a simple random sampling plan with `n_sp` and `sp_radius`.
     
@@ -147,227 +134,9 @@ gen_sim_data
         
         v) Arrange the sample points so that they distribute evenly within the field.
 
-```{r}
-# Run this if we want reproducibility
-#set.seed(123)
-```
 
 ```{r}
-### Debug
-# Create a helper function that gives unique identifers (3D)
-naming_sp_3d = function(n_sp, x_sp, y_sp, z_sp, radius){
-  
-  # Generate a unique identifier for each sample point
-  a = rep("sp", times = n_sp)
-  b = 1:n_sp %>% as.character()
-  ID = paste(a, "-", b, sep = "")
-  
-  ## Generate a column for sample radius
-  r = rep(radius, times = n_sp)
-  
-  df = data.frame(X = x_sp,
-             Y = y_sp,
-             Z = z_sp,
-             ID = ID,
-             label = "sample point",
-             r = r,
-             cont_level = NA,
-             dis_level = NA)
-  
-  df$ID = as.character(df$ID)
-  
-  return(df)
-}
-
-sim_plan_srs_3d = function(n_sp, lims, radius){
-  
-  # Check point: make sure the dimension is 3
-  stopifnot(length(lims) == 3)
-  
-  ## Generate a data frame that contains the coordinates of the sampling points
-  x_sp = runif(n = n_sp, min = lims$xlim[1], max = lims$xlim[2])
-  y_sp = runif(n = n_sp, min = lims$ylim[1], max = lims$ylim[2])
-  z_sp = runif(n = n_sp, min = lims$zlim[1], max = lims$zlim[2])
-  
-  naming_sp_3d(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, z_sp = z_sp, radius = radius)
-}
-
-
-# Create a function that calculates the boundaries of each stratum on z-axis
-calc_bounds_3d = function(lims, n_strata){
-  seq(from = lims$zlim[1], to = lims$zlim[2], by = (lims$zlim[2] - lims$zlim[1])/n_strata)
-}
-
-# Create a function that generates a stratified random sampling plan
-sim_plan_strs_3d = function(n_sp, n_strata, lims, radius){
-  
-  # Check points
-  stopifnot(length(lims) == 3)
-  
-  if (n_sp %% n_strata != 0) {
-    stop("n_sp is not a multiple of n_strata.")
-  } else {
-    bounds = calc_bounds_3d(lims = lims, n_strata = n_strata)
-    
-    x_sp = runif(n = n_sp, min = lims$xlim[1], max = lims$xlim[2])
-    y_sp = runif(n = n_sp, min = lims$ylim[1], max = lims$ylim[2])
-    z_sp = runif(n = n_sp, min = bounds[1:length(bounds) - 1], max = bounds[2:length(bounds)])
-  }
-    
-  naming_sp_3d(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, z_sp = z_sp, radius = radius)
-}
-
-
-sim_plan_3d = function(method_sp, n_sp, lims, radius){
-  
-  # Check points
-  stopifnot(method_sp %in% c("srs", "strs", "ss"))
-  
-  if(method_sp == "srs"){
-    sim_plan_srs_3d(n_sp = n_sp, lims = lims, radius = radius)
-  } else if (method_sp == "strs"){
-    sim_plan_strs_3d(n_sp = n_sp, n_strata = n_strata, lims = lims, radius = radius)
-  } else if (method_sp == "ss"){
-    sim_plan_ss_3d()
-  } else {
-    stop("Sampling method does not exist. Try 'srs', 'strs', or 'ss'.")
-  }
-}
-
-
-# A function that includes all kinds of sampling plan
-sim_plan_new = function(method_sp, spread, n_sp, lims, radius, n_strata, by){
-  
-  stopifnot(spread %in% c("continuous", "discrete"))
-  
-  if(spread == "continuous"){
-    sim_plan_2d(method_sp = method_sp, n_sp = n_sp, xlim = lims$xlim, ylim = lims$ylim, radius = radius, n_strata = n_strata, by = by)
-  } else if(spread == "discrete"){
-    sim_plan_3d(method_sp = method_sp, n_sp = n_sp, lims = lims, radius = radius)
-  }
-}
-
-calc_dist = function(df_contam, df_sp, spread){
-  
-  # Check point
-  stopifnot(spread %in% c("continuous", "discrete"))
-  
-  if(spread == "continuous"){
-    calc_dist_2d(df_contam = df_contam, df_sp = df_sp)
-  } else if(spread == "discrete"){
-    calc_dist_3d(df_contam = df_contam, df_sp = df_sp)
-  }
-}
-
-# Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points. If spotONLY == TRUE, then only calculate the distance between spots and sample points
-calc_dist_3d = function(df_contam, df_sp){
-  
-  df = rbind(df_contam, df_sp)
-  df$label = as.character(df$label)
-  
-  # Calculate the Euclidean distance
-  a = dist(x = df[ ,1:3], method = "euclidean") %>% as.matrix()
-  attr(x = a, which = "dimnames") = list(df$ID, df$ID)
-  
-  sp_ind = which(df$label == "sample point")
-  cont_ind = which(df$label %in% c("spot", "spread"))
-  
-  # Subset the matrix to keep the distances between sample points and contamination points (spot + spread)
-  # Gather the matrix into a long format
-  b = a[cont_ind, sp_ind, drop = FALSE] %>%
-    melt(data = ., varnames = c("ID_contam", "ID_sp"), value.name = "Distance")
-  
-  b$ID_contam = as.character(b$ID_contam)
-  
-  # Attach the labels for each contamination point
-  c = b %>%
-    left_join(x = ., y = df_contam[, c("ID", "label")], by = c("ID_contam" = "ID"))
-  
-  return(c)
-}
-
-# Calculate sample concentration for continuous case
-calc_level_cont = function(df_contam, dist, spread_radius, LOC, fun, cont_level){
-  
-  if(length(levels(df_contam$label)) > 1){
-    warning("df_contam contains both contamination spots and spreads. 
-            For continuous spread, contamination spread points should not exist. 
-            Check 'spread' in upstream functions.")
-  }
-  
-  # Subset the dist_contam_sp to keep the rows that show distance between spots and sample points
-  # Calculate the percent contribution based on distance
-  # Attach the source contamination level
-  # Calculate the contamination level at each sample point, which is source level * percent contribution
-  #Sum up the source_contri for each sample point to represent the actual contamination level at that sample point
-  
-  dist %>%
-    dplyr::filter(.data = ., label == "spot") %>%
-    mutate(perc_contri = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC, fun = fun, cont_level = cont_level),
-           source_level = df_contam$cont_level[match(x = .$ID_contam, table = df_contam$ID)],
-           source_contri = source_level * perc_contri) %>%
-    group_by(ID_sp) %>%
-    summarise(cont_level = sum(source_contri))
-}
-
-# Calculate sample concentration for discrete case
-calc_level_dis = function(df_contam, sp_radius, dist, m_sp, m_kbar){
-
-  # Estimate the number of kernels in each sample
-  n_k = round(x = m_sp/m_kbar, digits = 0)
-  
-  # Subset the dist_contam_sp to keep rows where the contamination points fall within the sampling region
-  # Attach the source contamination level
-  # Calculate the sum of contamination point levels in each sample, and record the number of points in each sample
-  # Calculate the dis_level in each sample
-  
-  dist %>%
-    dplyr::filter(Distance <= sp_radius) %>%
-    mutate(source_level = df_contam$dis_level[match(x = .$ID_contam, table = df_contam$ID)]) %>%
-    group_by(ID_sp) %>%
-    summarise(obs = n(),
-              sum_level = sum(source_level)) %>%
-    mutate(dis_level = m_kbar/m_sp*(sum_level + (n_k - obs) * conc_good))
-}
-
-# Create a function that calculates contamination levels for each sample point and combine "contam_xy" and "sp_xy"
-gen_sim_data_new = function(df_contam, df_sp, dist, spread, spread_radius, sp_radius, LOC, fun, m_kbar, m_sp, conc_good, cont_level){
-  
-  stopifnot(spread %in% c("continuous", "discrete"))
-  
-  ### Combine everything, fill the NAs with the corresponding contamination level.
-  df = rbind(df_contam, df_sp)
-  
-  if(spread == "continuous"){
-    
-    # Calculate the sample concentration in a continuous case
-    a = calc_level_cont(df_contam = df_contam, dist = dist, spread_radius = spread_radius, LOC = LOC, fun = fun, cont_level = cont_level)
-    
-    # Update the cont_level column for the sample points.
-    df$cont_level[match(x = a$ID_sp, table = df$ID)] = a$cont_level 
-    
-  } else if (spread == "discrete") {
-    
-    # Calculate the sample concentration in a discrete case
-    b = calc_level_dis(df_contam = df_contam, sp_radius = sp_radius, dist = dist, m_sp = m_sp, m_kbar = m_kbar)
-    
-    # Update the dis_level column for the sample points.
-    df$dis_level[match(x = b$ID_sp, table = df$ID)] = b$dis_level
-    
-    # NA's in dis_level indicate there is no contaminated kernel in those samples. 
-    # Assign conc_good to those samples
-    if(anyNA(df$dis_level)){
-      df$dis_level[is.na(df$dis_level)] = conc_good
-    }
-  }
-  
-  return(df)
-}
-
-```
-
-```{r}
-sp_xy = sim_plan_new(method_sp = "srs", n_sp = n_sp, spread = "discrete", lims = lims, radius = sp_radius, by = by, n_strata = n_strata)
+sp_xy = sim_plan_new(method_sp = method_sp, n_sp = n_sp, spread = spread, lims = lims, radius = sp_radius, by = by, n_strata = n_strata)
 
 str(sp_xy)
 ```
@@ -415,9 +184,9 @@ str(sp_xy)
         $f(d)$ = decay function that calculates the contribution of contamination. When $d_{ij} > spread\_radius$, $f^*(d) = f(d)\times \frac {1} {\mu}$, where $\mu$ is the absolute value of mean contamination level. This process would reduce $C_{sp_i}$ to almost 0.
 
 ```{r}
-dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy, spread = "continuous")
+dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy, spread = spread)
 
-contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, spread = "continuous", df_sp = sp_xy, dist = dist_contam_sp, spread_radius = spread_radius, sp_radius = sp_radius, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, cont_level = cont_level)
+contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, spread = spread, df_sp = sp_xy, dist = dist_contam_sp, spread_radius = spread_radius, sp_radius = sp_radius, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, cont_level = cont_level)
 ```
 
 ```{r}
@@ -427,46 +196,30 @@ kable_styling(kable(x = contam_sp_xy, format = "html"), full_width = FALSE)
 
 # Results
 
-1. Show the simulated contamination.
+1. Overlay the sampling plan on the simulated contamination plot.
+
+```{r}
+# Discrete spread in 3D space with a 2D projection
+plot_overlay_dis = overlay_draw(method = method_sp, data = contam_sp_xy, spread = "discrete", xlim = lims$xlim, ylim = lims$ylim)
+```
+
+```{r}
+plot_overlay_dis
+```
+
+2. 3D view
 
 ```{r, eval = FALSE}
-# Mode 1: Discrete Spread
-plot_contam_dis = contam_draw(data = contam_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
-
-plot_contam_dis
-
-# Mode 2: Continuous Spread
-plot_contam_cont = contam_draw(data = contam_xy, spread = "continuous", xlim = x_lim, ylim = y_lim)
-
-plot_contam_cont
-```
-
-2. Show the sample points and sample regions.
-
-```{r, eval = FALSE}
-# Systematic sampling
-plot_sp_dis_ss = sp_draw(method = "ss", data = sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim, by = by)
-plot_sp_cont_ss = sp_draw(method = "ss", data = sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim, by = by)
-
-plot_sp_dis_ss
-plot_sp_cont_ss
-```
-
-3. Overlay the sampling plan on the simulated contamination plot.
-
-```{r}
-# Systematic sampling
-plot_overlay_dis_ss = overlay_draw(method = "ss", data = contam_sp_xy, spread = "discrete", xlim = x_lim, ylim = y_lim)
-
-plot_overlay_cont_ss = overlay_draw(method = "ss", data = contam_sp_xy, spread = "continuous", xlim = x_lim, ylim = y_lim)
+plot_ly(data = subset(contam_sp_xy, subset = label != "sample point"), 
+            x = ~X, y = ~Y, z = ~Z, name = "contamination", type = "scatter3d", mode = "markers") %>%
+  add_trace(data = subset(contam_sp_xy, subset = label == "sample point"), x = ~X, y = ~Y, z = ~Z, name = "sample", mode = "markers")
 ```
 
 ```{r}
-plot_overlay_dis_ss
-
-plot_overlay_cont_ss
+knitr::include_graphics(path = "example1.png")
 ```
 
-```{r}
+
+```{r, echo= FALSE, eval = FALSE}
 contam_level_draw(dimension = "3d", method = fun, spread_radius = spread_radius, LOC = LOC, df_contam = contam_xy, xlim = x_lim, ylim = y_lim, interactive = FALSE)
 ```
