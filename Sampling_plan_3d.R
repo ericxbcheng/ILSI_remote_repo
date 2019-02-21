@@ -113,7 +113,7 @@ ss_truck = function(lims, depth_ft, radius){
   
   # Check point
   ## depth should be between 0 and zlim
-  stopifnot(depth_ft >=0 | ft2m(depth_ft) <= lims$zlim)
+  stopifnot(depth_ft >=0 & ft2m(depth_ft) <= lims$zlim)
   
   if(depth_ft >= 4){
     x_sp = c(ft2m(2), lims$xlim[2] / 4, 3/4 * lims$xlim[2]/2, lims$xlim[2]/2, 5/8*lims$xlim[2], 3/4*lims$xlim[2], lims$xlim[2] - ft2m(2))
