@@ -19,6 +19,7 @@ source(file = "Sampling_libraries.R")
 source(file = "Sampling_contamination.R")
 source(file = "Sampling_visualization.R")
 source(file = "Sampling_plan.R")
+source(file = "Sampling_plan_3d.R")
 library(plotly)
 ```
 
@@ -49,15 +50,15 @@ We do not consider such type of spread in a 3D space.
 ```{r}
 ## The input parameters
 n_contam = 3
-x_lim = c(0, 10)
+x_lim = c(0, 30)
 y_lim = c(0, 10)
-z_lim = c(0, 10)
+z_lim = c(0, 2.5)
 lims = list(xlim = x_lim, ylim = y_lim, zlim = z_lim)
 cont_level = c(7, 1)
 spread = "discrete"
 
 ### Discrete
-n_affected = 3
+n_affected = 2
 covar_mat = make_covar_mat(spread = spread, varx = 0.25, vary = 0.25, varz = 0.25, covxy = 0, covxz = 0, covyz = 0)
 
 ### Continuous
@@ -98,101 +99,46 @@ summary(contam_xy$label)
 
 ```{r}
 n_sp = 15
-sp_radius = 2
+sp_radius = 0.5
 n_strata = 5
 by = "row"
-method_sp = "srs"
+method_sp = "ss"
 
-m_kbar = 0.3
-m_sp = 25
-conc_good = 0.7 # We could use gen_elisa_af() from STD_simulation.R
+# m_kbar = 0.3
+# m_sp = 25
+# conc_good = 0.7 # We could use gen_elisa_af() from STD_simulation.R
 ```
 
 4. Generate a sampling plan.
 
-    a) `method = "srs"` generates a simple random sampling plan with `n_sp` and `sp_radius`.
-    
-        i) Sample point coordinates follow a uniform distribution.
+* Systematic sampling:
 
-    b) `method = "strs"` generates a stratified random sampling plan with `n_sp`, `sp_radius`, `n_strata` and `by`.
+  1) Truck: 
+  
+    * `depth_ft` = the depth of corn in feet. It could be >= 4 ft or < 4 ft, each corresponding to a different sampling pattern.
+  
+  2) Barge
+  
+  3) Hopper car:
+  
+    * 3-compartment trough type
     
-        i) Check whether `n_sp` is a multiple of `n_strata`.
-        
-        ii) Divide the field into strata either by row or by column.
-        
-        iii) Within each stratum, sample point coordinates follow a uniform distribution.
-    
-    c) `method = "ss"` generates a systematic sampling plan with `n_sp`, `sp_radius` and `by`.
-    
-        i) Split the field into `N` unit squares ($N = length \times width$).
-        
-        ii) Calculate `k`. $k = \frac {N} {n_{sp}}$.
-        
-        iii) In the first unit square, randomly select a sample point whose coordinates follow a uniform distribution.
-        
-        iv) Generate the rest of the sample points either along the x-axis or y-axis with the equation: $$x = x_0 + (n-1)k, n = 1, 2, ..., n_{sp} $$
-        
-        v) Arrange the sample points so that they distribute evenly within the field.
+    * 2-compartment open top type
 
 
 ```{r}
-sp_xy = sim_plan_new(method_sp = method_sp, n_sp = n_sp, spread = spread, lims = lims, radius = sp_radius, by = by, n_strata = n_strata)
+## Systematic sampling
+# truck
+sp_xy1 = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, radius = sp_radius, container = "truck", depth_ft = 3)
+sp_xy2 = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, radius = sp_radius, container = "truck", depth_ft = 5)
 
-str(sp_xy)
+# barge
+sp_xy3 = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, radius = sp_radius,container = "barge")
+
+# Hopper car
+sp_xy4 = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, radius = sp_radius,container = "hopper", compartment = 2, type = "open_top")
+sp_xy5 = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, radius = sp_radius,container = "hopper", compartment = 3, type = "trough")
 ```
-
-6. Calculate the contamination level of the sample points. Combine the `sp_xy` and `contam_xy`.
-
-    1) Calculate the Euclidean distance between sample points and contamination points. 
-    
-    a) **Discrete Spread:**
-    
-        i) Use the distance to keep the sample points that fall within `sp_radius`.
-        
-        ii) Calculate the contamination level of each sample point.
-        
-        $$C_i = \frac {\sum \limits_{j=1}^n C_{ij}\times \bar{m_{k}}} {m_{sp}} = \frac {\bar {m_k}} {m_{sp}} \times [C_{i1} + C_{i2} + ... + C_{ik} + (n_k - k)\times C_{good}] $$ 
-        
-        , where $C_i$ = contamination level of `sample point i`, 
-                        
-        $C_{ij}$ = contamination level of `kernel j` in `sample point i`,
-        
-        $\bar m_k$ = averaged weight of a single kernel,
-        
-        $m_{sp}$ = weight of an analytical unit,
-                        
-        $n_k$ = the total number of kernels in an analytical unit, calculated by $\frac {m_{sp}} {\bar m_k}$,
-                        
-        $k$ = the number of contamination spots or spreads in this sample,
-                        
-        $C_{good}$ = background contamination level.
-        
-    b) **Continuous Spread:**
-    
-        i) Use the distance and decay function to calculate the contamination contribution from each contamination point.
-        
-        ii) Sum up the contamination contribution from all source points for each sample point.
-        
-        $$C_{sp_i} = \sum \limits_{j=1}^n C_{cpj} \times f(d_{ij}) =  C_{cp1}\times f(d_{i1})+ C_{cp2}\times f(d_{i2})+ ...+C_{cpn}\times f(d_{in})$$ 
-        
-        , where $C_{sp_i}$ = contamination level of `sample point i`,  
-        
-        $C_{cpj}$ = contamination level of `contamination point j` (`j` = 1, 2, ..., n),   
-        
-        $d_{ij}$ = distance between `sample point i` and `contamination point j`,
-        
-        $f(d)$ = decay function that calculates the contribution of contamination. When $d_{ij} > spread\_radius$, $f^*(d) = f(d)\times \frac {1} {\mu}$, where $\mu$ is the absolute value of mean contamination level. This process would reduce $C_{sp_i}$ to almost 0.
-
-```{r}
-dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy, spread = spread)
-
-contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, spread = spread, df_sp = sp_xy, dist = dist_contam_sp, spread_radius = spread_radius, sp_radius = sp_radius, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, cont_level = cont_level)
-```
-
-```{r}
-kable_styling(kable(x = contam_sp_xy, format = "html"), full_width = FALSE)
-```
-
 
 # Results
 
@@ -200,14 +146,18 @@ kable_styling(kable(x = contam_sp_xy, format = "html"), full_width = FALSE)
 
 ```{r}
 # Discrete spread in 3D space with a 2D projection
-plot_overlay_dis = overlay_draw(method = method_sp, data = contam_sp_xy, spread = "discrete", xlim = lims$xlim, ylim = lims$ylim)
-```
 
-```{r}
-plot_overlay_dis
-```
+# Truck
+overlay_draw(method = method_sp, data = rbind(contam_xy, sp_xy1), spread = "discrete", xlim = lims$xlim, ylim = lims$ylim)
+overlay_draw(method = method_sp, data = rbind(contam_xy, sp_xy2), spread = "discrete", xlim = lims$xlim, ylim = lims$ylim)
 
-2. 3D view
+# Barge
+overlay_draw(method = method_sp, data = rbind(contam_xy, sp_xy3), spread = "discrete", xlim = lims$xlim, ylim = lims$ylim)
+
+# Hopper car
+overlay_draw(method = method_sp, data = rbind(contam_xy, sp_xy4), spread = "discrete", xlim = lims$xlim, ylim = lims$ylim)
+overlay_draw(method = method_sp, data = rbind(contam_xy, sp_xy5), spread = "discrete", xlim = lims$xlim, ylim = lims$ylim)
+```
 
 ```{r, eval = FALSE}
 plot_ly(data = subset(contam_sp_xy, subset = label != "sample point"), 
@@ -215,10 +165,9 @@ plot_ly(data = subset(contam_sp_xy, subset = label != "sample point"),
   add_trace(data = subset(contam_sp_xy, subset = label == "sample point"), x = ~X, y = ~Y, z = ~Z, name = "sample", mode = "markers")
 ```
 
-```{r}
+```{r, eval = FALSE, echo = FALSE}
 knitr::include_graphics(path = "example1.png")
 ```
-
 
 ```{r, echo= FALSE, eval = FALSE}
 contam_level_draw(dimension = "3d", method = fun, spread_radius = spread_radius, LOC = LOC, df_contam = contam_xy, xlim = x_lim, ylim = y_lim, interactive = FALSE)
