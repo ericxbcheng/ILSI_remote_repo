@@ -156,7 +156,7 @@ contam_cont = function(spot_coord, n_contam, spread, spread_radius, cont_level){
 }
 
 # Discrete contamination
-contam_dis = function(spot_coord, n_contam, n_affected, covar, spread, spread_radius, cont_level){
+contam_dis = function(spot_coord, n_contam, n_affected, covar, spread, spread_radius, dis_level){
   
   # Create labels for spots and spreads
   label = c(rep("spot", times = n_contam), rep("spread", times = n_contam * n_affected))
@@ -164,7 +164,7 @@ contam_dis = function(spot_coord, n_contam, n_affected, covar, spread, spread_ra
   if(n_affected == 0){
     
     df = naming_total(spot_coord = spot_coord, spread_coord = NULL, spread = spread, 
-                      label = label, spread_radius = spread_radius, cont_level = cont_level)
+                      label = label, spread_radius = spread_radius, dis_level = dis_level)
   } else {
     
     # Checkpoint: make sure the covariance matrix is 3 by 3
@@ -179,7 +179,7 @@ contam_dis = function(spot_coord, n_contam, n_affected, covar, spread, spread_ra
       naming_spread(df = ., spot = n_contam, spread = n_affected)
     
     df = naming_total(spot_coord = spot_coord, spread_coord = spread_coord, spread = spread, 
-                      label = label, spread_radius = spread_radius, cont_level = cont_level)
+                      label = label, spread_radius = spread_radius, dis_level = dis_level)
   }
   return(df)
 }
@@ -210,7 +210,7 @@ unif_contam = function(n_contam, lims, spread){
 }
 
 # Combine spots and spreads, create contamination levels, and add headers.
-naming_total = function(spot_coord, spread_coord, spread, label, spread_radius, cont_level){
+naming_total = function(spot_coord, spread_coord, spread, label, spread_radius, cont_level, dis_level){
   
   # Create the header for data frame
   if(spread == "continuous"){
@@ -227,11 +227,22 @@ naming_total = function(spot_coord, spread_coord, spread, label, spread_radius, 
   # Combine spot and spread by row
   df = rbind(spot_coord, spread_coord)
   colnames(df) =  header
-  df2 = cbind(df, label, r = spread_radius) %>%
-    mutate(cont_level = f_cont_level(n = nrow(.), param = cont_level),
-           dis_level = cont_level)
+  df2 = cbind(df, label, r = spread_radius) 
   
-  return(df2)
+  # Assume contamination in continuous case follows a log normal dist
+  # Assume contamination in discrete case follows 20 + Gamma dist
+  if(spread == "continuous"){
+    df3 = df2 %>%
+      mutate(cont_level = f_cont_level(n = nrow(.), param = cont_level),
+           dis_level = NA)
+    
+  } else {
+    df3 = df2 %>%
+      mutate(cont_level = NA,
+             dis_level = rgamma_lim(n = nrow(.), alpha = 2, mode = dis_level[["mode"]], lb = dis_level[["lb"]], ub = NULL))
+  }
+    
+  return(df3)
 }
 
 # Remove contamination points that fall beyond perimeters
@@ -266,7 +277,7 @@ rm_outlier = function(df, lims){
 }
 
 # Simulate contamination in 2D (continuous) or 3D (discrete) scenarios
-sim_contam_new = function(n_contam, lims, spread, covar, n_affected, spread_radius, cont_level){
+sim_contam_new = function(n_contam, lims, spread, covar, n_affected, spread_radius, cont_level, dis_level){
   
   # Checkpoints
   stopifnot(n_contam > 0 & spread_radius >= 0 & n_affected >= 0 & length(lims) %in% c(2,3))
@@ -282,7 +293,7 @@ sim_contam_new = function(n_contam, lims, spread, covar, n_affected, spread_radi
                      spread_radius = spread_radius, cont_level = cont_level)
   } else {
     df = contam_dis(spot_coord = spot_coord, n_contam = n_contam, n_affected = n_affected, 
-                    covar = covar, spread = spread, spread_radius = spread_radius, cont_level = cont_level)
+                    covar = covar, spread = spread, spread_radius = spread_radius, dis_level = dis_level)
   }
   
   # Remove outliers
@@ -293,4 +304,16 @@ sim_contam_new = function(n_contam, lims, spread, covar, n_affected, spread_radi
   df2$ID = as.character(df2$ID)
   
   return(df2)
+}
+
+## Generate concentration levels
+rgamma_lim = function(n, alpha = 2, mode, lb, ub){
+  # Alpha = 2 by default, theta is calculated by mode
+  # Include lower bound and upper bound
+  a = lb + rgamma(n = n, shape = alpha, scale = (mode-lb)/(alpha-1))
+  # When a number is > upper bound, replace it with the mode
+  if(!is.null(ub)){
+    a[a >= ub] = mode
+  } 
+  return(a)
 }
