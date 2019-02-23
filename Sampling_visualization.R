@@ -2,7 +2,7 @@
 contam_draw = function(data, spread, xlim, ylim){
   if (spread == "discrete") {
     ggplot() +
-      geom_point(data = data, aes(x = X, y = Y, shape = label, color = cont_level)) +
+      geom_point(data = data, aes(x = X, y = Y, shape = label, color = dis_level)) +
       scale_color_gradient(name = "Contamination Level", low = "coral", high = "red4") +
       coord_fixed(ratio = 1, xlim = xlim, ylim = ylim) +
       theme_bw()
