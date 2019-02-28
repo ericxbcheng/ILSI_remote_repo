@@ -113,7 +113,7 @@ ss_truck = function(lims, depth_ft, radius){
   
   # Check point
   ## depth should be between 0 and zlim
-  stopifnot(depth_ft >=0 & ft2m(depth_ft) <= lims$zlim)
+  stopifnot(depth_ft >=0 & ft2m(depth_ft) <= lims$zlim[2])
   
   if(depth_ft >= 4){
     x_sp = c(ft2m(2), lims$xlim[2] / 4, 3/4 * lims$xlim[2]/2, lims$xlim[2]/2, 5/8*lims$xlim[2], 3/4*lims$xlim[2], lims$xlim[2] - ft2m(2))
@@ -196,122 +196,5 @@ ss_hopper_2_open = function(lims, radius){
   stopifnot(length(x_sp) == length(y_sp))
   
   naming_sp_3d(n_sp = length(x_sp), x_sp = x_sp, y_sp = y_sp, z_sp = z_sp, radius = radius)
-}
-
-# 3D: Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points. If spotONLY == TRUE, then only calculate the distance between spots and sample points
-calc_dist_3d = function(df_contam, df_sp){
-  
-  df = rbind(df_contam, df_sp)
-  df$label = as.character(df$label)
-  
-  # Calculate the Euclidean distance
-  a = dist(x = df[ ,1:3], method = "euclidean") %>% as.matrix()
-  attr(x = a, which = "dimnames") = list(df$ID, df$ID)
-  
-  sp_ind = which(df$label == "sample point")
-  cont_ind = which(df$label %in% c("spot", "spread"))
-  
-  # Subset the matrix to keep the distances between sample points and contamination points (spot + spread)
-  # Gather the matrix into a long format
-  b = a[cont_ind, sp_ind, drop = FALSE] %>%
-    melt(data = ., varnames = c("ID_contam", "ID_sp"), value.name = "Distance")
-  
-  b$ID_contam = as.character(b$ID_contam)
-  
-  # Attach the labels for each contamination point
-  c = b %>%
-    left_join(x = ., y = df_contam[, c("ID", "label")], by = c("ID_contam" = "ID"))
-  
-  return(c)
-}
-
-calc_dist = function(df_contam, df_sp, spread){
-  
-  # Check point
-  stopifnot(spread %in% c("continuous", "discrete"))
-  
-  if(spread == "continuous"){
-    calc_dist_2d(df_contam = df_contam, df_sp = df_sp)
-  } else if(spread == "discrete"){
-    calc_dist_3d(df_contam = df_contam, df_sp = df_sp)
-  }
-}
-
-# Calculate sample concentration for continuous case
-calc_level_cont = function(df_contam, dist, spread_radius, LOC, fun, cont_level){
-  
-  if(length(levels(df_contam$label)) > 1){
-    warning("df_contam contains both contamination spots and spreads. 
-            For continuous spread, contamination spread points should not exist. 
-            Check 'spread' in upstream functions.")
-  }
-  
-  # Subset the dist_contam_sp to keep the rows that show distance between spots and sample points
-  # Calculate the percent contribution based on distance
-  # Attach the source contamination level
-  # Calculate the contamination level at each sample point, which is source level * percent contribution
-  #Sum up the source_contri for each sample point to represent the actual contamination level at that sample point
-  
-  dist %>%
-    dplyr::filter(.data = ., label == "spot") %>%
-    mutate(perc_contri = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC, fun = fun, cont_level = cont_level),
-           source_level = df_contam$cont_level[match(x = .$ID_contam, table = df_contam$ID)],
-           source_contri = source_level * perc_contri) %>%
-    group_by(ID_sp) %>%
-    summarise(cont_level = sum(source_contri))
-  }
-
-# Calculate sample concentration for discrete case
-calc_level_dis = function(df_contam, sp_radius, dist, m_sp, m_kbar){
-  
-  # Estimate the number of kernels in each sample
-  n_k = round(x = m_sp/m_kbar, digits = 0)
-  
-  # Subset the dist_contam_sp to keep rows where the contamination points fall within the sampling region
-  # Attach the source contamination level
-  # Calculate the sum of contamination point levels in each sample, and record the number of points in each sample
-  # Calculate the dis_level in each sample
-  
-  dist %>%
-    dplyr::filter(Distance <= sp_radius) %>%
-    mutate(source_level = df_contam$dis_level[match(x = .$ID_contam, table = df_contam$ID)]) %>%
-    group_by(ID_sp) %>%
-    summarise(obs = n(),
-              sum_level = sum(source_level)) %>%
-    mutate(dis_level = m_kbar/m_sp*(sum_level + (n_k - obs) * conc_good))
-}
-
-# Create a function that calculates contamination levels for each sample point and combine "contam_xy" and "sp_xy"
-gen_sim_data_new = function(df_contam, df_sp, dist, spread, spread_radius, sp_radius, LOC, fun, m_kbar, m_sp, conc_good, cont_level){
-  
-  stopifnot(spread %in% c("continuous", "discrete"))
-  
-  ### Combine everything, fill the NAs with the corresponding contamination level.
-  df = rbind(df_contam, df_sp)
-  
-  if(spread == "continuous"){
-    
-    # Calculate the sample concentration in a continuous case
-    a = calc_level_cont(df_contam = df_contam, dist = dist, spread_radius = spread_radius, LOC = LOC, fun = fun, cont_level = cont_level)
-    
-    # Update the cont_level column for the sample points.
-    df$cont_level[match(x = a$ID_sp, table = df$ID)] = a$cont_level 
-    
-  } else if (spread == "discrete") {
-    
-    # Calculate the sample concentration in a discrete case
-    b = calc_level_dis(df_contam = df_contam, sp_radius = sp_radius, dist = dist, m_sp = m_sp, m_kbar = m_kbar)
-    
-    # Update the dis_level column for the sample points.
-    df$dis_level[match(x = b$ID_sp, table = df$ID)] = b$dis_level
-    
-    # NA's in dis_level indicate there is no contaminated kernel in those samples. 
-    # Assign conc_good to those samples
-    if(anyNA(df$dis_level)){
-      df$dis_level[is.na(df$dis_level)] = conc_good
-    }
-  }
-  
-  return(df)
 }
 
