@@ -1,0 +1,172 @@
+---
+title: 'Sampling: Assay Preparation'
+author: "Xianbin Cheng"
+date: "February 22, 2019"
+output: html_document
+---
+
+# Objective
+
+  * Create a module that simulates taking analytical samples from work samples
+  
+# Method
+
+1. Load libraries and source R code.
+
+```{r, warning = FALSE, message = FALSE}
+source(file = "Sampling_libraries.R")
+source(file = "Sampling_contamination.R")
+source(file = "Sampling_visualization.R")
+source(file = "Sampling_assay_prep.R")
+source(file = "Sampling_plan.R")
+source(file = "Sampling_plan_3d.R")
+```
+
+2. List important parameters from `Sampling_contamination.R`.
+
+* `n_contam` = the number of contamination points  
+* `x_lim` = the limits of the x-axis  
+* `y_lim` = the limits of the y-axis  
+* `z_lim` = the limits of the z-axis
+* `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution by default
+* `y` = the vertical coordinate of the contamination center, which follows a uniform distribution by default
+* `z` = the vertical coordinate of the contamination center, which follows a uniform distribution by default
+* `cont_level` = a vector that indicates the mean contamination level (logCFU/g or logCFU/mL) and the standard deviation in a log scale, assuming contamination level follows a log normal distribution $ln(cont\_level)$~$N(\mu, \sigma^2)$. 
+* `dis_level` = a vector that indicates the mode (ppb) and the lower bound (ppb), assuming contamination level follows $lb+Gamma(\alpha, \theta=\frac {mode-20}{\alpha-1})$
+
+** Mode 1: Discrete Spread** 
+
+* `n_affected` = the number of affected kernels near the contamination spot, which follows a Poisson distribution ($Pois(\lambda = 5)$)   
+* `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) = 0.25, var(Y) = 0.25 and cov(X, Y) = 0   
+
+** Model 2: Continuous Spread**
+
+We do not consider such type of spread in a 3D space. 
+
+```{r}
+## The input parameters
+n_contam = 3
+x_lim = c(0, 8)
+y_lim = c(0, 2)
+z_lim = c(0, 2.5)
+lims = list(xlim = x_lim, ylim = y_lim, zlim = z_lim)
+cont_level = c(7, 1)
+dis_level = c("mode"= 40000, "lb" = 20)
+spread = "discrete"
+
+### Discrete
+n_affected = 2
+covar_mat = make_covar_mat(spread = spread, varx = 0.25, vary = 0.25, varz = 0.25, covxy = 0, covxz = 0, covyz = 0)
+
+### Continuous
+spread_radius = 1
+LOC = 10^(-3)
+fun = "exp"
+```
+
+```{r}
+# Run this if we want reproducibility
+set.seed(123)
+```
+
+```{r}
+# Generate the coordinates of contamination points
+contam_xy = sim_contam_new(n_contam = n_contam, lims = lims, spread = spread, covar = covar_mat, n_affected = n_affected, spread_radius = spread_radius, cont_level = cont_level, dis_level = dis_level) 
+```
+
+3. Define parameters for generating sampling plans.
+
+* `method_sp` = sampling strategy, including `srs`, `strs`, `ss`.
+
+**Mode 1: Continuous Spread**
+
+* `n_sp` = the number of sampling points
+* `n_strata` = the number of strata (applicable to *2D Stratified random sampling*)
+* `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to *2D Stratified random sampling*) **OR** the side along which a sample is taken every k steps (applicable to *2D Systematic sampling*).
+
+**Mode 1: Discrete Spread**   
+
+* `d` = inner diameter of the probe (m)
+* `L` = length of the probe (m). It can be 5, 6, 8, 10, 12 feet, depending on the container type. Remember to convert it to meters.
+* `rho` = average density of a kernel (g/cm3)
+* `m_kbar` = average mass of a kernel
+* `container` = "truck", "barge", "hopper"
+* `depth_ft` = the depth of corn inside the truck. There are two sampling patterns for trucks, depending on whether depth is higher than or lower than 4 ft.
+* `compartment` and `type` = arguments for hopper cars. `compartment` can be 2 or 3, `type` can be `open_top` or `trough`.
+
+```{r}
+method_sp = "ss"
+
+# Continuous
+n_sp = 15
+n_strata = 5
+by = "row"
+
+# Discrete
+# sp_radius = 0.5 (This is theoretically for SRS and STRS)
+container = "truck"
+depth_ft = 5
+#compartment = 2
+#type = "open_top"
+
+d = 1
+L = get_Lprobe(container = container, lims = lims)
+m_kbar = 0.3
+rho = 1.28
+```
+
+```{r}
+# Generate the coordinates of sample points
+sp_xy = sim_plan_new(method_sp = "ss", spread = spread, lims = lims, radius = d/2, container = container, depth_ft = depth_ft)
+```
+
+4. Determine whether contaminated kernels are captured and calculate sample concentration in the probe.
+
+  * Capture criteria:
+  
+    1) $d_{xy} \le d/2$, where $d_{xy}$ = 2D Euclidean distance between a sample point and a kernel on the X-Y plane, d = inner diameter of the probe;
+    2) $z_i >= zlim[2] - L$, where $z_i$ = the z-coordinate of the kernel. We assume the probe is fully inserted into the bulk corn.
+
+  * Healthy kernel distribution:
+    
+    Modified-PERT with min = 0, mode = 0.7, max = 19.99, shape = 80.
+
+```{r}
+# Pre-generate healthy kernel concentrations to save time
+conc_neg = rpert(n = 10^6, min = 0, mode = 0.7, max = 19.99, shape = 80)
+```
+
+```{r}
+# Generate the distance matrix
+dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy, spread = spread, method_sp = method_sp)
+
+contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, df_sp = sp_xy, dist = dist_contam_sp, spread = spread, d = d, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg)
+```
+
+
+# Result
+
+1. show the captured kernels.
+
+```{r}
+kable_styling(kable_input = kable(contam_sp_xy$combined, format = "html"), full_width = FALSE)
+contam_sp_xy$samples[[1]]
+```
+
+2. 2D visualization.
+
+```{r}
+overlay_draw(method_sp = method_sp, data = rbind(contam_xy, sp_xy), spread = spread, xlim = lims$xlim, ylim = lims$ylim)
+```
+
+3. Show the pooled sample distribution.
+
+```{r}
+temp = data.frame(conc = contam_sp_xy$samples[[2]])
+
+ggplot(data = temp, aes(x = conc)) +
+  geom_histogram(bins = 100) +
+  scale_x_log10() +
+  theme_bw()
+```
+
