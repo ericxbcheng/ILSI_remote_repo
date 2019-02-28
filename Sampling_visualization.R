@@ -137,7 +137,7 @@ overlay_draw_srs = function(data, spread, xlim, ylim){
                   aes(x0 = X, y0 = Y, r = r),
                   fill = "darkgreen",
                   alpha = 0.1) +
-      geom_point(data = subset(data, subset = label != "sample point"), aes(x = X, y = Y, color = cont_level, shape = label)) +
+      geom_point(data = subset(data, subset = label != "sample point"), aes(x = X, y = Y, color = dis_level, shape = label)) +
       scale_color_gradient(name = "Contamination Level", low = "orange", high = "red2") +
       scale_shape_manual(values = c(15, 16, 17)) +
       coord_fixed(ratio = 1, xlim = xlim, ylim = ylim) +
