@@ -7,6 +7,7 @@ source("Sampling_assay.R")
 source("Sampling_outcome.R")
 source("Sampling_iteration.R")
 source("Sampling_analysis.R")
+source("Simulation_data.R")
 source("Sampling_visualization.R")
 
 ## We choose "n_contam" to iterate on.
@@ -24,7 +25,7 @@ n_affected = rpois(n = 1, lambda = 5)
 covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
 
 ### Mode 2
-spread_radius = 1
+spread_radius = 0.2
 LOC = 10^(-3)
 fun = "exp"
 
@@ -64,50 +65,23 @@ ArgList = list(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_a
                cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, 
                conc_good = conc_good, case = case, m = m, M = M, Mc = Mc, method_det = method_det)
 
-Set_ArgList = function(n_sp_new, case_new, Args_default){
-  
-  # Change the n_sp and case accordingly
-  Args_default$n_sp = n_sp_new
-  Args_default$case = case_new
-  
-  ArgList_srs = ArgList_strs = ArgList_ss = Args_default
-  
-  # SRS
-  ArgList_srs$method_sp = "srs"
-  
-  # STRS
-  ArgList_strs$method_sp = "strs"
-  
-  # SS
-  ArgList_ss$method_sp = "ss"
-  
-  return(list("srs" = ArgList_srs, "strs" = ArgList_strs, "ss" = ArgList_ss))
-}
-
 ArgList_all = map2(.x = n_sp_list, .y = case_list, .f = Set_ArgList, Args_default = ArgList)
 names(ArgList_all) = as.character(n_sp_list)
 
-Name_rds = function(contam, sp, strategy, case){
-  paste0(contam, "_", sp, "_", strategy, "_", case, ".rds")
-}
+pmap(.l = list(Args_default = ArgList_all, sp = n_sp_list, case = case_list), .f = output_rds, 
+     seed = 123, n_iter = n_iter, val = vals, name = param_name, contam = "1to80")
 
-### ATTENTION: this function only works when n_contam = 1:6
-output_rds = function(seed, n_iter, val, name, Args_default, sp, case){
-  # SRS
-  set.seed(seed)
-  result_srs = map(.x = 1:n_iter, .f = tune_param2, val = val, name = name, Args_default = Args_default$srs, n_iter = n_iter)
-  saveRDS(object = result_srs, file = Name_rds(contam = "1to6", sp = sp, strategy = "srs", case = case))
-  
-  # STRS
-  set.seed(seed)
-  result_strs = map(.x = 1:n_iter, .f = tune_param2, val = val, name = name, Args_default = Args_default$strs, n_iter = n_iter)
-  saveRDS(object = result_strs, file = Name_rds(contam = "1to6", sp = sp, strategy = "strs", case = case))
-  
-  # SS
-  set.seed(seed)
-  result_ss = map(.x = 1:n_iter, .f = tune_param2, val = val, name = name, Args_default = Args_default$ss, n_iter = n_iter)
-  saveRDS(object = result_ss, file = Name_rds(contam = "1to6", sp = sp, strategy = "ss", case = case))
-}
+# Find all files with the suffix ".rds"
+rds_files = dir(pattern = ".rds")
 
-pmap(.l = list(Args_default = ArgList_all, sp = n_sp_list, case = case_list), .f = output_rds, seed = 123, n_iter = n_iter, val = vals, name = param_name)
+# Read all the RDS files and save them into rds2var
+rds2var = map(.x = rds_files, .f = readRDS)
+names(rds2var) = rds_files
+
+cleaned_data = map2(.x = rds2var, .y = names(rds2var), .f = clean_rds)
+full_data = bind_rows(cleaned_data)
+
+write.csv(x = full_data, file = "sim_data_1to80_5to60_3_10to15.csv")
+
+
 
