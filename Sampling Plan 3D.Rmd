@@ -115,7 +115,7 @@ method_sp = "ss"
 
   1) Truck: 
   
-    * `depth_ft` = the depth of corn in feet. It could be >= 4 ft or < 4 ft, each corresponding to a different sampling pattern.
+    * `depth_ft` = the depth of corn in feet. It could be >= 4 ft or < 4 ft, each corresponding to a different sampling pattern. By default, ft2m(depth_ft) == zlim[2]
   
   2) Barge
   
@@ -129,8 +129,8 @@ method_sp = "ss"
 ```{r}
 ## Systematic sampling
 # truck
-sp_xy1 = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, radius = sp_radius, container = "truck", depth_ft = 3)
-sp_xy2 = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, radius = sp_radius, container = "truck", depth_ft = 5)
+sp_xy1 = sim_plan_new(method_sp = method_sp, spread = spread, lims = append(lims[1:2], values = list(zlim = c(0,ft2m(3.5)))), radius = sp_radius, container = "truck")
+sp_xy2 = sim_plan_new(method_sp = method_sp, spread = spread, lims = append(lims[1:2], values = list(zlim = c(0,ft2m(5)))), radius = sp_radius, container = "truck")
 
 # barge
 sp_xy3 = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, radius = sp_radius,container = "barge")

@@ -63,19 +63,19 @@ sim_plan_strs_3d = function(n_sp, n_strata, lims, radius){
 }
 
 # systematic sampling for 3D
-sim_plan_ss_3d = function(container, lims, depth_ft, radius, compartment, type){
+sim_plan_ss_3d = function(container, lims, radius, compartment, type){
   
   # Check points
   stopifnot(length(lims) == 3)
   stopifnot(container %in% c("truck", "barge","hopper"))
   
   switch(container, 
-         "truck" = ss_truck(lims = lims, depth_ft = depth_ft, radius = radius),
+         "truck" = ss_truck(lims = lims, radius = radius),
          "barge" = ss_barge(lims = lims, radius = radius),
          "hopper" = ss_hopper(lims = lims, compartment = compartment, type = type, radius = radius))
 }
 
-sim_plan_3d = function(method_sp, n_sp, lims, radius, container, compartment, type, depth_ft){
+sim_plan_3d = function(method_sp, n_sp, lims, radius, container, compartment, type){
   
   # Check points
   stopifnot(method_sp %in% c("srs", "strs", "ss"))
@@ -85,21 +85,21 @@ sim_plan_3d = function(method_sp, n_sp, lims, radius, container, compartment, ty
   } else if (method_sp == "strs"){
     sim_plan_strs_3d(n_sp = n_sp, n_strata = n_strata, lims = lims, radius = radius)
   } else if (method_sp == "ss"){
-    sim_plan_ss_3d(container = container, lims = lims, depth_ft = depth_ft, radius = radius, compartment = compartment, type = type)
+    sim_plan_ss_3d(container = container, lims = lims, radius = radius, compartment = compartment, type = type)
   } else {
     stop("Sampling method does not exist. Try 'srs', 'strs', or 'ss'.")
   }
 }
 
 # A function that includes all kinds of sampling plan
-sim_plan_new = function(method_sp, spread, n_sp, lims, radius, n_strata, by, compartment, type, depth_ft, container){
+sim_plan_new = function(method_sp, spread, n_sp, lims, radius, n_strata, by, compartment, type, container){
   
   stopifnot(spread %in% c("continuous", "discrete"))
   
   if(spread == "continuous"){
     sim_plan_2d(method_sp = method_sp, n_sp = n_sp, xlim = lims$xlim, ylim = lims$ylim, radius = radius, n_strata = n_strata, by = by)
   } else if(spread == "discrete"){
-    sim_plan_3d(method_sp = method_sp, n_sp, lims = lims, radius = radius, container = container, compartment = compartment, type = type, depth_ft = depth_ft)
+    sim_plan_3d(method_sp = method_sp, n_sp, lims = lims, radius = radius, container = container, compartment = compartment, type = type)
   }
 }
 
@@ -109,13 +109,13 @@ ft2m = function(x){
 }
 
 # Probe sampling pattern for trucks
-ss_truck = function(lims, depth_ft, radius){
+ss_truck = function(lims, radius){
   
   # Check point
-  ## depth should be between 0 and zlim
-  stopifnot(depth_ft >=0 & ft2m(depth_ft) <= lims$zlim[2])
+  ## depth should be > 0
+  stopifnot(lims$zlim[2] >=0)
   
-  if(depth_ft >= 4){
+  if(lims$zlim[2] >= ft2m(4)){
     x_sp = c(ft2m(2), lims$xlim[2] / 4, 3/4 * lims$xlim[2]/2, lims$xlim[2]/2, 5/8*lims$xlim[2], 3/4*lims$xlim[2], lims$xlim[2] - ft2m(2))
     y_sp = c(lims$ylim[2] - ft2m(2), ft2m(2), lims$ylim[2] - ft2m(2), lims$ylim[2]/2, ft2m(2), lims$ylim[2] - ft2m(2), ft2m(2))
     z_sp = 0
