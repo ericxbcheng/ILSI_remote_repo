@@ -101,7 +101,8 @@ get_Lprobe = function(container, lims){
              "truck" = c(ft2m(5), ft2m(6)),
              "hopper_bottom" = c(ft2m(6), ft2m(8), ft2m(10)))
   
-  # Select one length where the probe can reach the bottom of the container
+  # Select one length where the probe can reach the bottom of the corn
+  # We assume the probe is fully inserted into the corn
   b = a <= lims$zlim[2]
   c = max(a[b])
   
@@ -201,15 +202,17 @@ calc_level_cont = function(df_contam, dist, spread_radius, LOC, fun, cont_level)
 # }
 
 # Define how a kernel is captured
-capture_kernel = function(method_sp, df_contam, dist, sp_radius, d, lims){
+capture_kernel = function(method_sp, df_contam, dist, sp_radius, d, lims, L){
   
   # Check points
   stopifnot(lims$zlim[2] >= L)
   stopifnot(method_sp %in% c("srs", "strs", "ss"))
   
   # When method_sp == ss, we use a probe
+    ## We assume zlim[2] >= L
   # Otherwise, we use a spherical sampler
   if(method_sp == "ss"){
+    
     dist %>%
       dplyr::filter(Distance <= d / 2 & Z >= lims$zlim[2] - L)  %>%
       mutate(source_level = df_contam$dis_level[match(x = .$ID_contam, table = df_contam$ID)])
@@ -283,7 +286,7 @@ get_pooled_sample = function(df_contam, df_sp, dist, method_sp, d, L, rho, m_kba
   n_k = calc_k_num(method_sp = method_sp, d = d, L = L, rho = rho, m_kbar = m_kbar, sp_radius = sp_radius)
   
   # Find captured kernels
-  kcap = capture_kernel(method_sp = method_sp, df_contam = df_contam, dist = dist, sp_radius = sp_radius,d  = d, lims = lims)
+  kcap = capture_kernel(method_sp = method_sp, df_contam = df_contam, dist = dist, sp_radius = sp_radius,d  = d, lims = lims, L = L)
   
   # Find the number of healthy kernels in total
   num_neg = n_k * nrow(df_sp) - nrow(kcap)

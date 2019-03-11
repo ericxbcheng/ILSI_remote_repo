@@ -48,7 +48,7 @@ We do not consider such type of spread in a 3D space.
 n_contam = 3
 x_lim = c(0, 8)
 y_lim = c(0, 2)
-z_lim = c(0, 2.5)
+z_lim = c(0, 4)
 lims = list(xlim = x_lim, ylim = y_lim, zlim = z_lim)
 cont_level = c(7, 1)
 dis_level = c("mode"= 40000, "lb" = 20)
@@ -69,9 +69,15 @@ fun = "exp"
 set.seed(123)
 ```
 
-```{r}
+```{r, eval = FALSE}
 # Generate the coordinates of contamination points
+# Not run
 contam_xy = sim_contam_new(n_contam = n_contam, lims = lims, spread = spread, covar = covar_mat, n_affected = n_affected, spread_radius = spread_radius, cont_level = cont_level, dis_level = dis_level) 
+```
+
+```{r}
+## Test case
+contam_xy = read.csv(file = "Test_case_truck.csv", row.names = 1, header = TRUE, stringsAsFactors = FALSE)
 ```
 
 3. Define parameters for generating sampling plans.
@@ -87,7 +93,7 @@ contam_xy = sim_contam_new(n_contam = n_contam, lims = lims, spread = spread, co
 **Mode 1: Discrete Spread**   
 
 * `d` = inner diameter of the probe (m)
-* `L` = length of the probe (m). It can be 5, 6, 8, 10, 12 feet, depending on the container type. Remember to convert it to meters.
+* `L` = length of the probe (m). It can be 5, 6, 8, 10, 12 feet, depending on the container type. Remember to convert it to meters. We assume it's fully inserted to the corn
 * `rho` = average density of a kernel (g/cm3)
 * `m_kbar` = average mass of a kernel
 * `container` = "truck", "barge", "hopper"
@@ -109,15 +115,15 @@ depth_ft = 5
 #compartment = 2
 #type = "open_top"
 
-d = 1
+d = 0.5
 L = get_Lprobe(container = container, lims = lims)
-m_kbar = 0.3
+m_kbar = 0.3 #unit: g
 rho = 1.28
 ```
 
 ```{r}
 # Generate the coordinates of sample points
-sp_xy = sim_plan_new(method_sp = "ss", spread = spread, lims = lims, radius = d/2, container = container, depth_ft = depth_ft)
+sp_xy = sim_plan_new(method_sp = "ss", spread = spread, lims = lims, radius = d/2, container = container)
 ```
 
 4. Determine whether contaminated kernels are captured and calculate sample concentration in the probe.
@@ -149,24 +155,30 @@ contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, df_sp = sp_xy, dist = dis
 1. show the captured kernels.
 
 ```{r}
+# Summary
 kable_styling(kable_input = kable(contam_sp_xy$combined, format = "html"), full_width = FALSE)
+
+# Captured kernels
 contam_sp_xy$samples[[1]]
 ```
 
 2. 2D visualization.
 
 ```{r}
-overlay_draw(method_sp = method_sp, data = rbind(contam_xy, sp_xy), spread = spread, xlim = lims$xlim, ylim = lims$ylim)
+overlay_draw(method_sp = method_sp, data = contam_sp_xy$combined, spread = spread, xlim = lims$xlim, ylim = lims$ylim)
+overlay_draw_probe(data = contam_sp_xy$combined, lims = lims, L = L)
 ```
 
 3. Show the pooled sample distribution.
 
 ```{r}
-temp = data.frame(conc = contam_sp_xy$samples[[2]])
+temp = data.frame(conc = contam_sp_xy$samples[[2]]) %>%
+  mutate(class = ifelse(.$conc >= 20, yes = "H", no = "L"))
 
-ggplot(data = temp, aes(x = conc)) +
+ggplot(data = temp, aes(x = conc, fill = class)) +
   geom_histogram(bins = 100) +
   scale_x_log10() +
+  scale_y_sqrt() +
   theme_bw()
 ```
 
