@@ -185,6 +185,18 @@ overlay_draw = function(method_sp, data, spread, xlim, ylim, n_strata, by){
   }
 }
 
+# A function for drawing X-Z with probes in them
+overlay_draw_probe = function(data, lims, L){
+  ggplot() +
+    geom_rect(data = subset(data, subset = label == "sample point"), 
+              aes(xmin = X - r, xmax = X + r, ymin = lims$zlim[2] - L, ymax = lims$zlim[2]), fill = "darkgreen") +
+    geom_point(data = subset(data, subset = label != "sample point"), aes(x = X, y = Z, color = dis_level, shape = label)) +
+    scale_color_gradient(name = "Contamination Level", low = "orange", high = "red2") +
+    scale_shape_manual(values = c(15, 16, 17)) +
+    coord_fixed(ratio = 1, xlim = lims$xlim, ylim = lims$zlim) +
+    theme_bw()
+}
+
 # Create a function that draws the contamination level of samples and shows the microbiological criteria in the continuous spread scenario
 assay_draw_cont = function(df, M, m, method_det, case){
   
