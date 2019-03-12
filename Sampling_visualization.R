@@ -241,15 +241,50 @@ assay_draw_dis = function(df, Mc, method_det){
     theme_bw()
 }
 
+## A new function for discrete case
+assay_draw_dis_new = function(data, Mc, method_det){
+  
+  temp1 = temp = tibble(Conc = data) %>%
+    mutate(class = ifelse(test = Conc < Mc, yes = "L", no = "H"))
+  
+  temp2 = data.frame(Thresholds = c("Mc", "LOD"), 
+                     val = c(Mc, get_LOD(method_det = method_det)))
+  
+  ggplot()+
+    geom_col(aes(x = "Mean sample concentration", y = mean(temp1$Conc)), width = 0.5, fill = "darkgrey") +
+    geom_hline(data = temp2, aes(yintercept = val, color = Thresholds), size = 1.5) +
+    geom_text(data = temp1, aes(x = "Mean sample concentration", 
+                                y = mean(temp1$Conc), 
+                                label = scientific(mean(temp1$Conc), digits = 2)), 
+              nudge_y = 0.3) +
+    scale_color_manual(values = c("#00BA38", "#F8766D")) +
+    labs(x = NULL, y = "Contamination level (ng/g)") +
+    theme_bw()
+}
+
 # A wrapper function that includes assay_draw_cont() and assay_draw_dis()
-assay_draw = function(df, M, m, Mc, method_det, spread, case){
+assay_draw = function(data, M, m, Mc, method_det, spread, case){
   if(spread == "discrete"){
-    assay_draw_dis(df = df, Mc = Mc, method_det = method_det)
+    assay_draw_dis_new(data = data, Mc = Mc, method_det = method_det)
   } else if (spread == "continuous"){
-    assay_draw_cont(df = df, M = M, m = m, method_det = method_det, case = case)
+    assay_draw_cont(df = data, M = M, m = m, method_det = method_det, case = case)
   } else {
     warning("Unknown type of spread.")
   }
+}
+
+# Draw the distribution of mycotoxin in the discrete case
+sample_dist = function(data, Mc){
+  
+  temp = tibble(Conc = data) %>%
+    mutate(class = ifelse(test = Conc < Mc, yes = "L", no = "H"))
+  
+  ggplot(data = temp, aes(x = Conc, fill = class)) +
+    geom_histogram(bins = 50) +
+    scale_x_log10() +
+    scale_y_sqrt() +
+    labs(x = "Concentration (ppb)", y = "Number of kernels") +
+    theme_bw()
 }
 
 # Plot the ROD for multiple values of a single parameter
