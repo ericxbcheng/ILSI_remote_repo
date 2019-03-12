@@ -91,6 +91,8 @@ gen_sim_data = function(df_contam, df_sp, dist, spread_radius, sp_radius, LOC, f
 # Find the length of the probe
 get_Lprobe = function(container, lims){
   
+  # Checkpoints
+  stopifnot(lims$zlim[2] > 0)
   stopifnot(container %in% c("barge", "hopper", "boxcar", "truck", "hopper_bottom"))
   
   # Find all possible probe lengths for a specific container type
@@ -102,9 +104,15 @@ get_Lprobe = function(container, lims){
              "hopper_bottom" = c(ft2m(6), ft2m(8), ft2m(10)))
   
   # Select one length where the probe can reach the bottom of the corn
-  # We assume the probe is fully inserted into the corn
-  b = a <= lims$zlim[2]
-  c = max(a[b])
+    ## Case 1: L >= zlim[2], then find the min L
+    ## Case 2: L < zlim[2], the probe won't reach the bottom, then we need to find the max L
+  b = a - lims$zlim[2]
+  
+  if(any(b > 0) == TRUE){
+    c = min(a[b>0])
+  } else {
+    c = max(a)
+  }
   
   return(c)
 }
@@ -205,17 +213,25 @@ calc_level_cont = function(df_contam, dist, spread_radius, LOC, fun, cont_level)
 capture_kernel = function(method_sp, df_contam, dist, sp_radius, d, lims, L){
   
   # Check points
-  stopifnot(lims$zlim[2] >= L)
   stopifnot(method_sp %in% c("srs", "strs", "ss"))
   
   # When method_sp == ss, we use a probe
-    ## We assume zlim[2] >= L
+    ## Case 1: zlim[2] >= L
+    ## Case 2: zlim[2] < L
   # Otherwise, we use a spherical sampler
   if(method_sp == "ss"){
     
-    dist %>%
-      dplyr::filter(Distance <= d / 2 & Z >= lims$zlim[2] - L)  %>%
-      mutate(source_level = df_contam$dis_level[match(x = .$ID_contam, table = df_contam$ID)])
+    if(lims$zlim[2] >= L){
+      dist %>%
+        dplyr::filter(Distance <= d / 2 & Z >= lims$zlim[2] - L)  %>%
+        mutate(source_level = df_contam$dis_level[match(x = .$ID_contam, table = df_contam$ID)])
+      
+    } else {
+      dist %>%
+        dplyr::filter(Distance <= d / 2)  %>%
+        mutate(source_level = df_contam$dis_level[match(x = .$ID_contam, table = df_contam$ID)])
+      
+    }
     
   } else {
     dist %>%
