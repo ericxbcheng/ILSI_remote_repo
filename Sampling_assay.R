@@ -42,7 +42,7 @@ get_attr_plan = function(case, m, M){
 get_LOD = function(method_det, V){
   switch(EXPR = method_det,
          "plating" = 2500,
-         "enrichment" = 1/V,
+         "enrichment" = 0,
          "ELISA aflatoxin" = 1,
          stop("Unknown detection method", call. = FALSE))
 }
