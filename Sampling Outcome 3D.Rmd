@@ -1,0 +1,170 @@
+---
+title: "Sampling Outcome 3D"
+author: "Xianbin Cheng"
+date: "March 25, 2019"
+output: html_document
+---
+
+# Objective
+
+  * Create a module that returns output for 3D scenarios.
+  
+# Method
+
+1. Load libraries and source R code.
+
+```{r, warning = FALSE, message = FALSE}
+source(file = "Sampling_libraries.R")
+source(file = "Sampling_contamination.R")
+source(file = "Sampling_visualization.R")
+source(file = "Sampling_assay_prep.R")
+source(file = "Sampling_plan.R")
+source(file = "Sampling_plan_3d.R")
+source(file = "Sampling_assay_3d.R")
+source(file = "Sampling_assay.R")
+source(file = "Sampling_outcome_3d.R")
+```
+
+2. List important parameters.
+
+**Sampling contamination**
+
+  * `n_contam` = the number of contamination points  
+  * `x_lim` = the limits of the x-axis  
+  * `y_lim` = the limits of the y-axis  
+  * `z_lim` = the limits of the z-axis
+  * `x` = the horizontal coordinate of the contamination center, which follows a uniform distribution by default
+  * `y` = the vertical coordinate of the contamination center, which follows a uniform distribution by default
+  * `z` = the vertical coordinate of the contamination center, which follows a uniform distribution by default
+  * `cont_level` = a vector that indicates the mean contamination level (logCFU/g or logCFU/mL) and the standard deviation in a log scale, assuming contamination level follows a log normal distribution $ln(cont\_level)$~$N(\mu, \sigma^2)$. 
+  * `dis_level` = a vector that indicates the mode (ppb) and the lower bound (ppb), assuming contamination level follows $lb+Gamma(\alpha, \theta=\frac {mode-20}{\alpha-1})$
+
+  ** Mode 1: Discrete Spread** 
+
+  * `n_affected` = the number of affected kernels near the contamination spot, which follows a Poisson distribution ($Pois(\lambda = 5)$)   
+  * `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) = 0.25, var(Y) = 0.25 and cov(X, Y) = 0   
+
+  ** Model 2: Continuous Spread**
+
+  We do not consider such type of spread in a 3D space. 
+
+**Sampling strategies**
+
+  * `method_sp` = sampling strategy, including `srs`, `strs`, `ss`.
+
+  **Mode 1: Continuous Spread**
+
+  * `n_sp` = the number of sampling points
+  * `n_strata` = the number of strata (applicable to *2D Stratified random sampling*)
+  * `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to *2D Stratified random sampling*) **OR** the side along which a sample is taken every k steps (applicable to *2D Systematic sampling*).
+
+  **Mode 1: Discrete Spread**   
+
+  * `d` = inner diameter of the probe (m)
+  * `L` = length of the probe (m). It can be 5, 6, 8, 10, 12 feet, depending on the container type. Remember to convert it to meters. We assume it's fully inserted to the corn
+  * `rho` = average density of a kernel (g/cm3)
+  * `m_kbar` = average mass of a kernel
+  * `container` = "truck", "barge", "hopper"
+  * `depth_ft` = the depth of corn inside the truck. There are two sampling patterns for trucks, depending on whether depth is higher than or lower than 4 ft.
+  * `compartment` and `type` = arguments for hopper cars. `compartment` can be 2 or 3, `type` can be `open_top` or `trough`.
+  
+**Sample Assay**
+
+  * `method_det` = method of detection  
+      + Plating: LOD = 2500 CFU/g  
+      + Enrichment: LOD = 1 CFU 
+      + ELISA: LOD = 1 ng/g (Helica Total Aflatoxins ELISA kit)  
+  
+  **Mode 1: Discrete Spread:**  
+  
+      * `Mc` = maximum concentration limit of mycotoxin (ng/g or ppb)
+      * `tox` = mycotoxin, including aflatoxin `AF`, fumonisin `FM`, zearalenone `ZEN`, Ochratoxin A `OTA`, Deoxynivalenol `DEN`
+      
+      * For aflatoxin, the minimum sample size is: 
+          * 908 g (2 lbs) for trucks
+          * 1362 g (3 lbs) for railcars (hopper)
+          * 4540 g (10 lbs) for barges, sublots and composite samples
+          * 4540 g is the recommended submitted sample size
+    
+      * The `get_work_portion()` can also be used to get the file sample
+  
+  **Mode 2: Continuous Spread:**  
+  
+      * `case` = 1 ~ 15 cases that define the stringency of the sampling plan.  
+      * Attributes plans:  
+          + `n` = number of analytical units (25g)  
+          + `c` = maximum allowable number of analytical units yielding positive results  
+          + `m` = microbial count or concentration above which an analytical unit is considered positive  
+          + `M` = microbial count or concentration, if any analytical unit is above `M`, the lot is rejected.
+        
+```{r}
+## The input parameters
+n_contam = 10
+x_lim = c(0, 8)
+y_lim = c(0, 2)
+z_lim = c(0, 2)
+lims = list(xlim = x_lim, ylim = y_lim, zlim = z_lim)
+cont_level = c(7, 1)
+dis_level = c("mode"= 40000, "lb" = 20)
+spread = "discrete"
+
+### Discrete
+n_affected = 10
+covar_mat = make_covar_mat(spread = spread, varx = 0.04, vary = 0.04, varz = 0.04, covxy = 0, covxz = 0, covyz = 0)
+
+### Continuous
+spread_radius = 1
+LOC = 10^(-3)
+fun = "exp"
+
+method_sp = "ss"
+
+# Continuous
+n_sp = 15
+n_strata = 5
+by = "row"
+
+# Discrete
+# sp_radius = 0.5 (This is theoretically for SRS and STRS)
+container = "truck"
+#depth_ft = 5
+#compartment = 2
+#type = "open_top"
+
+d = 0.2
+L = get_Lprobe(container = container, lims = lims)
+m_kbar = 0.3 #unit: g
+rho = 1.28
+
+# Assay
+# Define parameters: e.g. S.aureus in shrimps
+case = 9
+m = 50
+M = 500
+
+# Discrete
+tox = "AF"
+Mc = 20
+
+# Detection method: plating, enrichment, ELISA aflatoxin
+method_det = "ELISA aflatoxin"
+```
+
+3. Produce intermediate datasets.
+
+```{r}
+# Pre-generate healthy kernel concentrations to save time
+conc_neg = rpert(n = 10^6, min = 0, mode = 0.7, max = 19.99, shape = 80)
+```
+
+```{r, eval = FALSE}
+# Run this if we want reproducibility
+set.seed(123)
+```
+
+```{r}
+test = sim_intmed(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat, 
+                  n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, d = d, 
+                  container = container, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, tox = tox)
+```
+
