@@ -312,7 +312,7 @@ get_pooled_sample = function(df_contam, df_sp, dist, method_sp, d, L, rho, m_kba
   
   c_pooled = c(c_pos, c_neg)
   
-  return(list(kcap, c_pooled))
+  return(list(kcap = kcap, c_pooled = c_pooled))
 }
 
 # Create a function that calculates contamination levels for each sample point and combine "contam_xy" and "sp_xy"
