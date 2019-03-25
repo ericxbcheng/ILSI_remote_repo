@@ -280,7 +280,7 @@ rm_outlier = function(df, lims){
 sim_contam_new = function(n_contam, lims, spread, covar, n_affected, spread_radius, cont_level, dis_level){
   
   # Checkpoints
-  stopifnot(n_contam > 0 & spread_radius >= 0 & n_affected >= 0 & length(lims) %in% c(2,3))
+  stopifnot(n_contam > 0 & length(lims) %in% c(2,3))
   stopifnot(spread %in% c("continuous", "discrete"))
   
   # Create spot contaminations
@@ -289,9 +289,15 @@ sim_contam_new = function(n_contam, lims, spread, covar, n_affected, spread_radi
   
   # Generate all the data based on the spread type  
   if(spread == "continuous"){
+    
+    stopifnot(spread_radius >= 0)
+    
     df = contam_cont(spot_coord = spot_coord, n_contam = n_contam, spread = spread, 
                      spread_radius = spread_radius, cont_level = cont_level)
   } else {
+    
+    stopifnot(n_affected >= 0)
+    
     df = contam_dis(spot_coord = spot_coord, n_contam = n_contam, n_affected = n_affected, 
                     covar = covar, spread = spread, spread_radius = spread_radius, dis_level = dis_level)
   }
