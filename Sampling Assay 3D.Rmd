@@ -91,10 +91,10 @@ n_contam = 10
 x_lim = c(0, 8)
 y_lim = c(0, 2)
 z_lim = c(0, 2)
-lims = list(xlim = x_lim, ylim = y_lim)
+lims = list(xlim = x_lim, ylim = y_lim, zlim = z_lim)
 cont_level = c(7, 1)
 dis_level = c("mode"= 40000, "lb" = 20)
-spread = "continuous"
+spread = "discrete"
 
 ### Discrete
 n_affected = 10
@@ -105,7 +105,7 @@ spread_radius = 1
 LOC = 10^(-3)
 fun = "exp"
 
-method_sp = "strs"
+method_sp = "ss"
 
 # Continuous
 n_sp = 15
@@ -115,7 +115,7 @@ by = "row"
 # Discrete
 # sp_radius = 0.5 (This is theoretically for SRS and STRS)
 container = "truck"
-depth_ft = 5
+#depth_ft = 5
 #compartment = 2
 #type = "open_top"
 
@@ -156,7 +156,7 @@ contam_xy = read.csv(file = "Test_case_truck.csv", row.names = 1, header = TRUE,
 
 ```{r}
 # Generate the coordinates of sample points
-sp_xy = sim_plan_new(method_sp = method_sp, n_sp = 5, spread = spread, lims = lims, radius = spread_radius, container = container)
+sp_xy = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, radius = d/2, container = container)
 ```
 
 ```{r}
@@ -191,7 +191,6 @@ sample_dis = get_sample_dis(data = contam_sp_xy, container = container, m_kbar =
 
 ```{r}
 deci_dis = lot_decision_new(data = sample_dis, Mc = Mc, spread = "discrete", method_det = method_det)
-words(x = deci_dis)
 ```
 
 # Result
@@ -209,16 +208,19 @@ overlay_draw(method_sp = method_sp, data = contam_sp_xy$combined, spread = sprea
 overlay_draw_probe(data = contam_sp_xy$combined, lims = lims, L = L)
 ```
 
-3. Visualize aflatoxin distribution in raw sample, submitted sample, work sample, and test sample
+3. Visualize aflatoxin distribution in raw sample, work portion, and test portion
 
 ```{r, out.width="50%", echo = FALSE, fig.show = "hold", warning = FALSE}
 sample_dist(data = contam_sp_xy$samples[[2]], Mc = Mc)
-sample_dist(data = sample_dis$raw, Mc = Mc)
 sample_dist(data = sample_dis$work, Mc = Mc)
 sample_dist(data = sample_dis$test, Mc = Mc)
 ```
 
 ```{r}
-assay_draw(data = sample_dis$test, Mc = Mc, method_det = method_det, spread = "discrete")
+assay_draw(data = sample_dis$test, Mc = Mc, method_det = method_det, spread = spread)
+```
+
+```{r}
+words(x = deci_dis)
 ```
 

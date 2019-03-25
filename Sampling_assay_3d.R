@@ -96,7 +96,7 @@ get_sample_dis = function(data, container, m_kbar, tox){
   # get test portion
   test = get_test_portion(data = work, m_kbar = m_kbar)
   
-  return(list(raw = raw, work = work, test = test))
+  return(list(work = work, test = test))
 }
 
 # A function that decides lot rejection for discrete case
