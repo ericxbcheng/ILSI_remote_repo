@@ -210,7 +210,7 @@ calc_level_cont = function(df_contam, dist, spread_radius, LOC, fun, cont_level)
 # }
 
 # Define how a kernel is captured
-capture_kernel = function(method_sp, df_contam, dist, sp_radius, d, lims, L){
+capture_kernel = function(method_sp, df_contam, dist, sp_radius, lims, L){
   
   # Check points
   stopifnot(method_sp %in% c("srs", "strs", "ss"))
@@ -223,12 +223,12 @@ capture_kernel = function(method_sp, df_contam, dist, sp_radius, d, lims, L){
     
     if(lims$zlim[2] >= L){
       dist %>%
-        dplyr::filter(Distance <= d / 2 & Z >= lims$zlim[2] - L)  %>%
+        dplyr::filter(Distance <= sp_radius & Z >= lims$zlim[2] - L)  %>%
         mutate(source_level = df_contam$dis_level[match(x = .$ID_contam, table = df_contam$ID)])
       
     } else {
       dist %>%
-        dplyr::filter(Distance <= d / 2)  %>%
+        dplyr::filter(Distance <= sp_radius)  %>%
         mutate(source_level = df_contam$dis_level[match(x = .$ID_contam, table = df_contam$ID)])
       
     }
@@ -242,7 +242,7 @@ capture_kernel = function(method_sp, df_contam, dist, sp_radius, d, lims, L){
 }
 
 # Calculate the number of kernels in a sampler
-calc_k_num = function(method_sp, d, L, rho, m_kbar, sp_radius){
+calc_k_num = function(method_sp, sp_radius, L, rho, m_kbar){
   
   # Check point
   stopifnot(method_sp %in% c("srs", "strs", "ss"))
@@ -251,7 +251,7 @@ calc_k_num = function(method_sp, d, L, rho, m_kbar, sp_radius){
     # Estimate the number of kernels in each probe
     ## V = pi * r^2 * L
     ## m = rho * V, remember rho's unit = g/cm3, and V's unit is m3
-    V_probe = pi * (d/2) ^ 2 * L
+    V_probe = pi * (sp_radius) ^ 2 * L
     m_probe = rho * V_probe * 10 ^ 6
     n_k = round(x = m_probe/m_kbar, digits = 0)
     
@@ -296,13 +296,13 @@ gen_conc_neg = function(n, conc_neg){
 }
 
 # Form a pooled sample
-get_pooled_sample = function(df_contam, df_sp, dist, method_sp, d, L, rho, m_kbar, sp_radius, conc_neg){
+get_pooled_sample = function(df_contam, df_sp, dist, method_sp, L, rho, m_kbar, sp_radius, conc_neg){
   
   # Find the number of kernels for each sampler
-  n_k = calc_k_num(method_sp = method_sp, d = d, L = L, rho = rho, m_kbar = m_kbar, sp_radius = sp_radius)
+  n_k = calc_k_num(method_sp = method_sp, L = L, rho = rho, m_kbar = m_kbar, sp_radius = sp_radius)
   
   # Find captured kernels
-  kcap = capture_kernel(method_sp = method_sp, df_contam = df_contam, dist = dist, sp_radius = sp_radius,d  = d, lims = lims, L = L)
+  kcap = capture_kernel(method_sp = method_sp, df_contam = df_contam, dist = dist, sp_radius = sp_radius, lims = lims, L = L)
   
   # Find the number of healthy kernels in total
   num_neg = n_k * nrow(df_sp) - nrow(kcap)
@@ -316,7 +316,7 @@ get_pooled_sample = function(df_contam, df_sp, dist, method_sp, d, L, rho, m_kba
 }
 
 # Create a function that calculates contamination levels for each sample point and combine "contam_xy" and "sp_xy"
-gen_sim_data_new = function(df_contam, df_sp, dist, spread, spread_radius, LOC, fun, cont_level, d, L, rho, m_kbar, sp_radius, conc_neg){
+gen_sim_data_new = function(df_contam, df_sp, dist, spread, spread_radius, LOC, fun, cont_level, L, rho, m_kbar, sp_radius, conc_neg){
   
   stopifnot(spread %in% c("continuous", "discrete"))
   
@@ -337,10 +337,10 @@ gen_sim_data_new = function(df_contam, df_sp, dist, spread, spread_radius, LOC, 
   } else if (spread == "discrete") {
     
     b = get_pooled_sample(df_contam = df_contam, df_sp = df_sp, dist = dist, 
-                          method_sp = method_sp, d = d, L = L, rho = rho, 
+                          method_sp = method_sp, L = L, rho = rho, 
                           m_kbar = m_kbar, sp_radius = sp_radius, conc_neg = conc_neg)
     
-    return(list(combined = df, samples = b)) 
+    return(list(combined = df, raw = b)) 
   }
 }
 
