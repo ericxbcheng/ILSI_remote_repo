@@ -81,17 +81,14 @@ get_test_portion = function(data, m_kbar){
   return(a)
 }
 
-# Wrapper function for getting samples in the discrete case
+# Wrapper function for getting work and test samples from raw data in the discrete case
 get_sample_dis = function(data, container, m_kbar, tox){
-  
-  # Extract the kernel concentrations from the sample
-  a = data$samples[[2]]
   
   # Get raw sample that meet the sample size requirements
   #raw = sample_divider(data = a, container = container, m_kbar = m_kbar, tox = tox)
   
   # get work portion
-  work = get_work_portion(data = a, m_kbar = m_kbar, tox = tox)
+  work = get_work_portion(data = data, m_kbar = m_kbar, tox = tox)
   
   # get test portion
   test = get_test_portion(data = work, m_kbar = m_kbar)
