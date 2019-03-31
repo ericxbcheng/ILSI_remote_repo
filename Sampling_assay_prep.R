@@ -241,30 +241,39 @@ capture_kernel = function(method_sp, df_contam, dist, sp_radius, lims, L){
   }
 }
 
-# Calculate the number of kernels in a sampler
-calc_k_num = function(method_sp, sp_radius, L, rho, m_kbar){
+# Calculate the number of kernels in a sampler or the whole container
+calc_k_num = function(method_sp, sp_radius, L, rho, m_kbar, sampler = TRUE, lims){
   
-  # Check point
-  stopifnot(method_sp %in% c("srs", "strs", "ss"))
-  
-  if(method_sp == "ss"){
-    # Estimate the number of kernels in each probe
-    ## V = pi * r^2 * L
-    ## m = rho * V, remember rho's unit = g/cm3, and V's unit is m3
-    V_probe = pi * (sp_radius) ^ 2 * L
-    m_probe = rho * V_probe * 10 ^ 6
-    n_k = round(x = m_probe/m_kbar, digits = 0)
+  if(sampler == TRUE){
     
+    # Check point
+    stopifnot(method_sp %in% c("srs", "strs", "ss"))
+    
+    if(method_sp == "ss"){
+      # Estimate the number of kernels in each probe
+      ## V = pi * r^2 * L
+      ## m = rho * V, remember rho's unit = g/cm3, and V's unit is m3
+      V_probe = pi * (sp_radius) ^ 2 * L
+      m_probe = rho * V_probe * 10 ^ 6
+      n_k = round(x = m_probe/m_kbar, digits = 0)
+      
+    } else {
+      # Estimate the number of kernels in a sphere
+      ## V = 4/3 * pi * r^3
+      ## m = rho * V, remember rho's unit = g/cm3, and V's unit is m3
+      V_probe = 4/3 * pi * sp_radius ^ 3
+      m_probe = rho * V_probe * 10 ^ 6
+      n_k = round(x = m_probe/m_kbar, digits = 0)
+    }
   } else {
+    # Estimate the number of kernels in the whole container
+    ## V = xlim[2] * ylim[2] * zlim[2]
+    ## m = rho * V
+    V_all = lims$xlim[2] * lims$ylim[2] * lims$zlim[2]
+    m_all = rho * V_all
+    n_k = round(x = m_all / m_kbar, digits = 0)
     
-    # Estimate the number of kernels in a sphere
-    ## V = 4/3 * pi * r^3
-    ## m = rho * V, remember rho's unit = g/cm3, and V's unit is m3
-    V_probe = 4/3 * pi * sp_radius ^ 3
-    m_probe = rho * V_probe * 10 ^ 6
-    n_k = round(x = m_probe/m_kbar, digits = 0)
   }
-  
   return(n_k)
 }
 
@@ -315,6 +324,25 @@ get_pooled_sample = function(df_contam, df_sp, dist, method_sp, L, rho, m_kbar, 
   return(list(kcap = kcap, c_pooled = c_pooled))
 }
 
+# Calculate true contamination level in the container
+calc_true_contam = function(df_contam, rho, lims, m_kbar, conc_neg){
+  
+  # Find the number of kernels in the container
+  n_k = calc_k_num(rho = rho, m_kbar = m_kbar, sampler = FALSE, lims = lims)
+  
+  # Get the dis_level
+  dis_level = df_contam[["dis_level"]]
+  
+  # Find the number of healthy kernels
+  num_neg = n_k - length(dis_level)
+  
+  # Calculate the true contamination level in the container
+  c_true = (sum(dis_level) + num_neg * median(conc_neg)) / n_k
+  
+  return(c_true)
+}
+
+
 # Create a function that calculates contamination levels for each sample point and combine "contam_xy" and "sp_xy"
 gen_sim_data_new = function(df_contam, df_sp, dist, spread, spread_radius, LOC, fun, cont_level, L, rho, m_kbar, sp_radius, conc_neg){
   
@@ -340,7 +368,9 @@ gen_sim_data_new = function(df_contam, df_sp, dist, spread, spread_radius, LOC, 
                           method_sp = method_sp, L = L, rho = rho, 
                           m_kbar = m_kbar, sp_radius = sp_radius, conc_neg = conc_neg)
     
-    return(list(combined = df, raw = b)) 
+    c = calc_true_contam(df_contam = df_contam, rho = rho, lims = lims, m_kbar = m_kbar, conc_neg = conc_neg)
+    
+    return(list(combined = df, raw = b, c_true = c)) 
   }
 }
 
