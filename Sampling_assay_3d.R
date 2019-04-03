@@ -123,6 +123,7 @@ lot_decision_new = function(data, case, m, M, Mc, spread, method_det){
   ## Make decision based on the spread type
   if(spread == "continuous"){
     
+    ## data = contam_sp_xy
     ## Subset out the contamination levels at the sample points
     a = subset(x = data, subset = label == "sample point", select = cont_level, drop = FALSE)
     
@@ -130,9 +131,8 @@ lot_decision_new = function(data, case, m, M, Mc, spread, method_det){
     
   } else if (spread == "discrete"){
     
-    b = data$test
-    
-    decision_dis_new(data = b, LOD = LOD, Mc = Mc)
+    ## data = test portion
+    decision_dis_new(data = data, LOD = LOD, Mc = Mc)
     
   } else {
     stop("Unknown type of spread. Choose either 'continuous' or 'discrete'.")
