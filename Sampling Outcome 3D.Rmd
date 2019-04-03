@@ -2,7 +2,8 @@
 title: "Sampling Outcome 3D"
 author: "Xianbin Cheng"
 date: "March 25, 2019"
-output: html_document
+output:
+  html_document: default
 ---
 
 # Objective
@@ -163,44 +164,61 @@ conc_neg = rpert(n = 10^6, min = 0, mode = 0.7, max = 19.99, shape = 80)
 set.seed(123)
 ```
 
-```{r}
+```{r, eval = FALSE, echo = FALSE}
 # Discrete
-test = sim_intmed(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat, 
+sim_outcome_dis(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat, 
+                  n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, sp_radius = d/2, 
+                  container = container, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, diag = TRUE)
+
+# Continuous
+sim_outcome_cont(n_contam = n_contam, lims = list(xlim = c(0,10), ylim = c(0,10)), spread = "continuous", spread_radius = 1, 
+                   method_sp = "srs", n_sp = 10, n_strata = n_strata, by = by, LOC = LOC, fun = fun, case = case, m = m, M = M, method_det = method_det)
+```
+
+```{r}
+temp = sim_intmed(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat, 
                   n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, sp_radius = d/2, 
                   container = container, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, tox = tox)
 
-# Continuous
-test2 = sim_intmed(n_contam = n_contam, lims = list(xlim = c(0,10), ylim = c(0,10)), spread = "continuous", spread_radius = 1, 
-                   method_sp = "srs", n_sp = 15, n_strata = n_strata, by = by, LOC = LOC, fun = fun)
-
-test3 = sim_outcome_cont(n_contam = n_contam, lims = list(xlim = c(0,10), ylim = c(0,10)), spread = "continuous", spread_radius = 1, 
-                   method_sp = "srs", n_sp = 10, n_strata = n_strata, by = by, LOC = LOC, fun = fun, case = case, m = m, M = M, method_det = method_det)
-
-
-# Outcome simulation for discrete case
-sim_outcome_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_level, 
-                           method_sp, sp_radius, container, L, rho, m_kbar, conc_neg, tox){
-  
-  # Create intermediate datasets
-  a = sim_intmed(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat, 
-                  n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, sp_radius = sp_radius, 
-                  container = container, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, tox = tox)
-  
-  # Extract intermediate datasets
-  raw = a$contam_sp_xy$raw$c_pooled
-  dist_contam_sp = a$dist
-  cover = a$contam_sp_xy$raw$kcap
-  
-  
-}
+result = sim_outcome_new(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat,
+                         n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, sp_radius = d/2,
+                         container = container, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, 
+                         tox = tox, Mc = Mc, method_det = method_det, diag = TRUE)
 ```
+
 
 # Result
 
 1. Visualization of contamination.
 
 ```{r}
-overlay_draw(method_sp = method_sp, data = test$contam_sp_xy$combined, spread = spread, xlim = lims$xlim, ylim = lims$ylim)
-overlay_draw_probe(data = test$contam_sp_xy$combined, lims = lims, L = L)
+overlay_draw(method_sp = method_sp, data = temp$contam_sp_xy$combined, spread = spread, xlim = lims$xlim, ylim = lims$ylim)
+overlay_draw_probe(data = temp$contam_sp_xy$combined, lims = lims, L = L)
 ```
+
+2. Visualization of samples: raw sample, work portion, and test portion.
+
+```{r, out.width="50%", echo = FALSE, fig.show = "hold", warning = FALSE}
+sample_dist(data = temp$contam_sp_xy$raw$c_pooled, Mc = Mc)
+sample_dist(data = temp$sample$work, Mc = Mc)
+sample_dist(data = temp$sample$test, Mc = Mc)
+```
+
+```{r}
+assay_draw(data = temp$sample$test, Mc = Mc, method_det = method_det, spread = spread)
+```
+
+3. Decision
+
+```{r}
+words(x = result[[2]])
+```
+
+4. The true contamination level.
+
+```{r}
+result[[1]]
+```
+
+
 
