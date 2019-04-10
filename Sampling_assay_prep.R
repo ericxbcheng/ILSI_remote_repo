@@ -267,10 +267,10 @@ calc_k_num = function(method_sp, sp_radius, L, rho, m_kbar, sampler = TRUE, lims
     }
   } else {
     # Estimate the number of kernels in the whole container
-    ## V = xlim[2] * ylim[2] * zlim[2]
-    ## m = rho * V
+    ## V = xlim[2] * ylim[2] * zlim[2] (in m^3)
+    ## m = rho * V * 10^6 (because rho's unit is g/cm^3)
     V_all = lims$xlim[2] * lims$ylim[2] * lims$zlim[2]
-    m_all = rho * V_all
+    m_all = rho * V_all * 10^6
     n_k = round(x = m_all / m_kbar, digits = 0)
     
   }
