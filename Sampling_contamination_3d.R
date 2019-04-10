@@ -31,7 +31,7 @@ contam_dis = function(spot_coord, n_contam, n_affected, covar, spread, spread_ra
   if(n_affected == 0){
     
     df = naming_total(spot_coord = spot_coord, spread_coord = NULL, spread = spread, 
-                      label = label, spread_radius = spread_radius, dis_level = dis_level)
+                      label = label, spread_radius = spread_radius, dis_level = dis_level, n_contam = n_contam)
   } else {
 
     # Checkpoint: make sure the covariance matrix is 3 by 3
