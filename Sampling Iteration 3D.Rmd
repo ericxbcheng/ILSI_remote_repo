@@ -16,6 +16,7 @@ output: html_document
 ```{r, warning = FALSE, message = FALSE}
 source(file = "Sampling_libraries.R")
 source(file = "Sampling_contamination.R")
+source(file = "Sampling_contamination_3d.R")
 source(file = "Sampling_visualization.R")
 source(file = "Sampling_assay_prep.R")
 source(file = "Sampling_plan.R")
@@ -214,13 +215,14 @@ calc_metrics(c_true = result2$c_true, decision = result2$decision, Mc = Mc)
 ```{r, fig.keep = "hold"}
 temp = bind_cols(result2) %>%
   dplyr::select(-decision) %>%
-  gather(data = ., key = "type", value = "conc")
+  gather(data = ., key = "type", value = "conc") %>%
+  mutate(class = ifelse(conc >= 20, "H", "L"))
 
 ggplot(data = temp) +
-  geom_histogram(aes(x = conc), bins = 50) +
+  geom_histogram(aes(x = conc, fill = class), bins = 50) +
   labs(x = "Contamination level (ppb)", y = "Number of lots") +
-  scale_x_log10() +
+  scale_y_sqrt() +
   theme_bw() +
-  facet_wrap(~ type, scales = "free")
+  facet_wrap(~ type)
 ```
 
