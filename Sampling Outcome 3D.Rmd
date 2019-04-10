@@ -17,6 +17,7 @@ output:
 ```{r, warning = FALSE, message = FALSE}
 source(file = "Sampling_libraries.R")
 source(file = "Sampling_contamination.R")
+source(file = "Sampling_contamination_3d.R")
 source(file = "Sampling_visualization.R")
 source(file = "Sampling_assay_prep.R")
 source(file = "Sampling_plan.R")
@@ -101,7 +102,7 @@ source(file = "Sampling_outcome.R")
         
 ```{r}
 ## The input parameters
-n_contam = 10
+n_contam = 100
 x_lim = c(0, 8)
 y_lim = c(0, 2)
 z_lim = c(0, 2)
@@ -195,6 +196,13 @@ result = sim_outcome_new(n_contam = n_contam, lims = lims, spread = spread, cova
 overlay_draw(method_sp = method_sp, data = temp$contam_sp_xy$combined, spread = spread, xlim = lims$xlim, ylim = lims$ylim)
 overlay_draw_probe(data = temp$contam_sp_xy$combined, lims = lims, L = L)
 ```
+
+2. Visualization of captured kernels.
+
+```{r}
+temp$contam_sp_xy$raw$kcap
+```
+
 
 2. Visualization of samples: raw sample, work portion, and test portion.
 

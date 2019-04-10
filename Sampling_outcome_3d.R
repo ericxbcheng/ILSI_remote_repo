@@ -47,7 +47,7 @@ sim_intmed_cont = function(n_contam, lims, spread, spread_radius, cont_level,
 }
 
 # Create intermediate datasets
-sim_intmed = function(n_contam, lims, spread, covar_mat, n_affected, spread_radius, dis_level,
+sim_intmed = function(n_contam, lims, spread, covar_mat, n_affected, spread_radius, dis_level, cont_level,
                       method_sp, sp_radius, container, compartment, type, L, rho, m_kbar, conc_neg, tox, 
                       n_sp, n_strata, by, LOC, fun){
   
@@ -69,12 +69,12 @@ sim_intmed = function(n_contam, lims, spread, covar_mat, n_affected, spread_radi
 }
 
 # Outcome simulation for continuous case
-sim_outcome_cont = function(n_contam, lims, spread, spread_radius, method_sp, 
+sim_outcome_cont = function(n_contam, lims, spread, spread_radius, cont_level, method_sp, 
                             n_sp, n_strata, by, LOC, fun, case, m, M, method_det){
   
   # Create intermediate datasets
   a = sim_intmed(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, 
-                 method_sp = method_sp, n_sp = n_sp, n_strata = n_strata, by = by, LOC = LOC, fun = fun)
+                 method_sp = method_sp, n_sp = n_sp, n_strata = n_strata, by = by, LOC = LOC, fun = fun, cont_level = cont_level)
   
   # Extract intermediate datasets
   contam_sp_xy = a$contam_sp_xy
@@ -131,7 +131,7 @@ sim_outcome_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_le
 
 # Outcome simulation
 sim_outcome_new = function(n_contam, lims, spread, spread_radius, method_sp, n_sp, n_strata, 
-                       by, LOC, fun, case, m, M, method_det, covar_mat, n_affected, dis_level, 
+                       by, LOC, fun, case, m, M, method_det, covar_mat, n_affected, dis_level, cont_level,
                        sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, diag){
   
   if(spread == "discrete"){
@@ -141,7 +141,7 @@ sim_outcome_new = function(n_contam, lims, spread, spread_radius, method_sp, n_s
                     conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, diag = diag)
     
   } else {
-    sim_outcome_cont(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, 
+    sim_outcome_cont(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, cont_level = cont_level,
                      method_sp = method_sp, n_sp = n_sp, n_strata = n_strata, by = by, 
                      LOC = LOC, fun = fun, case = case, m = m, M = M, method_det = method_det)
   }
