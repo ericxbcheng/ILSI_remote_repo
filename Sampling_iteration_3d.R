@@ -81,7 +81,7 @@ calc_metrics = function(c_true, decision, Mc){
   sens = conf_mat[1,1] / sum(conf_mat[1, ])
   spec = conf_mat[2,2] / sum(conf_mat[2, ])
   
-  return(list(sens = sens, spec = spec))
+  return(c(sens = sens, spec = spec))
 }
 
 # A function factory
