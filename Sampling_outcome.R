@@ -42,10 +42,10 @@ sim_outcome_temp = function(n_contam, xlim, ylim, n_affected, covar_mat, spread_
   contam_xy = sim_contam(n_contam = n_contam, xlim = xlim, ylim = ylim, covariance = covar_mat, n_affected = n_affected, radius = spread_radius, cont_level = cont_level) 
   
   # Generate the coordinates of sample points
-  sp_xy = sim_plan(method_sp = method_sp, n_sp = n_sp, xlim = xlim, ylim = ylim, radius = sp_radius, by = by, n_strata = n_strata)
+  sp_xy = sim_plan_2d(method_sp = method_sp, n_sp = n_sp, xlim = xlim, ylim = ylim, radius = sp_radius, by = by, n_strata = n_strata)
   
   # Generate the distance matrix
-  dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy)
+  dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy, spread = spread)
   
   # Combine contam_xy and sp_xy
   contam_sp_xy = gen_sim_data(df_contam = contam_xy, df_sp = sp_xy, spread_radius = spread_radius, LOC = LOC, fun = fun, dist = dist_contam_sp, sp_radius = sp_radius, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, cont_level = cont_level)
