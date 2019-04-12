@@ -148,7 +148,6 @@ calc_dist = function(df_contam, df_sp, spread, method_sp){
   
   # Check point
   stopifnot(spread %in% c("continuous", "discrete"))
-  stopifnot(method_sp %in% c("srs", "strs", "ss"))
   
   if(spread == "continuous"){
     calc_dist_2d(df_contam = df_contam, df_sp = df_sp, probe = FALSE)
@@ -156,6 +155,7 @@ calc_dist = function(df_contam, df_sp, spread, method_sp){
     
     # When method_sp == 'ss', we only calculate 2D Euclidean distance as we are using probes
     # When method_sp == 'srs', 'strs', we calculate 3D Euclidean distance as we are using a spherical sampelr
+    stopifnot(method_sp %in% c("srs", "strs", "ss"))
     
     if(method_sp == "ss"){
       calc_dist_2d(df_contam = df_contam, df_sp = df_sp, probe = TRUE)
