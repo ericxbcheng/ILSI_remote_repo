@@ -138,7 +138,7 @@ overlay_draw_srs = function(data, spread, xlim, ylim){
                   fill = "darkgreen",
                   alpha = 0.1) +
       geom_point(data = subset(data, subset = label != "sample point"), aes(x = X, y = Y, color = dis_level, shape = label)) +
-      scale_color_gradient(name = "Contamination Level", low = "orange", high = "red2") +
+      scale_color_gradient(name = "Contamination Level (ng/g)", low = "orange", high = "red2") +
       scale_shape_manual(values = c(15, 16, 17)) +
       coord_fixed(ratio = 1, xlim = xlim, ylim = ylim) +
       theme_bw()
@@ -152,7 +152,7 @@ overlay_draw_srs = function(data, spread, xlim, ylim){
                  aes(x = X, y = Y, 
                      color = cont_level, 
                      shape = label)) +
-      scale_color_gradient(name = "Contamination Level", low = "orange", high = "red2") +
+      scale_color_gradient(name = "Contamination Level (CFU/g)", low = "orange", high = "red2") +
       scale_shape_manual(values = c(15, 16)) +
       geom_circle(data = subset(x = data, subset = label == "spot"),
                   aes(x0 = X, y0 = Y, r = r), 
@@ -166,7 +166,7 @@ overlay_draw_srs = function(data, spread, xlim, ylim){
 ## Stratified random sampling
 overlay_draw_strs = function(data, spread, xlim, ylim, n_strata, by){
   base = overlay_draw_srs(data = data, spread = spread, xlim = xlim, ylim = ylim)
-  bounds = calc_bounds(xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
+  bounds = calc_bounds_2d(xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
   if(by == "row"){
     base + 
       geom_hline(yintercept = bounds, color = "darkgrey")
