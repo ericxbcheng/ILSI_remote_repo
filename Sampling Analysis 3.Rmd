@@ -181,7 +181,6 @@ ArgList = list(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_a
 one_iteration = do.call(what = sim_outcome_temp, args = ArgList) %>% .[[4]]
 ```
 
-
 #Result
 
 1. Visualization
@@ -205,6 +204,7 @@ plot(model)
 ggplot(data = full_data, aes(x = param, y = P_det, group = interaction(param, method_sp))) +
     geom_boxplot(aes(color = method_sp)) +
     scale_x_log10(breaks = full_data$param) +
+    scale_color_discrete(name = "Sampling strategy", labels = c("SRS", "SS", "STRS")) +
     coord_cartesian(ylim = c(0,1)) +
     labs(x = "Number of contamination points", y = "Probability of detection") +
     theme_bw()
@@ -214,6 +214,7 @@ ggplot(data = full_data, aes(x = n_sp, y = P_det, group = interaction(n_sp, meth
     geom_boxplot(aes(color = method_sp)) +
     scale_x_log10(breaks = full_data$n_sp) +
     coord_cartesian(ylim = c(0,1)) +
+    scale_color_discrete(name = "Sampling strategy", labels = c("SRS", "SS", "STRS")) +
     labs(x = "Number of samples", y = "Probability of detection") +
     theme_bw()
 ```
