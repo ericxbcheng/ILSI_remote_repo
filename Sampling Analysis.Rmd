@@ -18,6 +18,7 @@ source("Sampling_outcome.R")
 source("Sampling_iteration.R")
 source("Sampling_analysis.R")
 source("Sampling_visualization.R")
+source("Sampling_assay_prep.R")
 ```
 
 2. List important parameters from previous R files. 
@@ -74,13 +75,13 @@ source("Sampling_visualization.R")
 
 ```{r}
 ## We choose "n_contam" to iterate on.
-n_contam = rpois(n = 1, lambda = 3)
+n_contam = 10
 
 ## Other fixed parameters
 ## Contamination
-x_lim = c(0, 10)
-y_lim = c(0, 10)
-cont_level = c(7, 1)
+x_lim = c(0, 100)
+y_lim = c(0, 100)
+cont_level = c(4, 1)
 spread = "continuous"
 
 ### Mode 1
@@ -93,9 +94,9 @@ LOC = 10^(-3)
 fun = "exp"
 
 ## Sampling plan
-method_sp = "srs"
-n_sp = 10
-sp_radius = 1
+method_sp = "ss"
+n_sp = 15
+sp_radius = 2.5
 n_strata = 5
 by = "row"
 m_kbar = 0.3
@@ -107,7 +108,7 @@ M = 500
 Mc = 20
 
 ## Assay
-method_det = "enrichment"
+method_det = "plating"
 
 ## Sampling outcome
 n_iter = 100
@@ -149,7 +150,7 @@ result = readRDS(file = "Iterate_100x100.rds")
 6. For visualization and debug purposes.
 
 ```{r}
-one_iteration = do.call(what = sim_outcome2, args = ArgList)
+one_iteration = do.call(what = sim_outcome_temp, args = ArgList)[[4]]
 ```
 
 
@@ -161,7 +162,7 @@ one_iteration = do.call(what = sim_outcome2, args = ArgList)
 overlay_draw(method_sp = method_sp, data = one_iteration, spread = spread, xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
 contam_level_draw(dimension = "2d", method = fun, spread_radius = spread_radius, LOC = LOC, df_contam = one_iteration, xlim = x_lim, ylim = y_lim)
 contam_level_draw(dimension = "3d", method = fun, spread_radius = spread_radius, LOC = LOC, df_contam = one_iteration, xlim = x_lim, ylim = y_lim)
-assay_draw(df = one_iteration, M = M, m = m, Mc = Mc, method_det = method_det, spread = spread, case = case)
+assay_draw(data = one_iteration, M = M, m = m, Mc = Mc, method_det = method_det, spread = spread, case = case)
 ```
 
 1.  Create a plot for probability of detection.  
