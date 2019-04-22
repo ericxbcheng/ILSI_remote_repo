@@ -3,14 +3,14 @@ naming_spread = function(df, spot, spread){
   a = rep(x = 1:spot, each = spread) %>% as.character()
   b = rep(x = 1:spread, times = spot) %>% as.character()
   c = paste(a, "-", b, sep = "")
-  cbind(df, c)
+  cbind(df, c, stringsAsFactors = FALSE)
 }
 
 naming_spot = function(df, spot){
   a = 1:spot %>% as.character()
   b = rep(0, times = spot) %>% as.character()
   c = paste(a, "-", b, sep = "")
-  cbind(df, c)
+  cbind(df, c, stringsAsFactors = FALSE)
 }
 
 ## Create a function to generate contamination levels. Remember that param contains log10(mean) and log10(sd). And log() in R means log(..., base = exp(1)).
