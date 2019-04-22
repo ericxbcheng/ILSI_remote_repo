@@ -3,22 +3,23 @@
 # Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points. If spotONLY == TRUE, then only calculate the distance between spots and sample points
 calc_dist_2d = function(df_contam, df_sp, probe = FALSE){
   
-  df = rbind(df_contam, df_sp)
-  df$label = as.character(df$label)
-  
-  # Calculate the Euclidean distance
-  a = dist(x = df[ ,1:2], method = "euclidean") %>% as.matrix()
-  attr(x = a, which = "dimnames") = list(df$ID, df$ID)
+  # Combine by row
+  df = rbind.data.frame(df_contam, df_sp, stringsAsFactors = FALSE)
   
   sp_ind = which(df$label == "sample point")
   cont_ind = which(df$label %in% c("spot", "spread"))
   
-  # Subset the matrix to keep the distances between sample points and contamination points (spot + spread)
-  # Gather the matrix into a long format
-  b = a[cont_ind, sp_ind, drop = FALSE] %>%
-    melt(data = ., varnames = c("ID_contam", "ID_sp"), value.name = "Distance")
+  # Calculate Euclidean distance between spots/spreads and sample points only.
+  ## Rows = contamination points, columns = sample points
+  a = crossdist.default(X = df$X[cont_ind], Y = df$Y[cont_ind], 
+                        x2 = df$X[sp_ind], y2 = df$Y[sp_ind], method = "C")
   
+  attr(x = a, which = "dimnames") = list(df$ID[cont_ind], df$ID[sp_ind])
+  
+  # Gather the matrix into a long format
+  b = melt(data = a, varnames = c("ID_contam", "ID_sp"), value.name = "Distance")
   b$ID_contam = as.character(b$ID_contam)
+  b$ID_sp = as.character(b$ID_sp)
   
   # Attach the labels for each contamination point
   # If we are using probes for kernels, we need to have the Z-coordinates

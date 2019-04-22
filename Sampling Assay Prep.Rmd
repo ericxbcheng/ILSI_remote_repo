@@ -73,7 +73,7 @@ set.seed(123)
 ```{r, eval = FALSE}
 # Generate the coordinates of contamination points
 # Not run
-contam_xy = sim_contam_new(n_contam = n_contam, lims = lims, spread = spread, covar = covar_mat, n_affected = n_affected, spread_radius = spread_radius, cont_level = cont_level, dis_level = dis_level) 
+contam_xy = sim_contam_new(n_contam = n_contam, lims = lims, spread = spread, covar = covar_mat, n_affected = n_affected, cont_level = cont_level, dis_level = dis_level) 
 ```
 
 ```{r}
@@ -153,7 +153,6 @@ dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy, spread = spread
 
 contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, df_sp = sp_xy, dist = dist_contam_sp, spread = spread, sp_radius = d/2, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg)
 ```
-
 
 # Result
 
