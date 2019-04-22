@@ -23,7 +23,7 @@ contam_cont = function(spot_coord, n_contam, spread, spread_radius, cont_level){
 }
 
 # Discrete contamination
-contam_dis = function(spot_coord, n_contam, n_affected, covar, spread, spread_radius, dis_level){
+contam_dis = function(spot_coord, n_contam, n_affected, covar, spread, dis_level){
   
   # Create labels for spots and spreads
   label = c(rep("spot", times = n_contam), rep("spread", times = n_contam * n_affected))
@@ -31,7 +31,7 @@ contam_dis = function(spot_coord, n_contam, n_affected, covar, spread, spread_ra
   if(n_affected == 0){
     
     df = naming_total(spot_coord = spot_coord, spread_coord = NULL, spread = spread, 
-                      label = label, spread_radius = spread_radius, dis_level = dis_level, n_contam = n_contam)
+                      label = label, spread_radius = NaN, dis_level = dis_level, n_contam = n_contam)
   } else {
 
     # Checkpoint: make sure the covariance matrix is 3 by 3
@@ -42,11 +42,11 @@ contam_dis = function(spot_coord, n_contam, n_affected, covar, spread, spread_ra
       split(x = ., f = col(.)) %>%
       map(.x = ., .f = function(x) {matrix(x, ncol = ncol(spot_coord))}) %>%
       do.call(what = rbind, args = .) %>%
-      as.data.frame() %>%
+      as.data.frame(., stringsAsFactors = FALSE) %>%
       naming_spread(df = ., spot = n_contam, spread = n_affected)
     
     df = naming_total(spot_coord = spot_coord, spread_coord = spread_coord, n_contam = n_contam, spread = spread, 
-                      label = label, spread_radius = spread_radius, dis_level = dis_level)
+                      label = label, spread_radius = NaN, dis_level = dis_level)
   }
   return(df)
 }
@@ -90,20 +90,20 @@ naming_total = function(spot_coord, spread_coord, n_contam, spread, label, sprea
   spot_coord = naming_spot(df = spot_coord, spot = n_contam)
   
   # Combine spot and spread by row
-  df = rbind(spot_coord, spread_coord)
+  df = rbind(spot_coord, spread_coord, stringsAsFactors = FALSE)
   colnames(df) =  header
-  df2 = cbind(df, label, r = spread_radius) 
+  df2 = cbind(df, label, r = spread_radius, stringsAsFactors = FALSE) 
   
   # Assume contamination in continuous case follows a log normal dist
   # Assume contamination in discrete case follows 20 + Gamma dist
   if(spread == "continuous"){
     df3 = df2 %>%
       mutate(cont_level = f_cont_level(n = nrow(.), param = cont_level),
-             dis_level = NA)
+             dis_level = NaN)
     
   } else {
     df3 = df2 %>%
-      mutate(cont_level = NA,
+      mutate(cont_level = NaN,
              dis_level = rgamma_lim(n = nrow(.), alpha = 2, mode = dis_level[["mode"]], lb = dis_level[["lb"]], ub = NULL))
   }
   
@@ -164,7 +164,7 @@ sim_contam_new = function(n_contam, lims, spread, covar, n_affected, spread_radi
     stopifnot(n_affected >= 0)
     
     df = contam_dis(spot_coord = spot_coord, n_contam = n_contam, n_affected = n_affected, 
-                    covar = covar, spread = spread, spread_radius = spread_radius, dis_level = dis_level)
+                    covar = covar, spread = spread, dis_level = dis_level)
   }
   
   # Remove outliers
@@ -172,7 +172,7 @@ sim_contam_new = function(n_contam, lims, spread, covar, n_affected, spread_radi
   
   # Final adjustments
   rownames(df2) = NULL
-  df2$ID = as.character(df2$ID)
+  #df2$ID = as.character(df2$ID)
   
   return(df2)
 }
