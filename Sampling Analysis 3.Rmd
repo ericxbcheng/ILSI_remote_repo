@@ -23,6 +23,7 @@ source("Sampling_iteration.R")
 source("Sampling_analysis.R")
 source("Simulation_data.R")
 source("Sampling_visualization.R")
+source("Sampling_assay_prep.R")
 library(lawstat)
 ```
 
@@ -83,13 +84,13 @@ sessionInfo()
 
 ```{r}
 ## We choose "n_contam" to iterate on.
-n_contam = rpois(n = 1, lambda = 3)
+n_contam = 10
 
 ## Other fixed parameters
 ## Contamination
-x_lim = c(0, 10)
-y_lim = c(0, 10)
-cont_level = c(7, 1)
+x_lim = c(0, 100)
+y_lim = c(0, 100)
+cont_level = c(4, 1)
 spread = "continuous"
 
 ### Mode 1
@@ -97,7 +98,7 @@ n_affected = rpois(n = 1, lambda = 5)
 covar_mat = matrix(data = c(0.25, 0, 0, 0.25), nrow = 2, ncol = 2)
 
 ### Mode 2
-spread_radius = 0.2
+spread_radius = 2.5
 LOC = 10^(-3)
 fun = "exp"
 
@@ -179,6 +180,21 @@ model = lm(formula = P_det ~ param + method_sp + n_sp + param:method_sp + param:
 ArgList = list(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method_sp = method_sp, n_sp = n_sp, sp_radius = sp_radius, spread = spread, n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, case = case, m = m, M = M, Mc = Mc, method_det = method_det)
 
 one_iteration = do.call(what = sim_outcome_temp, args = ArgList) %>% .[[4]]
+
+# SRS
+ArgList_srs = list(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method_sp = "srs", n_sp = n_sp, sp_radius = sp_radius, spread = spread, n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, case = case, m = m, M = M, Mc = Mc, method_det = method_det)
+
+one_iteration_srs = do.call(what = sim_outcome_temp, args = ArgList_srs) %>% .[[4]]
+
+# STRS
+ArgList_strs = list(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method_sp = "strs", n_sp = n_sp, sp_radius = sp_radius, spread = spread, n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, case = case, m = m, M = M, Mc = Mc, method_det = method_det)
+
+one_iteration_strs = do.call(what = sim_outcome_temp, args = ArgList_strs) %>% .[[4]]
+
+# SS
+ArgList_ss = list(n_contam = n_contam, xlim = x_lim, ylim = y_lim, n_affected = n_affected, covar_mat = covar_mat, spread_radius = spread_radius, method_sp = "ss", n_sp = n_sp, sp_radius = sp_radius, spread = spread, n_strata = n_strata, by = by, cont_level = cont_level, LOC = LOC, fun = fun, m_kbar = m_kbar, m_sp = m_sp, conc_good = conc_good, case = case, m = m, M = M, Mc = Mc, method_det = method_det)
+
+one_iteration_ss = do.call(what = sim_outcome_temp, args = ArgList_ss) %>% .[[4]]
 ```
 
 #Result
@@ -201,24 +217,40 @@ plot(model)
 3. Comparison among three sampling strategies across different prevalence levels or different sample sizes.
 
 ```{r}
-ggplot(data = full_data, aes(x = param, y = P_det, group = interaction(param, method_sp))) +
+p_contam = ggplot(data = full_data, aes(x = param, y = P_det, group = interaction(param, method_sp))) +
     geom_boxplot(aes(color = method_sp)) +
     scale_x_log10(breaks = full_data$param) +
     scale_color_discrete(name = "Sampling strategy", labels = c("SRS", "SS", "STRS")) +
     coord_cartesian(ylim = c(0,1)) +
     labs(x = "Number of contamination points", y = "Probability of detection") +
-    theme_bw()
+    theme_bw() +
+    theme(legend.position = "top")
 ```
+
 ```{r}
-ggplot(data = full_data, aes(x = n_sp, y = P_det, group = interaction(n_sp, method_sp))) +
+p_sp = ggplot(data = full_data, aes(x = n_sp, y = P_det, group = interaction(n_sp, method_sp))) +
     geom_boxplot(aes(color = method_sp)) +
     scale_x_log10(breaks = full_data$n_sp) +
     coord_cartesian(ylim = c(0,1)) +
     scale_color_discrete(name = "Sampling strategy", labels = c("SRS", "SS", "STRS")) +
     labs(x = "Number of samples", y = "Probability of detection") +
-    theme_bw()
+    theme_bw() +
+    theme(legend.position = "top")
 ```
 
+```{r}
+p_srs = overlay_draw(method_sp = "srs", data = one_iteration_srs, spread = spread, xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
+p_strs = overlay_draw(method_sp = "strs", data = one_iteration_strs, spread = spread, xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
+p_ss = overlay_draw(method_sp = "ss", data = one_iteration_ss, spread = spread, xlim = x_lim, ylim = y_lim, n_strata = n_strata, by = by)
+
+pdf(file = "CPS_Poster.pdf")
+  p_srs
+  p_strs
+  p_ss
+  p_contam
+  p_sp
+dev.off()
+```
 
 
 4. Run ANOVA to compare the mean probability of detection for three sampling strategies.
