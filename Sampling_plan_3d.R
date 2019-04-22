@@ -15,10 +15,9 @@ naming_sp_3d = function(n_sp, x_sp, y_sp, z_sp, radius){
                   ID = ID,
                   label = "sample point",
                   r = r,
-                  cont_level = NA,
-                  dis_level = NA)
-  
-  df$ID = as.character(df$ID)
+                  cont_level = NaN,
+                  dis_level = NaN, 
+                  stringsAsFactors = FALSE)
   
   return(df)
 }
