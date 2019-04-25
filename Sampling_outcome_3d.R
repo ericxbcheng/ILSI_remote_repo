@@ -25,7 +25,7 @@ sim_intmed_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_lev
 
 # Create intermediate datasets for continuous case
 sim_intmed_cont = function(n_contam, lims, spread, spread_radius, cont_level, 
-                           method_sp, n_sp, n_strata, by, LOC, fun){
+                           method_sp, n_sp, n_strata, by, LOC, fun, bg_level){
   
   # Generate the coordinates of contamination points
   contam_xy = sim_contam_new(n_contam = n_contam, lims = lims, spread = spread, 
@@ -41,7 +41,7 @@ sim_intmed_cont = function(n_contam, lims, spread, spread_radius, cont_level,
   # Generate combined dataset
   contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, df_sp = sp_xy, dist = dist_contam_sp, 
                                   spread = spread, spread_radius = spread_radius, LOC = LOC, 
-                                  fun = fun, cont_level = cont_level)
+                                  fun = fun, bg_level = bg_level)
   
   return(list(contam_sp_xy = contam_sp_xy, dist = dist_contam_sp))
 }
@@ -49,7 +49,7 @@ sim_intmed_cont = function(n_contam, lims, spread, spread_radius, cont_level,
 # Create intermediate datasets
 sim_intmed = function(n_contam, lims, spread, covar_mat, n_affected, spread_radius, dis_level, cont_level,
                       method_sp, sp_radius, container, compartment, type, L, rho, m_kbar, conc_neg, tox, 
-                      n_sp, n_strata, by, LOC, fun){
+                      n_sp, n_strata, by, LOC, fun, bg_level){
   
   # Check point
   stopifnot(spread %in% c("discrete", "continuous"))
@@ -63,17 +63,17 @@ sim_intmed = function(n_contam, lims, spread, covar_mat, n_affected, spread_radi
   } else {
     
     sim_intmed_cont(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, 
-                    cont_level = cont_level, method_sp = method_sp, n_sp = n_sp, 
+                    cont_level = cont_level, method_sp = method_sp, n_sp = n_sp, bg_level = bg_level,
                     n_strata = n_strata, by = by, LOC = LOC, fun = fun)
   }
 }
 
 # Outcome simulation for continuous case
-sim_outcome_cont = function(n_contam, lims, spread, spread_radius, cont_level, method_sp, 
+sim_outcome_cont = function(n_contam, lims, spread, spread_radius, cont_level, bg_level, method_sp, 
                             n_sp, n_strata, by, LOC, fun, case, m, M, method_det){
   
   # Create intermediate datasets
-  a = sim_intmed(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, 
+  a = sim_intmed(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, bg_level = bg_level,
                  method_sp = method_sp, n_sp = n_sp, n_strata = n_strata, by = by, LOC = LOC, fun = fun, cont_level = cont_level)
   
   # Extract intermediate datasets
@@ -132,7 +132,7 @@ sim_outcome_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_le
 # Outcome simulation
 sim_outcome_new = function(n_contam, lims, spread, spread_radius, method_sp, n_sp, n_strata, 
                        by, LOC, fun, case, m, M, method_det, covar_mat, n_affected, dis_level, cont_level,
-                       sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, diag){
+                       bg_level, sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, diag){
   
   if(spread == "discrete"){
     sim_outcome_dis(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat, 
@@ -142,7 +142,7 @@ sim_outcome_new = function(n_contam, lims, spread, spread_radius, method_sp, n_s
     
   } else {
     sim_outcome_cont(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, cont_level = cont_level,
-                     method_sp = method_sp, n_sp = n_sp, n_strata = n_strata, by = by, 
+                     bg_level, method_sp = method_sp, n_sp = n_sp, n_strata = n_strata, by = by, 
                      LOC = LOC, fun = fun, case = case, m = m, M = M, method_det = method_det)
   }
   
