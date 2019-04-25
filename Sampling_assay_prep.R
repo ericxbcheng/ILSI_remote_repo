@@ -1,5 +1,18 @@
 ########### 2D
 
+## Calculate the percent of contamination a source contributes to a sample point
+calc_perc_contam = function(df_dist, r, LOC, fun, cont_level){
+  
+  stopifnot(fun %in% c("exp", "norm", "unif"))
+  
+  f_chosen = switch(EXPR = fun,
+                    "exp" = f_exp,
+                    "norm" = f_norm,
+                    "unif" = f_unif)
+  
+  map_dbl(.x = df_dist[["Distance"]], .f = f_decay, fun = f_chosen, spread_radius = spread_radius, LOC = LOC, cont_level = cont_level)
+}
+
 # Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points. If spotONLY == TRUE, then only calculate the distance between spots and sample points
 calc_dist_2d = function(df_contam, df_sp, probe = FALSE){
   
@@ -167,7 +180,7 @@ calc_dist = function(df_contam, df_sp, spread, method_sp){
 }
 
 # Calculate sample concentration for continuous case
-calc_level_cont = function(df_contam, dist, spread_radius, LOC, fun, cont_level){
+calc_level_cont = function(df_contam, dist, spread_radius, LOC, fun, cont_level, bg_level){
   
   if(length(levels(df_contam$label)) > 1){
     warning("df_contam contains both contamination spots and spreads. 
@@ -187,28 +200,9 @@ calc_level_cont = function(df_contam, dist, spread_radius, LOC, fun, cont_level)
            source_level = df_contam$cont_level[match(x = .$ID_contam, table = df_contam$ID)],
            source_contri = source_level * perc_contri) %>%
     group_by(ID_sp) %>%
-    summarise(cont_level = sum(source_contri))
-  }
-
-# # Calculate sample concentration for discrete case
-# calc_level_dis = function(df_contam, sp_radius, dist, m_sp, m_kbar){
-#   
-#   # Estimate the number of kernels in each sample
-#   n_k = round(x = m_sp/m_kbar, digits = 0)
-#   
-#   # Subset the dist_contam_sp to keep rows where the contamination points fall within the sampling region
-#   # Attach the source contamination level
-#   # Calculate the sum of contamination point levels in each sample, and record the number of points in each sample
-#   # Calculate the dis_level in each sample
-#   
-#   dist %>%
-#     dplyr::filter(Distance <= sp_radius) %>%
-#     mutate(source_level = df_contam$dis_level[match(x = .$ID_contam, table = df_contam$ID)]) %>%
-#     group_by(ID_sp) %>%
-#     summarise(obs = n(),
-#               sum_level = sum(source_level)) %>%
-#     mutate(dis_level = m_kbar/m_sp*(sum_level + (n_k - obs) * conc_good))
-# }
+    summarise(cont_level = sum(source_contri) + bg_level)
+  
+}
 
 # Define how a kernel is captured
 capture_kernel = function(method_sp, df_contam, dist, sp_radius, lims, L){
