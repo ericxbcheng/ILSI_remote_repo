@@ -19,11 +19,11 @@ f_cont_level = function(n, param){
 }
 
 ## Define a function that calculates contamination contribution when a point is within spread_radius and reduces to almost 0 when beyond spread_radius
-f_decay = function(x, fun, spread_radius, LOC, cont_level){
+f_decay = function(x, fun, spread_radius, LOC){
   if(x <= spread_radius){
     fun(x = x, spread_radius = spread_radius, LOC = LOC)
   } else {
-    fun(x = x, spread_radius = spread_radius, LOC = LOC)* 1/(10^cont_level[1])
+    0
   }
 }
 
@@ -39,22 +39,25 @@ f_norm = function(x, spread_radius, LOC){
   exp(-x^2/sigma^2)
 } 
 
+## Calculate the contamination contribution using a constant 
+f_unif = function(x, spread_radius, LOC){
+  1
+}
+
 ## Calculate the contamination contribution on a 2D plane
-f_density = function(method, x, y, x0, y0, spread_radius, LOC){
+f_density = function(method, x, y, x0, y0, spread_radius, LOC, cont_level){
+  
+  stopifnot(method %in% c("exp", "norm", "unif"))
   
   d = sqrt((x-x0)^2 + (y-y0)^2)
   
-  if(method == "exp"){
-    
-    f_exp(x = d, spread_radius = spread_radius, LOC = LOC)
-    
-  } else if (method == "norm"){
-    
-    f_norm(x = d, spread_radius = spread_radius, LOC = LOC)
-    
-  } else {
-    stop("Method is undefined. Please choose 'exp' or 'norm'. ")
-  }
+  f_chosen = switch(EXPR = method,
+                    "exp" = f_exp,
+                    "norm" = f_norm,
+                    "unif" = f_unif)
+  
+  map_dbl(.x = d, .f = f_decay, fun = f_chosen, spread_radius = spread_radius, LOC = LOC)
+  
 }
 
 
