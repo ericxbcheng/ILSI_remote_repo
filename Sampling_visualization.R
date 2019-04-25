@@ -37,7 +37,7 @@ contam_level_draw_2d = function(method, spread_radius, LOC){
 }
 
 ## Draw thw contamination level plot for continuous spread in a 3D space
-contam_level_draw_3d = function(method, df_contam, xlim, ylim, spread_radius, LOC, interactive = FALSE){
+contam_level_draw_3d = function(method, df_contam, xlim, ylim, spread_radius, LOC, bg_level = 1, interactive = FALSE){
   
   ### Extract the coordinates of contamination spots
   spot_coord = df_contam %>%
@@ -48,6 +48,7 @@ contam_level_draw_3d = function(method, df_contam, xlim, ylim, spread_radius, LO
   a = expand.grid(X = seq(xlim[1],xlim[2],0.1), Y = seq(ylim[1], ylim[2],0.1))
   
   ### Calculate the contamination contribution from each contamination spot on each point in the field and put them in a matrix
+  ## Each column is the contribution of one contamination spot to all the locations in the field
   b = mapply(FUN = f_density, spot_coord$X, spot_coord$Y, MoreArgs = list(method = method, x = a$X, y = a$Y, spread_radius = spread_radius, LOC = LOC))
   
   ### Calculate the contamination level distribution from each contamination spot
@@ -57,7 +58,7 @@ contam_level_draw_3d = function(method, df_contam, xlim, ylim, spread_radius, LO
   
   ### Calculate the contamination level at each point in the field by summing up the contamination contributed by all sources
   d = rowSums(c)
-  a$Z = log10(d)
+  a$Z = log10(d + bg_level)
   
   ### Make the 3D plot
   if(interactive == FALSE){
