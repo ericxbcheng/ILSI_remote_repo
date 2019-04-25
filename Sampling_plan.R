@@ -22,20 +22,6 @@ naming_sp_2d = function(n_sp, x_sp, y_sp, radius){
   return(df)
 }
 
-## Calculate the percent of contamination a source contributes to a sample point
-calc_perc_contam = function(df_dist, r, LOC, fun, cont_level){
-  
-  if(fun == "exp"){
-    f_chosen = f_exp
-  } else if(fun == "norm"){
-    f_chosen = f_norm
-  } else {
-    stop("Decay function is undefined. Choose 'exp' or 'norm'. ")
-  }
-  
-  map_dbl(.x = df_dist[["Distance"]], .f = f_decay, fun = f_chosen, spread_radius = spread_radius, LOC = LOC, cont_level = cont_level)
-}
-
 # Create a function that calculates the boundaries of each stratum
 calc_bounds_2d = function(xlim, ylim, n_strata, by){
   if(by == "row"){
