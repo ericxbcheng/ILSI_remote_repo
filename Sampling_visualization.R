@@ -22,16 +22,16 @@ contam_draw = function(data, spread, xlim, ylim){
 ## Draw the contamination level plot for continuous spread in a 2D plane.
 contam_level_draw_2d = function(method, spread_radius, LOC){
   
-  if(method == "exp"){
-    f_chosen = f_exp
-  } else if (method == "norm"){
-    f_chosen = f_norm
-  } else {
-    stop("Method is undefined. Choose 'exp' or 'norm'.")
-  }
+  stopifnot(fun %in% c("exp", "norm", "unif"))
+  
+  f_chosen = switch(EXPR = method,
+                    "exp" = f_exp,
+                    "norm" = f_norm,
+                    "unif" = f_unif)
   
   ggplot(data = data.frame(x = c(0, spread_radius)), aes(x = x))+
     geom_line(stat = "function", fun = f_chosen, args = list(spread_radius = spread_radius, LOC = LOC)) +
+    coord_cartesian(ylim = c(0,1)) +
     labs(x = "Distance from a contamination source", y = "Contamination contribution") +
     theme_bw()
 }
@@ -396,5 +396,26 @@ plot_mean_Paccept2 = function(data, param_name){
     theme_bw()
 }
 
-
+# Plot P(detection) and P(acceptance) for continuous case
+plot_metrics_cont = function(df, xlab){
+  
+  temp = df %>%
+    group_by(param) %>%
+    gather(data = ., key = "Metric", value = "Value", -param) %>%
+    group_by(param, Metric) %>%
+    summarise(q2.5 = stats::quantile(x = Value, probs = 0.025),
+              med = median(Value), 
+              q97.5 = stats::quantile(x = Value, probs = 0.975))
+  
+  ggplot(data = temp) +
+    geom_ribbon(aes(x = param, ymin = q2.5, ymax = q97.5), alpha = 0.3) +
+    geom_line(aes(x = param, y = med)) +
+    geom_point(aes(x = param, y = med)) +
+    coord_cartesian(ylim = c(0,1)) +
+    facet_grid(Metric ~ ., labeller = labeller(Metric = c(P_det = "Probability of detection",
+                                                          Paccept = "Probability of acceptance"))) +
+    labs(x = xlab, y = "Median (2.5th - 97.5th percentile)") +
+    theme_bw() +
+    theme(legend.position = "top")
+}
 
