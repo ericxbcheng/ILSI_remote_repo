@@ -16,7 +16,7 @@ contam_cont = function(spot_coord, n_contam, spread, spread_radius, cont_level){
   # Create labels for spots
   label = c(rep("spot", times = n_contam))
   
-  df = naming_total(spot_coord = spot_coord, spread_coord = NULL, spread = spread,
+  df = naming_total(n_contam = n_contam, spot_coord = spot_coord, spread_coord = NULL, spread = spread,
                     label = label, spread_radius = spread_radius, cont_level = cont_level)
   
   return(df)
@@ -51,8 +51,8 @@ contam_dis = function(spot_coord, n_contam, n_affected, covar, spread, dis_level
   return(df)
 }
 
-# Create uniformly distributed contamination spots
-unif_contam = function(n_contam, lims, spread){
+# Create point-source contamination spots
+point_contam = function(n_contam, lims, spread){
   
   # Check point: make sure the dimension is either 2D or 3D
   if(spread == "continuous"){
@@ -149,7 +149,7 @@ sim_contam_new = function(n_contam, lims, spread, covar, n_affected, spread_radi
   stopifnot(spread %in% c("continuous", "discrete"))
   
   # Create spot contaminations
-  spot_coord = unif_contam(n_contam = n_contam, lims = lims, spread = spread) %>%
+  spot_coord = point_contam(n_contam = n_contam, lims = lims, spread = spread) %>%
     as.data.frame()
   
   # Generate all the data based on the spread type  
