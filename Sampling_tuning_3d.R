@@ -14,7 +14,7 @@ tune_param_new = function(val, n_iter, ...){
   c = clean_new(data = b, spread = eval_tidy(Args_exprs[["spread"]]), diag = eval_tidy(Args_exprs[["diag"]]))
   
   # Add a vector of parameter values to the list
-  c$param = rep(x = val, each = n_iter) %>% as.factor()
+  c$param = rep(x = val, each = n_iter) 
   
   return(c)
 }
@@ -28,7 +28,7 @@ one_arg_less_new = function(name, Args_default){
                             "case", "m", "M", "method_det", "covar_mat", 
                             "n_affected", "dis_level","cont_level","sp_radius", 
                             "container", "L", "rho", "m_kbar", "conc_neg", 
-                            "tox", "Mc", "diag")))
+                            "tox", "Mc", "diag", "bg_level")))
   
   a = Args_default
   

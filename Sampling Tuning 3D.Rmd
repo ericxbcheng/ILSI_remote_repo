@@ -159,7 +159,7 @@ Mc = 20
 method_det = "ELISA aflatoxin"
 
 # Iteration
-n_iter = 100
+n_iter = 10
 ```
 
 ```{r}
