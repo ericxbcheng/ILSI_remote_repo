@@ -228,13 +228,16 @@ gen_conc_neg = function(n, conc_neg){
   if(is.null(conc_neg) == FALSE){
     
     # When conc_neg is longer than n, vector a either takes a subset of values from conc_neg
-    # Otherwise, vector a = conc_neg + values sampled from conc_neg with replacement so that the total length of a = n
+    # Otherwise, vector a = conc_neg * quotient + conc_neg[remainder]
     if(n <= length(conc_neg)){
       a = conc_neg[1:n]
       
     } else {
-      a = c(conc_neg, sample(x = conc_neg, size = n - length(conc_neg), replace = TRUE))
       
+      quotient = n %/% length(conc_neg)
+      remainder = n %% length(conc_neg)
+      
+      a = c(rep(x = conc_neg, times = quotient), conc_neg[remainder])
     }
   } else {
     
@@ -279,7 +282,7 @@ calc_true_contam = function(df_contam, rho, lims, m_kbar, conc_neg){
   num_neg = n_k - length(dis_level)
   
   # Calculate the true contamination level in the container
-  c_true = (sum(dis_level) + num_neg * median(conc_neg)) / n_k
+  c_true = (sum(dis_level) + num_neg * mean(conc_neg)) / n_k
   
   return(c_true)
 }

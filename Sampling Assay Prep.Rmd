@@ -140,7 +140,7 @@ sp_xy = sim_plan_new(method_sp = "ss", spread = spread, lims = lims, radius = d/
     
   * True contamination level in the container:
   
-  $$C_{true}=\frac {(\sum_{i=1}^{k} C_{contam_i}+\sum_{j=1}^{n-k} C_{healthy_j})\times \bar m_k}{n\times \bar m_k}=\frac{(\sum_{i=1}^{k}C_{contam_i}+(n-k)\times median(C_{healthy}))}{n}$$
+  $$C_{true}=\frac {(\sum_{i=1}^{k} C_{contam_i}+\sum_{j=1}^{n-k} C_{healthy_j})\times \bar m_k}{n\times \bar m_k}=\frac{(\sum_{i=1}^{k}C_{contam_i}+(n-k)\times \bar C_{healthy})}{n}$$
 
 ```{r}
 # Pre-generate healthy kernel concentrations to save time
