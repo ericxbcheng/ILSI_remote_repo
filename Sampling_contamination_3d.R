@@ -76,6 +76,18 @@ point_contam = function(n_contam, lims, spread){
   } 
 }
 
+# Create systematic and sporadic contamination
+area_contam = function(lims){
+  
+  # Check point: only continuous case has area-based contamination
+  stopifnot(length(lims) == 2)
+  
+  x = 0
+  y = 0
+  
+  matrix(data = c(x, y), ncol = 2)
+}
+
 # Combine spots and spreads, create contamination levels, and add headers.
 naming_total = function(spot_coord, spread_coord, n_contam, spread, label, spread_radius, cont_level, dis_level){
   
@@ -142,15 +154,24 @@ rm_outlier = function(df, lims){
 }
 
 # Simulate contamination in 2D (continuous) or 3D (discrete) scenarios
-sim_contam_new = function(n_contam, lims, spread, covar, n_affected, spread_radius, cont_level, dis_level){
+sim_contam_new = function(geom = "point", n_contam, lims, spread, covar, n_affected, spread_radius, cont_level, dis_level){
   
   # Checkpoints
   stopifnot(n_contam > 0 & length(lims) %in% c(2,3))
   stopifnot(spread %in% c("continuous", "discrete"))
+  stopifnot(geom %in% c("point", "area"))
   
   # Create spot contaminations
-  spot_coord = point_contam(n_contam = n_contam, lims = lims, spread = spread) %>%
-    as.data.frame()
+  if(geom == "point"){
+    spot_coord = point_contam(n_contam = n_contam, lims = lims, spread = spread) %>%
+      as.data.frame()
+  } else {
+    spot_coord = area_contam(lims = lims) %>%
+      as.data.frame()
+    
+    # Assume the spread_radius is big enough to cover the whole field
+    spread_radius = sqrt(lims$xlim[2] ^ 2 + lims$ylim[2] ^ 2)
+  }
   
   # Generate all the data based on the spread type  
   if(spread == "continuous"){
