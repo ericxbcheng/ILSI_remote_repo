@@ -44,7 +44,7 @@ tune_param2_new = function(val, name, Args_default, n_iter, ...){
   a = one_arg_less_new(name = name, Args_default = Args_default)
   
   # Tune the chosen parameter for n_iter times. !!!a means splicing the list "a" and releasing all the remaining arguments.
-  b = exec(f = tune_param_new, val = val, n_iter = n_iter, !!!a)
+  b = exec(.fn = tune_param_new, val = val, n_iter = n_iter, !!!a)
   
   return(b)
 }
