@@ -25,10 +25,10 @@ one_arg_less_new = function(name, Args_default){
   # Check point: Is the parame_name included in the list below?
   stopifnot(any(name %in% c("n_contam", "lims", "spread", "spread_radius", 
                             "method_sp", "n_sp", "n_strata","by", "LOC", "fun", 
-                            "case", "m", "M", "method_det", "covar_mat", 
+                            "case", "m", "M", "m_sp", "method_det", "covar_mat", 
                             "n_affected", "dis_level","cont_level","sp_radius", 
                             "container", "L", "rho", "m_kbar", "conc_neg", 
-                            "tox", "Mc", "diag", "bg_level")))
+                            "tox", "Mc", "diag", "bg_level", "geom")))
   
   a = Args_default
   
