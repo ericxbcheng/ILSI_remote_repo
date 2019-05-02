@@ -39,10 +39,10 @@ get_attr_plan = function(case, m, M){
 
 # Create a function that provides a LOD value corresponding to the detection method. 
 # V = sample volume. Enrichment can theoretically detect 1 CFU as in 1 cell
-get_LOD = function(method_det, V){
+get_LOD = function(method_det, m_sp){
   switch(EXPR = method_det,
          "plating" = 2500,
-         "enrichment" = 0,
+         "enrichment" = 1/m_sp,
          "ELISA aflatoxin" = 1,
          stop("Unknown detection method", call. = FALSE))
 }
