@@ -15,12 +15,19 @@ calc_cover_dis = function(df_dist, r){
 }
 
 ## Wrap up function
-calc_cover = function(df_dist, spread_radius, sp_radius, spread){
+calc_cover = function(df_dist, spread_radius, sp_radius, spread, geom, df_contam_sp){
   
   if(spread == "discrete"){
     calc_cover_dis(df_dist = df_dist, r = sp_radius)
   } else if (spread == "continuous"){
+    
+    # Area-based: spread_radius = diagonal length of the field
+    if(geom == "area"){
+      spread_radius = subset(x = df_contam_sp, subset = label == "spot", select = r, drop = TRUE)
+    }
+    
     calc_cover_cont(df_dist = df_dist, r = spread_radius)
+    
   } else {
     stop("Unknown spread type.")
   }
