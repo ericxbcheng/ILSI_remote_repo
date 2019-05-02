@@ -37,12 +37,17 @@ contam_level_draw_2d = function(method, spread_radius, LOC){
 }
 
 ## Draw thw contamination level plot for continuous spread in a 3D space
-contam_level_draw_3d = function(method, df_contam, xlim, ylim, spread_radius, LOC, bg_level = 1, interactive = FALSE){
-  
+contam_level_draw_3d = function(method, df_contam, xlim, ylim, spread_radius, LOC, bg_level, geom, interactive = FALSE){
+
   ### Extract the coordinates of contamination spots
   spot_coord = df_contam %>%
     dplyr::filter(label == "spot") %>%
     dplyr::select(c(X, Y, cont_level))
+  
+  if(geom == "area"){
+    # -0.1 is for dealing with the bug in scatter3D
+    spread_radius = subset(x = df_contam, subset = label == "spot", select = r, drop = TRUE) - 0.1
+  }
   
   ### Create a grid that has the dimensions of the field
   a = expand.grid(X = seq(xlim[1],xlim[2],0.1), Y = seq(ylim[1], ylim[2],0.1))
@@ -69,12 +74,13 @@ contam_level_draw_3d = function(method, df_contam, xlim, ylim, spread_radius, LO
 }
 
 ## Wrap-up funciton
-contam_level_draw = function(dimension, method, spread_radius, LOC, df_contam, xlim, ylim, ...){
+contam_level_draw = function(dimension, method, spread_radius, LOC, df_contam, xlim, ylim, geom,bg_level,  ...){
   if(dimension == "2d"){
     contam_level_draw_2d(method = method, spread_radius = spread_radius, LOC = LOC)
     
   } else if (dimension == "3d"){
-    contam_level_draw_3d(method = method, df_contam = df_contam, spread_radius = spread_radius, LOC = LOC, xlim = xlim, ylim = ylim, ...)
+    contam_level_draw_3d(method = method, df_contam = df_contam, spread_radius = spread_radius, 
+                         LOC = LOC, xlim = xlim, ylim = ylim, geom = geom, bg_level, ...)
     
   } else {
     stop("we do not support this dimension. Please choose '2d' or '3d'.")
@@ -199,7 +205,7 @@ overlay_draw_probe = function(data, lims, L){
 }
 
 # Create a function that draws the contamination level of samples and shows the microbiological criteria in the continuous spread scenario
-assay_draw_cont = function(df, M, m, method_det, case){
+assay_draw_cont = function(df, M, m, m_sp, method_det, case){
   
   a = get_attr_plan(case = case, m = m, M = M)
   M1 = a$M
@@ -207,7 +213,7 @@ assay_draw_cont = function(df, M, m, method_det, case){
   
   temp1 = subset(x = df, subset = label == "sample point")
   temp2 = data.frame(Thresholds = c("M", "m", "LOD"), 
-                    val = c(M1, m1, get_LOD(method_det = method_det)))
+                    val = c(M1, m1, get_LOD(method_det = method_det, m_sp = m_sp)))
   
   ggplot() +
     geom_col(data = temp1, aes(x = ID, y = cont_level), fill = "darkgrey") +
@@ -264,11 +270,11 @@ assay_draw_dis_new = function(data, Mc, method_det){
 }
 
 # A wrapper function that includes assay_draw_cont() and assay_draw_dis()
-assay_draw = function(data, M, m, Mc, method_det, spread, case){
+assay_draw = function(data, M, m, m_sp, Mc, method_det, spread, case){
   if(spread == "discrete"){
     assay_draw_dis_new(data = data, Mc = Mc, method_det = method_det)
   } else if (spread == "continuous"){
-    assay_draw_cont(df = data, M = M, m = m, method_det = method_det, case = case)
+    assay_draw_cont(df = data, M = M, m = m, m_sp = m_sp, method_det = method_det, case = case)
   } else {
     warning("Unknown type of spread.")
   }
