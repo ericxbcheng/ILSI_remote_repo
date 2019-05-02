@@ -153,8 +153,26 @@ rm_outlier = function(df, lims){
   }
 }
 
+# Generate contamination spots for either point-source or area-based scenario
+gen_contam_spot = function(geom, n_contam, lims, spread, spread_radius){
+  if(geom == "point"){
+    spot_coord = point_contam(n_contam = n_contam, lims = lims, spread = spread) %>%
+      as.data.frame()
+    
+  } else {
+    spot_coord = area_contam(lims = lims) %>%
+      as.data.frame()
+    
+    # Assume the spread_radius is big enough to cover the whole field
+    # Assume there is only 1 contamination spot
+    n_contam = 1
+    spread_radius = sqrt(lims$xlim[2] ^ 2 + lims$ylim[2] ^ 2)
+  }
+  return(list(spot_coord = spot_coord, n_contam = n_contam, spread_radius = spread_radius))
+}
+
 # Simulate contamination in 2D (continuous) or 3D (discrete) scenarios
-sim_contam_new = function(geom = "point", n_contam, lims, spread, covar, n_affected, spread_radius, cont_level, dis_level){
+sim_contam_new = function(geom, n_contam, lims, spread, covar, n_affected, spread_radius, cont_level, dis_level){
   
   # Checkpoints
   stopifnot(n_contam > 0 & length(lims) %in% c(2,3))
@@ -162,24 +180,15 @@ sim_contam_new = function(geom = "point", n_contam, lims, spread, covar, n_affec
   stopifnot(geom %in% c("point", "area"))
   
   # Create spot contaminations
-  if(geom == "point"){
-    spot_coord = point_contam(n_contam = n_contam, lims = lims, spread = spread) %>%
-      as.data.frame()
-  } else {
-    spot_coord = area_contam(lims = lims) %>%
-      as.data.frame()
-    
-    # Assume the spread_radius is big enough to cover the whole field
-    spread_radius = sqrt(lims$xlim[2] ^ 2 + lims$ylim[2] ^ 2)
-  }
+  spot_temp = gen_contam_spot(geom = geom, n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius)
   
   # Generate all the data based on the spread type  
   if(spread == "continuous"){
     
     stopifnot(spread_radius >= 0)
     
-    df = contam_cont(spot_coord = spot_coord, n_contam = n_contam, spread = spread, 
-                     spread_radius = spread_radius, cont_level = cont_level)
+    df = contam_cont(spot_coord = spot_temp$spot_coord, n_contam = spot_temp$n_contam, spread = spread, 
+                     spread_radius = spot_temp$spread_radius, cont_level = cont_level)
   } else {
     
     stopifnot(n_affected >= 0)
