@@ -86,13 +86,14 @@ calc_metrics = function(c_true, decision, Mc){
 
 # A function factory
 gen_sim_outcome_new = function(n_contam, lims, spread, spread_radius, method_sp, n_sp, n_strata, 
-                               by, LOC, fun, case, m, M, method_det, covar_mat, n_affected, dis_level, cont_level, 
-                               sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, diag, bg_level){
+                               by, LOC, fun, case, m, M, m_sp, method_det, covar_mat, n_affected, dis_level, cont_level, 
+                               sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, diag, bg_level, geom){
   function(...){
     sim_outcome_new(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat,
                     n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, sp_radius = sp_radius,
                     container = container, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, 
-                    tox = tox, Mc = Mc, method_det = method_det, diag = diag, spread_radius = spread_radius, 
-                    n_sp = n_sp, n_strata = n_strata, by = by, LOC = LOC, fun = fun, case = case, m = m, M = M, cont_level = cont_level, bg_level)
+                    tox = tox, Mc = Mc, m_sp, method_det = method_det, diag = diag, spread_radius = spread_radius, 
+                    n_sp = n_sp, n_strata = n_strata, by = by, LOC = LOC, fun = fun, case = case, m = m, 
+                    M = M, cont_level = cont_level, bg_level = bg_level, geom = geom)
   }
 }
