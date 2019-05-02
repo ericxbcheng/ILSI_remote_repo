@@ -1,7 +1,7 @@
 ########### 2D
 
 ## Calculate the percent of contamination a source contributes to a sample point
-calc_perc_contam = function(df_dist, r, LOC, fun){
+calc_perc_contam = function(df_dist, spread_radius, LOC, fun){
   
   stopifnot(fun %in% c("exp", "norm", "unif"))
   
@@ -64,7 +64,7 @@ calc_level_cont = function(df_contam, dist, spread_radius, LOC, fun, bg_level){
   
   dist %>%
     dplyr::filter(.data = ., label == "spot") %>%
-    mutate(perc_contri = calc_perc_contam(df_dist = ., r = spread_radius, LOC = LOC, fun = fun),
+    mutate(perc_contri = calc_perc_contam(df_dist = ., spread_radius = spread_radius, LOC = LOC, fun = fun),
            source_level = df_contam$cont_level[match(x = .$ID_contam, table = df_contam$ID)],
            source_contri = source_level * perc_contri) %>%
     group_by(ID_sp) %>%
@@ -290,14 +290,20 @@ calc_true_contam = function(df_contam, rho, lims, m_kbar, conc_neg){
 
 # Create a function that calculates contamination levels for each sample point and combine "contam_xy" and "sp_xy"
 gen_sim_data_new = function(df_contam, df_sp, dist, spread, spread_radius, LOC, bg_level,
-                            fun, L, rho, m_kbar, sp_radius, conc_neg){
+                            fun, L, rho, m_kbar, sp_radius, conc_neg, geom){
   
   stopifnot(spread %in% c("continuous", "discrete"))
-  
+
   ### Combine everything, fill the NAs with the corresponding contamination level.
   df = rbind(df_contam, df_sp)
   
   if(spread == "continuous"){
+    
+    # Area-based: update spread_radius and fun
+    stopifnot(geom %in% c("point", "area"))
+    if(geom == "area"){
+      spread_radius = df_contam[["r"]]
+    }
     
     # Calculate the sample concentration in a continuous case
     a = calc_level_cont(df_contam = df_contam, dist = dist, spread_radius = spread_radius, 
