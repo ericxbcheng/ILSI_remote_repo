@@ -115,10 +115,10 @@ decision_dis_new = function(data, LOD, Mc){
 }
 
 # Create a function that decides whether to accept or reject the lot
-lot_decision_new = function(data, case, m, M, Mc, spread, method_det){
+lot_decision_new = function(data, case, m, M, Mc, m_sp, spread, method_det){
   
   ## Get LOD for the chosen method of detection
-  LOD = get_LOD(method_det = method_det)
+  LOD = get_LOD(method_det = method_det, m_sp = m_sp)
   
   ## Make decision based on the spread type
   if(spread == "continuous"){
