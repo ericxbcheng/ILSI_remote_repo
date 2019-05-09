@@ -144,7 +144,7 @@ sim_outcome_new = function(n_contam, lims, spread, spread_radius, method_sp, n_s
   } else {
     sim_outcome_cont(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, cont_level = cont_level,
                      bg_level = bg_level, method_sp = method_sp, n_sp = n_sp, n_strata = n_strata, by = by, 
-                     LOC = LOC, fun = fun, case = case, m = m, M = M, m_sp, method_det = method_det, geom = geom)
+                     LOC = LOC, fun = fun, case = case, m = m, M = M, m_sp = m_sp, method_det = method_det, geom = geom)
   }
   
 }
