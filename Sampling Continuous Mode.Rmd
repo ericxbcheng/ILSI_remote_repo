@@ -7,7 +7,7 @@ output: html_document
 
 # Objective
 
-  * This is an instruction for the continuous mode in the sampling model v2.0.
+  * This is an instruction for the continuous mode in the sampling model v2.1.
   * For more information on the mathematical details, please refer to each module's R markdown file. As a reminder, this R markdown file is the final wrapper of all the upstream modules and contains some latest updates. Thus, previous R markdown files might not be able to run successfully.
   
 # Method
@@ -207,7 +207,7 @@ contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, df_sp = sp_xy, dist = dis
 cover = calc_cover(df_dist = dist_contam_sp, spread_radius = spread_radius, 
                    spread = spread, geom = geom, df_contam_sp = contam_sp_xy)
 decision = lot_decision_new(data = contam_sp_xy, case = case, m = m, M = M, 
-                            spread = spread, method_det = method_det)
+                            spread = spread, method_det = method_det, m_sp = m_sp)
 words(x = decision)
 
 # This function produces the dataframe "contam_sp_xy" and the distance dataframe
