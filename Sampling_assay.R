@@ -39,30 +39,44 @@ get_attr_plan = function(case, m, M){
 
 # Create a function that provides a LOD value corresponding to the detection method. 
 # V = sample volume. Enrichment can theoretically detect 1 CFU as in 1 cell
-get_LOD = function(method_det, m_sp){
+get_LOD = function(method_det){
   switch(EXPR = method_det,
          "plating" = 2500,
-         "enrichment" = 1/m_sp,
+         "enrichment" = 1,
          "ELISA aflatoxin" = 1,
          stop("Unknown detection method", call. = FALSE))
 }
 
-# Create a function that makes decisions for continuous spread scenarios
-decision_cont = function(df, LOD, case, m, M){
+# Create a function that converts concentration values to binary results
+conc2bin = function(method_det, LOD, conc, m_sp){
   
-  ## Get the appropriate attribute plan
-  micro_ct = get_attr_plan(case = case, m = m, M = M)
+  # Check point
+  stopifnot(method_det %in% c("plating", "enrichment"))
   
-  ## Check if n_sp == n in the microbiological criteria
-  if(nrow(df) != micro_ct[["n"]]){
-    warning("n_sp does not equal to n.")
+  if(method_det == "plating"){
+    a = {conc >= LOD}
+    return(a)
+    
+  } else {
+    
+    # Find the samples that has < 1 CFU
+    a = {conc * m_sp < LOD}
+    
+    ## For samples whose CFU < 1, we assume the enrichment result follows a Bernoulli distribution with p = CFU
+    ## For samples whose CFU >=1, its enrichment result would be positive (denoted as 1)
+    b = vector(mode = "numeric", length = length(conc))
+    b[a] = rbinom(n = sum(a), size = 1, prob = conc[a])
+    b[!a] = 1
+    
+    return(as.logical(b))
   }
+}
+
+# Convert binary detection result to lot decision (plating)
+bin2deci_plating = function(micro_ct, conc, detected){
   
-  ## Find out the sample points with contamination level >= LOD
-  conc = df[["cont_level"]]
-  detected = conc >= LOD
-  
-  ## Decision: reject lot if any sample has contamination level >= M or if the number of samples with contamination level >= m is above c
+  ## Decision: reject lot if any sample has contamination level >= M OR 
+  ## if the number of samples with contamination level >= m is above c
   if(!any(detected)){
     return(1)
   } else {
@@ -77,42 +91,51 @@ decision_cont = function(df, LOD, case, m, M){
   } 
 }
 
-# Create a function that makes decision for discrete spread scenarios
-decision_dis = function(df, LOD, Mc){
+# Convert binary detection result to lot decision (enrichment)
+bin2deci_enrichment = function(micro_ct, detected){
   
-  ## Calculate the mean concentration of all samples
-  c_bar = mean(df[["dis_level"]])
+  # Checkpoint: c should be 0 when using enrichment
+  if(micro_ct[["c"]] != 0){
+    warning("For enrichment please choose a 2-class plan (case 10 ~ 15).")
+  }
   
-  ## Determine whether c_bar is above LOD. If it is >= LOD, then determine if it exceeds Mc.
-  if(c_bar < LOD){
-    return(5)
+  # A lot would be accepted only when all samples are negative
+  if(!any(detected)){
+    return(1)
   } else {
-    if(c_bar >= Mc){
-      return(6)
-    } else {
-      return(7)
-    }
+    return(3) 
   }
 }
 
-# Create a function that decides whether to accept or reject the lot
-lot_decision = function(data, case, m, M, Mc, spread, method_det){
+# Create a function that makes a lot decision based on the attribute sampling plan
+bin2deci = function(micro_ct, detected, method_det, conc){
   
-  ## Get LOD for the chosen method of detection
-  LOD = get_LOD(method_det = method_det)
+  # Check point
+  stopifnot(method_det %in% c("plating", "enrichment"))
   
-  ## Subset out the contamination levels at the sample points
-  a = subset(x = data, subset = label == "sample point", select = c(cont_level, dis_level), drop = FALSE)
-  
-  ## Make decision based on the spread type
-  if(spread == "continuous"){
-    decision_cont(df = a, LOD = LOD, case = case, M = M, m = m)
-  } else if (spread == "discrete"){
-    decision_dis(df = a, LOD = LOD, Mc = Mc)
+  if(method_det == "plating"){
+    bin2deci_plating(micro_ct = micro_ct, conc = conc, detected = detected)
+    
   } else {
-    stop("Unknown type of spread. Choose either 'continuous' or 'discrete'.")
+    bin2deci_enrichment(micro_ct = micro_ct, detected = detected)
+    
   }
+}
+
+decision_cont_new = function(conc, LOD, case, m, M, m_sp, method_det){
   
+  # Get the attribute sampling plan parameters
+  a = get_attr_plan(case = case, m = m, M = M)
+  
+  ## Convert concentration to binary result
+  # For plating, it means whether a sample can be detected or not
+  # For enrichment, it means whether a sample is positive or not
+  b = conc2bin(method_det = method_det, LOD = LOD, conc = conc, m_sp = m_sp)
+  
+  # Return lot decision
+  c = bin2deci(micro_ct = a, detected = b, method_det = method_det, conc = conc)
+  
+  return(c)
 }
 
 # Create texts for lot decisions.
