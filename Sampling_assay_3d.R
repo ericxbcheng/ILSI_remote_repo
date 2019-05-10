@@ -118,16 +118,16 @@ decision_dis_new = function(data, LOD, Mc){
 lot_decision_new = function(data, case, m, M, Mc, m_sp, spread, method_det){
   
   ## Get LOD for the chosen method of detection
-  LOD = get_LOD(method_det = method_det, m_sp = m_sp)
+  LOD = get_LOD(method_det = method_det)
   
   ## Make decision based on the spread type
   if(spread == "continuous"){
     
     ## data = contam_sp_xy
     ## Subset out the contamination levels at the sample points
-    a = subset(x = data, subset = label == "sample point", select = cont_level, drop = FALSE)
+    conc = subset(x = data, subset = label == "sample point", select = cont_level, drop = TRUE)
     
-    decision_cont(df = a, LOD = LOD, case = case, M = M, m = m)
+    decision_cont_new(conc = conc, LOD = LOD, case = case, m = m, M = M, m_sp = m_sp, method_det = method_det)
     
   } else if (spread == "discrete"){
     

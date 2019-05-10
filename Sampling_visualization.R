@@ -205,7 +205,7 @@ overlay_draw_probe = function(data, lims, L){
 }
 
 # Create a function that draws the contamination level of samples and shows the microbiological criteria in the continuous spread scenario
-assay_draw_cont = function(df, M, m, m_sp, method_det, case){
+assay_draw_cont = function(df, M, m, method_det, case){
   
   a = get_attr_plan(case = case, m = m, M = M)
   M1 = a$M
@@ -213,7 +213,7 @@ assay_draw_cont = function(df, M, m, m_sp, method_det, case){
   
   temp1 = subset(x = df, subset = label == "sample point")
   temp2 = data.frame(Thresholds = c("M", "m", "LOD"), 
-                    val = c(M1, m1, get_LOD(method_det = method_det, m_sp = m_sp)))
+                    val = c(M1, m1, get_LOD(method_det = method_det)))
   
   ggplot() +
     geom_col(data = temp1, aes(x = ID, y = cont_level), fill = "darkgrey") +
@@ -226,26 +226,6 @@ assay_draw_cont = function(df, M, m, m_sp, method_det, case){
     scale_color_manual(values = c("#00BA38", "#D89000", "#F8766D" )) +
     labs(x = "Sample point", y = "Contamination level (CFU/g)") +
     theme_bw() 
-}
-
-# Create a function that draws the mean contamination level of all samples and the microbiological criteria in the discrete spread scenario
-assay_draw_dis = function(df, Mc, method_det){
-  
-  temp1 = subset(x = df, subset = label == "sample point")
-  temp2 = data.frame(Thresholds = c("Mc", "LOD"), 
-                     val = c(Mc, get_LOD(method_det = method_det)))
-  
-  ggplot()+
-    geom_col(aes(x = "Mean sample concentration", y = mean(temp1$dis_level)), width = 0.5, fill = "darkgrey") +
-    geom_hline(data = temp2, aes(yintercept = val, color = Thresholds), size = 1.5) +
-    geom_text(data = temp1, aes(x = "Mean sample concentration", 
-                                y = mean(temp1$dis_level), 
-                                label = scientific(mean(temp1$dis_level), digits = 2)), 
-              nudge_y = 0.3) +
-    scale_y_log10() +
-    scale_color_manual(values = c("#00BA38", "#F8766D")) +
-    labs(x = NULL, y = "Contamination level (ng/g)") +
-    theme_bw()
 }
 
 ## A new function for discrete case
@@ -274,7 +254,7 @@ assay_draw = function(data, M, m, m_sp, Mc, method_det, spread, case){
   if(spread == "discrete"){
     assay_draw_dis_new(data = data, Mc = Mc, method_det = method_det)
   } else if (spread == "continuous"){
-    assay_draw_cont(df = data, M = M, m = m, m_sp = m_sp, method_det = method_det, case = case)
+    assay_draw_cont(df = data, M = M, m = m, method_det = method_det, case = case)
   } else {
     warning("Unknown type of spread.")
   }
