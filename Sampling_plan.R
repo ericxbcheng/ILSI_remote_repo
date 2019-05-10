@@ -14,8 +14,8 @@ naming_sp_2d = function(n_sp, x_sp, y_sp, radius){
              ID = ID,
              label = "sample point",
              r = r,
-             cont_level = NA,
-             dis_level = NA)
+             cont_level = NaN,
+             dis_level = NaN)
   
   df$ID = as.character(df$ID)
   
