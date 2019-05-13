@@ -205,7 +205,7 @@ overlay_draw_probe = function(data, lims, L){
 }
 
 # Create a function that draws the contamination level of samples and shows the microbiological criteria in the continuous spread scenario
-assay_draw_cont = function(df, M, m, method_det, case){
+assay_draw_cont_plating = function(df, M, m, method_det, case){
   
   a = get_attr_plan(case = case, m = m, M = M)
   M1 = a$M
@@ -226,6 +226,59 @@ assay_draw_cont = function(df, M, m, method_det, case){
     scale_color_manual(values = c("#00BA38", "#D89000", "#F8766D" )) +
     labs(x = "Sample point", y = "Contamination level (CFU/g)") +
     theme_bw() 
+}
+
+# Draw CFU for each sample and binary results for enrichment
+assay_draw_cont_enrichment = function(data, m_sp, m, M, case, method_det){
+  
+  temp0 = data %>%
+    dplyr::filter(label == "sample point") %>%
+    dplyr::select(ID, cont_level)
+  
+  # Run intermediate functions in lot_decision_new()
+  attr_plan = get_attr_plan(case = case, m = m, M = M)
+  LOD = get_LOD(method_det = method_det)
+  bin_conc = conc2bin(method_det = method_det, LOD = LOD, conc = temp0$cont_level, m_sp = m_sp) %>%
+    as.numeric()
+  
+  # Subsetting
+  temp1 = temp0 %>%
+    mutate(CFU = cont_level * m_sp, bin_conc = bin_conc)
+  
+  temp2 = data.frame(Thresholds = "LOD", 
+                     val = LOD) 
+  
+  a = ggplot() +
+    geom_col(data = temp1, aes(x = ID, y = CFU), fill = "darkgrey") +
+    geom_hline(data = temp2, aes(yintercept = val, color = Thresholds), size = 1.5) +
+    geom_text(data = temp1, 
+              aes(x = ID, y = CFU, 
+                  label = scientific(CFU, digits = 2)), 
+              position = position_nudge(y = 0.3)) +
+    scale_y_log10(label = scientific_format()) +
+    scale_color_manual(values = c("#00BA38")) +
+    labs(x = "Sample point", y = "CFU") +
+    theme_bw() 
+  
+  b = ggplot(data = temp1) +
+    geom_col(aes(x = ID, y = bin_conc)) +
+    coord_cartesian(ylim = c(0, 1)) +
+    labs(x = "Sample point", y = "Positive after enrichment?") +
+    theme_bw()
+  
+  return(list(a,b))
+}
+
+assay_draw_cont = function(df, M, m, case, m_sp, method_det){
+  if(method_det == "plating"){
+    assay_draw_cont_plating(df = df, M = M, m = m, method_det = method_det, case = case)
+    
+  } else if(method_det == "enrichment"){
+    assay_draw_cont_enrichment(data = df, m_sp = m_sp, m = m, M = M, case = case, method_det = method_det)
+    
+  } else {
+    stop("Unknown detection method.")
+  }
 }
 
 ## A new function for discrete case
@@ -254,7 +307,7 @@ assay_draw = function(data, M, m, m_sp, Mc, method_det, spread, case){
   if(spread == "discrete"){
     assay_draw_dis_new(data = data, Mc = Mc, method_det = method_det)
   } else if (spread == "continuous"){
-    assay_draw_cont(df = data, M = M, m = m, method_det = method_det, case = case)
+    assay_draw_cont(df = data, M = M, m = m, method_det = method_det, case = case, m_sp = m_sp)
   } else {
     warning("Unknown type of spread.")
   }
