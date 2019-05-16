@@ -64,7 +64,7 @@ sim_intmed = function(n_contam, lims, spread, covar_mat, n_affected, spread_radi
     
     sim_intmed_cont(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, 
                     cont_level = cont_level, method_sp = method_sp, n_sp = n_sp, bg_level = bg_level,
-                    n_strata = n_strata, by = by, LOC = LOC, fun = fun, geom)
+                    n_strata = n_strata, by = by, LOC = LOC, fun = fun, geom = geom)
   }
 }
 
