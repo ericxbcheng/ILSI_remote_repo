@@ -1,10 +1,10 @@
 # Create intermediate datasets for discrete case
 sim_intmed_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_level, 
-                          method_sp, sp_radius, container, compartment, type, L, rho, m_kbar, conc_neg, tox){
+                          method_sp, sp_radius, container, compartment, type, L, rho, m_kbar, conc_neg, tox, seed){
   
   # Generate the coordinates of contamination points
   contam_xy = sim_contam_new(n_contam = n_contam, lims = lims, spread = spread, covar = covar_mat, 
-                             n_affected = n_affected, spread_radius = NA, dis_level = dis_level) 
+                             n_affected = n_affected, spread_radius = NA, dis_level = dis_level, seed = seed) 
   
   # Generate the coordinates of sample points
   sp_xy = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, radius = sp_radius, 
@@ -25,11 +25,11 @@ sim_intmed_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_lev
 
 # Create intermediate datasets for continuous case
 sim_intmed_cont = function(n_contam, lims, spread, spread_radius, cont_level, 
-                           method_sp, n_sp, n_strata, by, LOC, fun, bg_level, geom){
+                           method_sp, n_sp, n_strata, by, LOC, fun, bg_level, geom, seed){
   
   # Generate the coordinates of contamination points
   contam_xy = sim_contam_new(n_contam = n_contam, lims = lims, spread = spread, 
-                             spread_radius = spread_radius, cont_level = cont_level, geom = geom) 
+                             spread_radius = spread_radius, cont_level = cont_level, geom = geom, seed = seed) 
   
   # Generate the coordinates of sample points
   sp_xy = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, n_sp = n_sp, 
@@ -49,7 +49,7 @@ sim_intmed_cont = function(n_contam, lims, spread, spread_radius, cont_level,
 # Create intermediate datasets
 sim_intmed = function(n_contam, lims, spread, covar_mat, n_affected, spread_radius, dis_level, cont_level,
                       method_sp, sp_radius, container, compartment, type, L, rho, m_kbar, conc_neg, tox, 
-                      n_sp, n_strata, by, LOC, fun, bg_level, geom){
+                      n_sp, n_strata, by, LOC, fun, bg_level, geom, seed){
   
   # Check point
   stopifnot(spread %in% c("discrete", "continuous"))
@@ -59,22 +59,23 @@ sim_intmed = function(n_contam, lims, spread, covar_mat, n_affected, spread_radi
     sim_intmed_dis(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat, 
                    n_affected = n_affected, dis_level = dis_level, 
                    method_sp = method_sp, sp_radius = sp_radius, container = container, compartment = compartment, 
-                   type = type, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, tox = tox)
+                   type = type, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, tox = tox, seed = seed)
   } else {
     
     sim_intmed_cont(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, 
                     cont_level = cont_level, method_sp = method_sp, n_sp = n_sp, bg_level = bg_level,
-                    n_strata = n_strata, by = by, LOC = LOC, fun = fun, geom)
+                    n_strata = n_strata, by = by, LOC = LOC, fun = fun, geom = geom, seed = seed)
   }
 }
 
 # Outcome simulation for continuous case
 sim_outcome_cont = function(n_contam, lims, spread, spread_radius, cont_level, bg_level, method_sp, 
-                            n_sp, n_strata, by, LOC, fun, case, m, M, m_sp, method_det, geom){
+                            n_sp, n_strata, by, LOC, fun, case, m, M, m_sp, method_det, geom, seed){
   
   # Create intermediate datasets
-  a = sim_intmed(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, bg_level = bg_level,
-                 method_sp = method_sp, n_sp = n_sp, n_strata = n_strata, by = by, LOC = LOC, fun = fun, cont_level = cont_level,geom = geom)
+  a = sim_intmed(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, 
+                 bg_level = bg_level, method_sp = method_sp, n_sp = n_sp, n_strata = n_strata, 
+                 by = by, LOC = LOC, fun = fun, cont_level = cont_level,geom = geom, seed = seed)
   
   # Extract intermediate datasets
   contam_sp_xy = a$contam_sp_xy
@@ -96,12 +97,12 @@ sim_outcome_cont = function(n_contam, lims, spread, spread_radius, cont_level, b
 
 # Outcome simulation for discrete case
 sim_outcome_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_level, 
-                           method_sp, sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, method_det, diag){
+                           method_sp, sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, method_det, diag, seed){
   
   # Create intermediate datasets
   a = sim_intmed(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat, 
                  n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, sp_radius = sp_radius, 
-                 container = container, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, tox = tox)
+                 container = container, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, tox = tox, seed = seed)
   
   # Extract intermediate datasets
   raw = a$contam_sp_xy$raw$c_pooled
@@ -133,18 +134,18 @@ sim_outcome_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_le
 # Outcome simulation
 sim_outcome_new = function(n_contam, lims, spread, spread_radius, method_sp, n_sp, n_strata, 
                        by, LOC, fun, case, m, M, m_sp, method_det, covar_mat, n_affected, dis_level, cont_level,
-                       bg_level, sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, diag, geom){
+                       bg_level, sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, diag, geom, seed){
   
   if(spread == "discrete"){
     sim_outcome_dis(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat, 
                     n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
                     sp_radius = sp_radius, container = container, L = L, rho = rho, m_kbar = m_kbar, 
-                    conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, diag = diag)
+                    conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, diag = diag, seed = seed)
     
   } else {
     sim_outcome_cont(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, cont_level = cont_level,
                      bg_level = bg_level, method_sp = method_sp, n_sp = n_sp, n_strata = n_strata, by = by, 
-                     LOC = LOC, fun = fun, case = case, m = m, M = M, m_sp = m_sp, method_det = method_det, geom = geom)
+                     LOC = LOC, fun = fun, case = case, m = m, M = M, m_sp = m_sp, method_det = method_det, geom = geom, seed = seed)
   }
   
 }
