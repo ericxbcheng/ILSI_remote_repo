@@ -173,13 +173,27 @@ overlay_draw_srs = function(data, spread, xlim, ylim){
 ## Stratified random sampling
 overlay_draw_strs = function(data, spread, xlim, ylim, n_strata, by){
   base = overlay_draw_srs(data = data, spread = spread, xlim = xlim, ylim = ylim)
-  bounds = calc_bounds_2d(xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
-  if(by == "row"){
-    base + 
-      geom_hline(yintercept = bounds, color = "darkgrey")
-  } else if (by == "column"){
+  
+  if(by == "2d"){
+    n_x = n_strata[1]
+    n_y = n_strata[2]
+    xbounds = calc_bounds_2d(xlim = xlim, ylim = ylim, n_strata = n_x, by = "column")
+    ybounds = calc_bounds_2d(xlim = xlim, ylim = ylim, n_strata = n_y, by = "row")
+    
     base +
-      geom_vline(xintercept = bounds, color = "darkgrey")
+      geom_hline(yintercept = ybounds, color = "darkgrey") +
+      geom_vline(xintercept = xbounds, color = "darkgrey")
+    
+  } else {
+    
+    bounds = calc_bounds_2d(xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
+    if(by == "row"){
+      base + 
+        geom_hline(yintercept = bounds, color = "darkgrey")
+    } else if (by == "column"){
+      base +
+        geom_vline(xintercept = bounds, color = "darkgrey")
+    }
   }
 }
 
