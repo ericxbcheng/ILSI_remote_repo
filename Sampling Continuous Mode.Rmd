@@ -56,7 +56,11 @@ source(file = "Sampling_analysis.R")
   * `method_sp` = sampling strategy, including `srs`, `strs`, `ss`.
   * `n_sp` = the number of sampling points
   * `n_strata` = the number of strata (applicable to *2D Stratified random sampling*)
-  * `by` = the side along which the field is divided into strata. It is either "row" or "column" (applicable to *2D Stratified random sampling*) **OR** the side along which a sample is taken every k steps (applicable to *2D Systematic sampling*).
+      + For 2D STRS, `n_strata` should be a vector: c(`n_x`, `n_y`) where `n_x` = number of x strata, `n_y` = number of y strata.
+  * `by` = the side along which the field is divided into strata (applicable to *2D Stratified random sampling*) **OR** the side along which a sample is taken every k steps (applicable to *2D Systematic sampling*).
+      + `row` = stratified by row
+      + `column` = stratified by column
+      + `2d` = stratified by row and column (Not applicable to *2D Systematic Sampling*)
 
 **Sample Assay**
   
@@ -94,10 +98,10 @@ LOC = 10^(-3)
 fun = "exp"
 
 # Sampling
-method_sp = "srs"
-n_sp = 10
-n_strata = 5
-by = "row"
+method_sp = "strs"
+n_sp = 20
+n_strata = c(4,5)
+by = "2d"
 
 # Assaying
 case = 10
