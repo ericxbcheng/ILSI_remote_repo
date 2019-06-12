@@ -60,12 +60,13 @@ conc2bin = function(method_det, LOD, conc, m_sp){
   } else {
     
     # Find the samples that has < 1 CFU
-    a = {conc * m_sp < LOD}
+    CFU = conc * m_sp
+    a = {CFU < LOD}
     
     ## For samples whose CFU < 1, we assume the enrichment result follows a Bernoulli distribution with p = CFU
     ## For samples whose CFU >=1, its enrichment result would be positive (denoted as 1)
     b = vector(mode = "numeric", length = length(conc))
-    b[a] = rbinom(n = sum(a), size = 1, prob = conc[a])
+    b[a] = rbinom(n = sum(a), size = 1, prob = CFU[a])
     b[!a] = 1
     
     return(as.logical(b))
