@@ -47,8 +47,12 @@ sim_plan_strs_2d = function(n_sp, n_strata, by, xlim, ylim, radius){
   # by %in% c("row", "column", "2d")
   if(by == "2d"){
     
-    # Checkpoint
-    stopifnot(length(n_strata) == 2)
+    # Checkpoint: Make sure n_x and n_y are integers > 0
+    stopifnot(length(n_strata) == 2 & 
+                n_strata[1] == trunc(n_strata[1]) & 
+                n_strata[2] == trunc(n_strata[2]) &
+                n_strata[1] > 0 &
+                n_strata[2] > 0)
     if(n_sp %% (n_strata[1] * n_strata[2]) != 0){
       stop("n_sp is not a multiple of n_strata[1] * n_strata[2].")
     }

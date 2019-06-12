@@ -127,6 +127,11 @@ decision_cont_new = function(conc, LOD, case, m, M, m_sp, method_det){
   # Get the attribute sampling plan parameters
   a = get_attr_plan(case = case, m = m, M = M)
   
+  # Checkpoint: See if n in attribute plan matches n_sp:
+  if(a$n != length(conc)){
+    warning("n_sp does not match n from attribute plan!")
+  }
+  
   ## Convert concentration to binary result
   # For plating, it means whether a sample can be detected or not
   # For enrichment, it means whether a sample is positive or not
