@@ -60,12 +60,13 @@ conc2bin = function(method_det, LOD, conc, m_sp){
   } else {
     
     # Find the samples that has < 1 CFU
-    a = {conc * m_sp < LOD}
+    CFU = conc * m_sp
+    a = {CFU < LOD}
     
     ## For samples whose CFU < 1, we assume the enrichment result follows a Bernoulli distribution with p = CFU
     ## For samples whose CFU >=1, its enrichment result would be positive (denoted as 1)
     b = vector(mode = "numeric", length = length(conc))
-    b[a] = rbinom(n = sum(a), size = 1, prob = conc[a])
+    b[a] = rbinom(n = sum(a), size = 1, prob = CFU[a])
     b[!a] = 1
     
     return(as.logical(b))
@@ -126,6 +127,11 @@ decision_cont_new = function(conc, LOD, case, m, M, m_sp, method_det){
   
   # Get the attribute sampling plan parameters
   a = get_attr_plan(case = case, m = m, M = M)
+  
+  # Checkpoint: See if n in attribute plan matches n_sp:
+  if(a$n != length(conc)){
+    warning("n_sp does not match n from attribute plan!")
+  }
   
   ## Convert concentration to binary result
   # For plating, it means whether a sample can be detected or not

@@ -44,9 +44,37 @@ sim_plan_srs_2d = function(n_sp, xlim, ylim, radius){
 # Create a function that generates a stratified random sampling plan
 sim_plan_strs_2d = function(n_sp, n_strata, by, xlim, ylim, radius){
   
-  if (n_sp %% n_strata != 0) {
-    stop("n_sp is not a multiple of n_strata.")
+  # by %in% c("row", "column", "2d")
+  if(by == "2d"){
+    
+    # Checkpoint: Make sure n_x and n_y are integers > 0
+    stopifnot(length(n_strata) == 2 & 
+                n_strata[1] == trunc(n_strata[1]) & 
+                n_strata[2] == trunc(n_strata[2]) &
+                n_strata[1] > 0 &
+                n_strata[2] > 0)
+    if(n_sp %% (n_strata[1] * n_strata[2]) != 0){
+      stop("n_sp is not a multiple of n_strata[1] * n_strata[2].")
+    }
+    
+    n_x = n_strata[1]
+    n_y = n_strata[2]
+    
+    xbounds = calc_bounds_2d(xlim = xlim, ylim = ylim, n_strata = n_x, by = "column")
+    ybounds = calc_bounds_2d(xlim = xlim, ylim = ylim, n_strata = n_y, by = "row")
+    
+    x_sp = runif(n = n_sp, min = xbounds[1:length(xbounds) - 1], max = xbounds[2:length(xbounds)])
+    y_sp = runif(n = n_sp, min = ybounds[1:length(ybounds) - 1], max = ybounds[2:length(ybounds)])
+    
+    naming_sp_2d(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, radius = radius)
+    
   } else {
+    
+    # Checkpoint
+    if (n_sp %% n_strata != 0) {
+      stop("n_sp is not a multiple of n_strata.")
+    } 
+    
     bounds = calc_bounds_2d(xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
     
     if (by == "row") {
