@@ -75,8 +75,8 @@ calc_Paccept_n = function(data){
 }
 
 # Calculate P(detection) and P(acceptance) in the continuous case for a list of n lists
-metrics_cont_n = function(data, vals){
-  
+metrics_cont_n = function(data){
+
   # Checkpoint
   if(!is.null(names(data))){
     stop("Data should be a list of lists, not a single list.")
@@ -92,7 +92,7 @@ metrics_cont_n = function(data, vals){
   c = map_dbl(.x = data, .f = function(x) x$param[[1]])
   
   # Form output
-  d = cbind(a, Paccept = b$Paccept, param = rep(x = c, each = length(data)))
+  d = cbind(a, Paccept = b$Paccept, param = rep(x = c, each = nrow(a) / length(data)))
   
   return(d)
 }
