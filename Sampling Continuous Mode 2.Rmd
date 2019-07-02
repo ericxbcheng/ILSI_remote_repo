@@ -28,7 +28,6 @@ source(file = "Sampling_assay.R")
 source(file = "Sampling_outcome_3d.R")
 source(file = "Sampling_outcome.R")
 source(file = "Sampling_iteration.R")
-source(file = "Sampling_iteration_3d.R")
 source(file = "Sampling_tuning_3d.R")
 source(file = "Sampling_analysis.R")
 ```
@@ -87,8 +86,8 @@ y_lim = c(0, 10)
 lims = list(xlim = x_lim, ylim = y_lim)
 geom = "point"
 
-cont_level = c(7, 1)
-bg_level = 0.001
+cont_level = c(3, 1)
+bg_level = 0.00001
 spread = "continuous"
 spread_radius = 1
 LOC = 10^(-3)
@@ -105,7 +104,7 @@ case = 10
 m = 50
 M = 500
 m_sp = 25
-method_det = "plating"
+method_det = "enrichment"
 
 # Iteration
 n_iter = 10
@@ -114,7 +113,7 @@ n_iter = 10
 ArgList_default = list(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, 
                        cont_level = cont_level, method_sp = method_sp, n_sp = n_sp, n_strata = n_strata, 
                        by = by, LOC = LOC, fun = fun, case = case, m = m, M = M, m_sp = m_sp, 
-                       method_det = method_det, bg_level = bg_level, geom = geom, seed = seed)
+                       method_det = method_det, bg_level = bg_level, geom = geom)
 ```
 
 ###3. Set a parameter for tuning and a vector of values to tune over.
@@ -127,12 +126,15 @@ ArgList_default = list(n_contam = n_contam, lims = lims, spread = spread, spread
       
   * Some parameters have a finite range of values. Going beyond the allowable range may not produce an error, but it will definitely produce weird results.
   
-  * `seed` = the number of seeds.
+  * `seed` = the random seed for contamination locations
+  
+  * `n_seed` = the number of seeds.
   
 ```{r}
 param_name = "n_contam"
 vals = c(1,2,3,4,5)
-seed = 10
+seed = 5
+n_seed = 10
 ```
 
 ###4. Tune the parameter and produce the following results:
@@ -148,59 +150,15 @@ seed = 10
   * `param` = the tuning parameter
 
 ```{r, warning = FALSE}
-# ## This result contains data that can make 1 probability of detection and 1 probability of acceptance over 5 contamination scenarios
-# # Each scenario is repeated for n_iter times
-# result1 = tune_param2_new(val = vals, name = param_name, Args_default = ArgList_default, n_iter = n_iter)
-# str(result1)
-# 
-# ## This result contains data that can make n_iter probability of detection and n_iter probability of acceptance over 5 contamination scenarios
-# # There are 2 layers of iteration in this case.
-# # At layer 1, each scenario is repeated for n_iter times. At layer 2, layer 1 is repeated for n_iter times.
-# result2 = map(.x = 1:n_iter, .f = tune_param2_new, val = vals, 
-#               name = param_name, Args_default = ArgList_default, n_iter = n_iter)
-# str(result2, list.len = 5)
+# Iterate the model over tuning parameters. Each set of parameters is iterated n_seed x n_iter times
+results = map(.x = vals, .f = tune_param, Args = ArgList_default, n_seed = n_seed, n_iter = n_iter, param = param_name)
+str(results, list.len = 5)
 ```
 
-```{r}
-# This function makes a list of arguments from the default arguments
-make_tune_args = function(Args_default, param, val){
-  Args_new = Args_default
-  Args_new[[param]] = val
-  return(Args_new)
-}
-
-# Second layer iteration
-sim_iterate2 = function(seed, n_iter, Args){
-  
-  # Create a temporary argument list that includes the seed
-  temp = list2(.x = 1:seed, .f = gen_sim_outcome_new, !!!Args)
-  
-  # Create multiple sim_outcome_new() functions, each has a different seed
-  a = exec(.fn = map, !!!temp)
-  
-  # Iterate each sim_outcome_new() function for n_iter times
-  b = map(.x = a, .f = sim_iterate, n_iter = n_iter)
-  
-  return(b)
-}
-
-# Create a function that passes lists of arguments with tuning parameters to sim_iterate2()
-tune_param = function(Args, seed, n_iter, param, val){
-  
-  # Create a list of argument lists with tuning parameters
-  a = map(.x = val, .f = make_tune_args, param = param)
-  
-  # Pass each argument list to sim_iterate2()
-  b = map(.x = a, .f = sim_iterate2, seed = seed, n_iter = n_iter)
-}
-```
-
-
-5. Clean up values of probability of detection and probability of acceptance in `r n_iter` lists. Each list contains `r length(vals)` x `r n_iter` = `r length(vals) * n_iter` observations.
+5. Clean up values of probability of detection and probability of acceptance.
 
 ```{r, warning = FALSE}
-result3 = metrics_cont_n(result2)
-str(result3)
+results_cleaned = metrics_cont_n(results)
 ```
 
 # Visualization
@@ -211,6 +169,7 @@ str(result3)
 # Remove unnecessary arguments
 ArgList_vis = ArgList_default 
 ArgList_vis[c("case", "M", "m_sp", "method_det")] = NULL
+ArgList_vis$seed = rpois(n = 1, lambda = 5)
 
 # Produce intermediate outputs
 one_iteration = do.call(what = sim_intmed, args = ArgList_vis)
@@ -227,7 +186,7 @@ assay_draw(data = one_iteration[["contam_sp_xy"]] , M = M, m = m, m_sp = m_sp, m
 ###2. Visualize the probability of detection and acceptance. 
 
 ```{r}
-plot_metrics_cont(df = result3, xlab = "Number of contamination points")
+plot_metrics_cont(df = results_cleaned, xlab = "Number of contamination points")
 ```
 
 # Appendix
@@ -239,7 +198,7 @@ plot_metrics_cont(df = result3, xlab = "Number of contamination points")
 # These functions produce intermediate data
 contam_xy = sim_contam_new(n_contam = n_contam, lims = lims, spread = spread, 
                            spread_radius = spread_radius, cont_level = cont_level,
-                           geom = geom, seed = NULL)
+                           geom = geom, seed = seed)
 sp_xy = sim_plan_new(method_sp = method_sp, spread = spread, n_sp = n_sp, lims = lims, 
                      n_strata = n_strata, by = by, radius = NaN)
 dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy, spread = spread, 
@@ -256,20 +215,26 @@ words(x = decision)
 # This function produces the dataframe "contam_sp_xy" and the distance dataframe
 test1 = sim_intmed(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, 
                    method_sp = method_sp, n_sp = n_sp, n_strata = n_strata, by = by, LOC = LOC, 
-                   fun = fun, cont_level = cont_level, bg_level = bg_level, geom = geom)
+                   fun = fun, cont_level = cont_level, bg_level = bg_level, geom = geom, seed = seed)
 
 # This function produces two values: I_det and decision
 test2 = sim_outcome_new(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, 
                        method_sp = method_sp, n_sp = n_sp, n_strata = n_strata, by = by, LOC = LOC, 
                        fun = fun, cont_level = cont_level, bg_level = bg_level, case = case, m = m, 
-                       M = M, method_det = method_det, geom = geom, m_sp = m_sp)
+                       M = M, method_det = method_det, geom = geom, m_sp = m_sp, seed = seed)
 
 # This function produces a sim_outcome_new() function with all the input parameters loaded
 test3 = gen_sim_outcome_new(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, 
                        method_sp = method_sp, n_sp = n_sp, n_strata = n_strata, by = by, LOC = LOC, 
                        fun = fun, cont_level = cont_level, bg_level = bg_level, case = case, m = m, 
-                       M = M, method_det = method_det, geom = geom, m_sp = m_sp)
+                       M = M, method_det = method_det, geom = geom, m_sp = m_sp, seed = seed)
 
-# This function iterates the sim_outcome_new() for n_iter times
-test4 = sim_iterate(n_iter = n_iter, fun = test3)
+# First layer of iteration: This function iterates the sim_outcome_new() for n_iter times with the same contamination locations
+test4 = sim_iterate(n_iter = n_iter, Args = ArgList_default, seed = seed)
+
+# Second layer of iteration: Iterate the 1st layer with different seeds
+test5 = sim_iterate2(n_seed = n_seed, n_iter = n_iter, Args = ArgList_default)
+
+# Tuning layer
+test6 = tune_param(Args = ArgList_default, n_seed = n_seed, n_iter = n_iter, param = "n_contam", val = 100)
 ```
