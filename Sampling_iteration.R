@@ -1,44 +1,112 @@
-# Determine if we accept or reject a lot
-do_rej = function(decision){
-  # Check point
-  stopifnot(decision %in% 1:7)
-  
-  # Based on the lookup table, numbers 2,3,6 mean rejection while the others mean acceptance. 
-  # Convert the decision vector into a logical vector. 1 = rejection, 0 = acceptance.
-  a = {decision %in% c(2, 3, 6)}
-  
-  return(a)
+# A function factory
+gen_sim_outcome_new = function(n_contam, lims, spread, spread_radius, method_sp, n_sp, n_strata, 
+                               by, LOC, fun, case, m, M, m_sp, method_det, covar_mat, n_affected, dis_level, cont_level, 
+                               sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, diag, bg_level, geom, seed){
+  function(...){
+    sim_outcome_new(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat,
+                    n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, sp_radius = sp_radius,
+                    container = container, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, 
+                    tox = tox, Mc = Mc, m_sp = m_sp, method_det = method_det, diag = diag, spread_radius = spread_radius, 
+                    n_sp = n_sp, n_strata = n_strata, by = by, LOC = LOC, fun = fun, case = case, m = m, 
+                    M = M, cont_level = cont_level, bg_level = bg_level, geom = geom, seed = seed)
+  }
 }
 
-# Calculate the probability of rejection
-calc_Prej = function(decision){
+# Organize the results
+clean_new = function(spread, data, diag){
   
-  # Determine whether to reject or accept a lot
-  a = do_rej(decision = decision)
+  stopifnot(spread %in% c("continuous", "discrete"))
   
-  # Calculate the probability of rejection
-  b = mean(a)
+  if(spread == "discrete"){
+    clean_dis(data = data, diag = diag)
+    
+  } else {
+    clean_cont(data = data)
+    
+  }
+}
+
+# Organize the results for discrete case
+clean_dis = function(data, diag){
+  
+  # Convert the list into a vector
+  a = unlist(data)
+  
+  if(diag == FALSE){
+    
+    # Produce a sequence of c(1,2) for element extraction
+    ind = rep(x = c(1,2), times = length(data))
+    
+    c_true = a[ind == 1]
+    decision = a[ind == 2]
+    
+    # Output
+    return(list("c_true" = c_true, "decision" = decision))
+    
+  } else {
+    
+    # Produce a sequence of c(1,2,3,4,5) for element extraction
+    ind = rep(x = c(1,2,3,4,5), times = length(data))
+    
+    c_true = a[ind == 1]
+    decision = a[ind == 2]
+    mean_raw = a[ind == 3]
+    mean_work = a[ind == 4]
+    mean_test = a[ind == 5]
+    
+    # Output
+    return(list("c_true" = c_true, "decision" = decision, 
+                "mean_raw" = mean_raw, "mean_work" = mean_work, "mean_test" = mean_test))
+  }
+}
+
+# Organize the results for continuous case
+clean_cont = function(data){
+  # Convert the data into a vector
+  a = unlist(data)
+  
+  #Produce a sequence of indices for element extraction
+  ind = rep(x = c(1,2), times = length(data))
+  
+  # Extract elements respectively
+  I_det = a[ind == 1]
+  decision = a[ind == 2]
+  
+  # Output
+  b = list("I_det" = I_det, "decision" = decision)
   
   return(b)
 }
 
-# Calculate the probability of detection (whether any of the contamination is detected)
-calc_Pdet = function(I_det){
-  
-  # Check point
-  stopifnot(I_det %in% c(0,1))
-  
-  # Calculate the probability of detection
-  mean(I_det)
-  
-}
-
-# Create a function that can iterate the simulation for n_iter times
-sim_iterate = function(n_iter, fun){
+# First layer of iteration
+sim_iterate = function(n_iter, Args, seed){
   
   # Check point: Is n_iter >= 1?
   stopifnot(n_iter >= 1)
   
-  # Iterate the function for n_iter times
-  map(.x = 1:n_iter, .f = fun)
+  # Include seed into arguments list
+  Args$seed = seed
+  
+  # Generate a sim_outcome_new() with loaded arguments
+  a = do.call(what = gen_sim_outcome_new, args = Args)
+  
+  # Iterate that manufactured function for n_iter times
+  b = map(.x = 1:n_iter, .f = a)
+  
+  return(b)
+}
+
+# Second layer iteration
+sim_iterate2 = function(n_seed, n_iter, Args, ...){
+  
+  # Run the model for n_iter times under each seed
+  a = map(.x = 1:n_seed, .f = sim_iterate, Args = Args, n_iter = n_iter)
+  
+  # Clean the data
+  b = clean_new(spread = Args$spread, data = a, diag = ...)
+  
+  # Add a vector for the seeds
+  b$seed = rep(x = 1:n_seed, each = n_iter)
+  
+  return(b)
 }

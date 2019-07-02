@@ -172,12 +172,24 @@ gen_contam_spot = function(geom, n_contam, lims, spread, spread_radius){
 }
 
 # Simulate contamination in 2D (continuous) or 3D (discrete) scenarios
-sim_contam_new = function(geom, n_contam, lims, spread, covar, n_affected, spread_radius, cont_level, dis_level){
-  
+sim_contam_new = function(geom, n_contam, lims, spread, covar, n_affected, spread_radius, cont_level, dis_level, seed){
+
   # Checkpoints
   stopifnot(n_contam > 0 & length(lims) %in% c(2,3))
   stopifnot(spread %in% c("continuous", "discrete"))
   stopifnot(geom %in% c("point", "area"))
+  
+  # Maintain the old seed and reassign the current seed with the old seed when this function ends
+  # If there is no user-defined seed, the system-generated seed will be used
+  old <- .Random.seed
+  on.exit(expr = {.Random.seed <<- old})
+  
+  if(is.null(seed)){
+    seed = old
+    warning("Seed is not set. Contamination points won't be reproducible.")
+  } else {
+    set.seed(seed)
+  }
   
   # Create spot contaminations
   spot_temp = gen_contam_spot(geom = geom, n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius)

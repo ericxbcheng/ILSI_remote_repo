@@ -454,7 +454,7 @@ plot_metrics_cont = function(df, xlab){
   
   temp = df %>%
     group_by(param) %>%
-    gather(data = ., key = "Metric", value = "Value", -param) %>%
+    gather(data = ., key = "Metric", value = "Value", -c(param, seed)) %>%
     group_by(param, Metric) %>%
     summarise(q2.5 = stats::quantile(x = Value, probs = 0.025),
               med = median(Value), 
