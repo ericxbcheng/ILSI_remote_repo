@@ -184,7 +184,7 @@ sim_contam_new = function(geom, n_contam, lims, spread, covar, n_affected, sprea
   old <- .Random.seed
   on.exit(expr = {.Random.seed <<- old})
   
-  if(is.null(seed)){
+  if(is.na(seed)){
     seed = old
     warning("Seed is not set. Contamination points won't be reproducible.")
   } else {
