@@ -64,7 +64,8 @@ sim_plan_strs_2d = function(n_sp, n_strata, by, xlim, ylim, radius){
     ybounds = calc_bounds_2d(xlim = xlim, ylim = ylim, n_strata = n_y, by = "row")
     
     x_sp = runif(n = n_sp, min = xbounds[1:length(xbounds) - 1], max = xbounds[2:length(xbounds)])
-    y_sp = runif(n = n_sp, min = ybounds[1:length(ybounds) - 1], max = ybounds[2:length(ybounds)])
+    y_sp = runif(n = n_sp, min = ybounds[1:length(ybounds) - 1], max = ybounds[2:length(ybounds)]) %>%
+      sample(x = ., size = length(.), replace = FALSE)
     
     naming_sp_2d(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, radius = radius)
     

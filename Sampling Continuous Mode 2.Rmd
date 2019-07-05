@@ -94,15 +94,15 @@ LOC = 10^(-3)
 fun = "exp"
 
 # Sampling
-method_sp = "srs"
-n_sp = 10
-n_strata = 5
-by = "row"
+method_sp = "strs"
+n_sp = 64
+n_strata = c(2,2)
+by = "2d"
 
 # Assaying
-case = 10
-m = 50
-M = 500
+case = 12
+m = 0
+M = 0
 m_sp = 25
 method_det = "enrichment"
 
@@ -169,7 +169,7 @@ results_cleaned = metrics_cont_n(results)
 # Remove unnecessary arguments
 ArgList_vis = ArgList_default 
 ArgList_vis[c("case", "M", "m_sp", "method_det")] = NULL
-ArgList_vis$seed = rpois(n = 1, lambda = 5)
+ArgList_vis$seed = NaN
 
 # Produce intermediate outputs
 one_iteration = do.call(what = sim_intmed, args = ArgList_vis)
