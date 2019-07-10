@@ -1,12 +1,14 @@
 # ILSI Remote Repository
-This is a repository for the ILSI Sampling Project created and maintained by Xianbin (Eric) Cheng. 
+This is a repository created and maintained by Xianbin (Eric) Cheng. It is built for a project supported by International Life Science Institute North America (ILSI N.A.) Food Microbiology Committee under the title "Simulating Larg-Number Bulk-Product Sampling to Improve Food Safety Sampling Plans". 
 
-The simulation model includes three modules: contamination simulation, sampling plan simulation, and sampling evaluation. 
+## Objective
+We are looking to build a model that takes various input parameters that are relevant to food safety scenarios and returns metrics that are associated with food safety risk. 
 
-In the contamination simulation module, we generate random contamination spots with certain level of contamination and simulate the spreading. 
-		*With discrete spread, the contamination points are scattered around the contamination spots in a bivariate normal distribution. The level of contamination of all the points follows a log normal distribution. 
-		*With continuous spread, a circular area around the contamination spots is marked as the contamination zone and its level of contamination is defined by a decay function. The further away from the spot, the lower the contamination level.
+## Introduction
+The simulation model has 2 modes: continuous mode and discrete mode. The continuous mode is intended for sampling in a 2D field whereas the discrete mode is designed for sampling in a 3D space. As the project is based on food safety scenarios, all sampling strategies and sampling plans used in the simulation are in alignment with US food safety regulations, like attribute sampling plans designated by ICMSF and mycotoxin sampling protocols designated by USDA.
 
-In the sampling plan simulation module, we create three types of sampling plans: simple random sampling (SRS), stratified random sampling (STRS), and systematic sampling (SS).
+## How to use
+Please refer to the WORD document for instruction for downloading the target version. Then, choose the right R Markdown file to run the simulation.
 
-In the sampling evaluation module, we overlay the sampling plan onto the contaminated field and calculate the rate of detection.
+## Caution
+The simulation model is under development. There might be unexpected bugs when running the simulation.
