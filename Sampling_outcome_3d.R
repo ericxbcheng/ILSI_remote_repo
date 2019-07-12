@@ -18,7 +18,7 @@ sim_intmed_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_lev
                                   spread = spread, sp_radius = sp_radius, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg)
   
   # Create work portion and test portion
-  sample_dis = get_sample_dis(data = contam_sp_xy$raw$c_pooled, container = container, m_kbar = m_kbar, tox = tox)
+  sample_dis = get_sample_dis(data = contam_sp_xy$raw, container = container, m_kbar = m_kbar, tox = tox)
   
   return(list(contam_sp_xy = contam_sp_xy, dist = dist_contam_sp, sample = sample_dis))
 }
@@ -97,7 +97,7 @@ sim_outcome_cont = function(n_contam, lims, spread, spread_radius, cont_level, b
 
 # Outcome simulation for discrete case
 sim_outcome_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_level, 
-                           method_sp, sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, method_det, diag, seed){
+                           method_sp, sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, method_det, verbose = FALSE, seed){
   
   # Create intermediate datasets
   a = sim_intmed(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat, 
@@ -105,7 +105,7 @@ sim_outcome_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_le
                  container = container, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, tox = tox, seed = seed)
   
   # Extract intermediate datasets
-  raw = a$contam_sp_xy$raw$c_pooled
+  raw = a$contam_sp_xy$raw
   c_true = a$contam_sp_xy$c_true
   work = a$sample$work
   test = a$sample$test
@@ -114,10 +114,10 @@ sim_outcome_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_le
   decision = lot_decision_new(data = test, Mc = Mc, spread = spread, method_det = method_det)
   
   # Create diagnostics option
-  if(diag == FALSE){
+  if(verbose == FALSE){
     
     # Output
-    list(c_true, decision)
+    return(list(c_true, decision))
     
   } else {
     
@@ -127,20 +127,20 @@ sim_outcome_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_le
     mean_test = mean(test)
     
     # output
-    list(c_true, decision, mean_raw, mean_work, mean_test)
+    return(list(c_true, decision, mean_raw, mean_work, mean_test))
   }
 }
 
 # Outcome simulation
 sim_outcome_new = function(n_contam, lims, spread, spread_radius, method_sp, n_sp, n_strata, 
                        by, LOC, fun, case, m, M, m_sp, method_det, covar_mat, n_affected, dis_level, cont_level,
-                       bg_level, sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, diag, geom, seed){
+                       bg_level, sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, verbose = FALSE, geom, seed){
   
   if(spread == "discrete"){
     sim_outcome_dis(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat, 
                     n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
                     sp_radius = sp_radius, container = container, L = L, rho = rho, m_kbar = m_kbar, 
-                    conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, diag = diag, seed = seed)
+                    conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, verbose = verbose, seed = seed)
     
   } else {
     sim_outcome_cont(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, cont_level = cont_level,
