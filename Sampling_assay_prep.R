@@ -264,9 +264,9 @@ get_pooled_sample = function(df_contam, df_sp, dist, method_sp, L, rho, m_kbar, 
   c_pos = kcap[["source_level"]]
   c_neg = gen_conc_neg(n = num_neg, conc_neg = conc_neg)
   
-  c_pooled = c(c_pos, c_neg)
-  
-  return(list(kcap = kcap, c_pooled = c_pooled))
+  raw = c(c_pos, c_neg)
+
+  return(raw)
 }
 
 # Calculate true contamination level in the container

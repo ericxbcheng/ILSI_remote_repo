@@ -472,3 +472,23 @@ plot_metrics_cont = function(df, xlab){
     theme(legend.position = "top")
 }
 
+# Plot P(acceptance) for discrete case
+plot_metrics_dis = function(df, xlab){
+  
+  temp = df %>%
+    gather(data = ., key = "Metric", value = "Value", -c(seed, P_rej, sens, spec, param)) %>%
+    group_by(param, Metric) %>%
+    summarise(q2.5 = stats::quantile(x = Value, probs = 0.025),
+              med = median(Value), 
+              q97.5 = stats::quantile(x = Value, probs = 0.975))
+  
+  ggplot(data = temp) +
+    geom_ribbon(aes(x = param, ymin = q2.5, ymax = q97.5), alpha = 0.3) +
+    geom_line(aes(x = param, y = med)) +
+    geom_point(aes(x = param, y = med)) +
+    scale_x_log10(breaks = temp$param) +
+    coord_cartesian(ylim = c(0,1)) +
+    labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") +
+    theme_bw() +
+    theme(legend.position = "top")
+}

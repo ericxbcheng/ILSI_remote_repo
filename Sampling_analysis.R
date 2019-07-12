@@ -97,7 +97,7 @@ metrics_cont_n = function(data){
   return(d)
 }
 
-# Calculate metrics for 3D
+# Calculate sensitivity and specificity
 calc_metrics = function(c_true, decision, Mc){
   
   # Determine whether a lot is truly contaminated
@@ -115,5 +115,58 @@ calc_metrics = function(c_true, decision, Mc){
   sens = conf_mat[1,1] / sum(conf_mat[1, ])
   spec = conf_mat[2,2] / sum(conf_mat[2, ])
   
-  return(c(sens = sens, spec = spec))
+  return(c(sens, spec))
+}
+
+# Calculate metrics for iterations under each seed
+calc_metrics_one = function(data, Mc){
+  a = split(x = data$c_true, f = data$seed)
+  b = split(x = data$decision, f = data$seed)
+  
+  map2(.x = a, .y = b, .f = calc_metrics, Mc = Mc) %>%
+    unlist()
+}
+
+# Calculate metrics for multiple lists
+calc_metrics_n = function(data, Mc){
+  
+  # Checkpoint
+  if(!is.null(names(data))){
+    stop("Data should be a list of lists, not a single list.")
+  }
+  
+  a = map(.x = data, .f = calc_metrics_one, Mc = Mc) %>%
+        unlist()
+  
+  # Extract sensitivity and specificity and seed
+  ind = rep(x = c(1,2), length.out = length(a))
+  sens = a[ind == 1]
+  spec = a[ind == 2]
+  
+  b = tibble(sens = sens, 
+             spec = spec)
+  
+  return(b)
+}
+
+metrics_dis_n = function(data, Mc){
+  
+  # Checkpoint
+  if(!is.null(names(data))){
+    stop("Data should be a list of lists, not a single list.")
+  }
+  
+  # Get Paccept
+  a = calc_Paccept_n(data = data)
+  
+  # Get metrics
+  b = calc_metrics_n(data = data, Mc = Mc)
+  
+  # Get parameter values
+  c = map_dbl(.x = data, .f = function(x) x$param[[1]])
+  
+  # Form output
+  d = cbind(a, b, param = rep(x = c, each = nrow(a) / length(data)))
+  
+  return(d)
 }

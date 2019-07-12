@@ -153,8 +153,8 @@ rm_outlier = function(df, lims){
   }
 }
 
-# Generate contamination spots for either point-source or area-based scenario
-gen_contam_spot = function(geom, n_contam, lims, spread, spread_radius){
+# Generate contamination spots for either point-source or area-based scenario in continuous case
+gen_contam_cont = function(geom, n_contam, lims, spread, spread_radius){
   if(geom == "point"){
     spot_coord = point_contam(n_contam = n_contam, lims = lims, spread = spread) %>%
       as.data.frame()
@@ -171,13 +171,18 @@ gen_contam_spot = function(geom, n_contam, lims, spread, spread_radius){
   return(list(spot_coord = spot_coord, n_contam = n_contam, spread_radius = spread_radius))
 }
 
+# Created contamination spots for discrete case
+gen_contam_dis = function(n_contam, lims, spread){
+  spot_coord = point_contam(n_contam = n_contam, lims = lims, spread = spread) %>%
+    as.data.frame()
+  return(list(spot_coord = spot_coord, n_contam = n_contam))
+}
+
 # Simulate contamination in 2D (continuous) or 3D (discrete) scenarios
 sim_contam_new = function(geom, n_contam, lims, spread, covar, n_affected, spread_radius, cont_level, dis_level, seed){
 
   # Checkpoints
-  stopifnot(n_contam > 0 & length(lims) %in% c(2,3))
-  stopifnot(spread %in% c("continuous", "discrete"))
-  stopifnot(geom %in% c("point", "area"))
+  stopifnot(n_contam > 0 & spread %in% c("continuous", "discrete"))
   
   # Maintain the old seed and reassign the current seed with the old seed when this function ends
   # If there is no user-defined seed, the system-generated seed will be used
@@ -191,22 +196,27 @@ sim_contam_new = function(geom, n_contam, lims, spread, covar, n_affected, sprea
     set.seed(seed)
   }
   
-  # Create spot contaminations
-  spot_temp = gen_contam_spot(geom = geom, n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius)
-  
-  # Generate all the data based on the spread type  
+  # Create contamination for either continuous or discrete case
   if(spread == "continuous"){
     
-    stopifnot(spread_radius >= 0)
+    #check point
+    stopifnot(geom %in% c("point", "area") & length(lims) == 2 & spread_radius >= 0)
     
+    spot_temp = gen_contam_cont(geom = geom, n_contam = n_contam, lims = lims, 
+                                  spread = spread, spread_radius = spread_radius)
     df = contam_cont(spot_coord = spot_temp$spot_coord, n_contam = spot_temp$n_contam, spread = spread, 
                      spread_radius = spot_temp$spread_radius, cont_level = cont_level)
+    
   } else {
     
-    stopifnot(n_affected >= 0)
+    # Check point
+    stopifnot(length(lims) == 3 & n_affected >= 0)
     
-    df = contam_dis(spot_coord = spot_coord, n_contam = n_contam, n_affected = n_affected, 
-                    covar = covar, spread = spread, dis_level = dis_level)
+    spot_temp = gen_contam_dis(n_contam = n_contam, lims = lims, spread = spread)
+    
+    df = contam_dis(spot_coord = spot_temp$spot_coord, n_contam = spot_temp$n_contam, n_affected = n_affected, 
+                    covar = covar, spread = spread, dis_level = dis_level)  
+      
   }
   
   # Remove outliers

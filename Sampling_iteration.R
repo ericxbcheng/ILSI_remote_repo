@@ -1,24 +1,24 @@
 # A function factory
 gen_sim_outcome_new = function(n_contam, lims, spread, spread_radius, method_sp, n_sp, n_strata, 
                                by, LOC, fun, case, m, M, m_sp, method_det, covar_mat, n_affected, dis_level, cont_level, 
-                               sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, diag, bg_level, geom, seed){
+                               sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, verbose = FALSE, bg_level, geom, seed){
   function(...){
     sim_outcome_new(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat,
                     n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, sp_radius = sp_radius,
                     container = container, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, 
-                    tox = tox, Mc = Mc, m_sp = m_sp, method_det = method_det, diag = diag, spread_radius = spread_radius, 
+                    tox = tox, Mc = Mc, m_sp = m_sp, method_det = method_det, verbose = verbose, spread_radius = spread_radius, 
                     n_sp = n_sp, n_strata = n_strata, by = by, LOC = LOC, fun = fun, case = case, m = m, 
                     M = M, cont_level = cont_level, bg_level = bg_level, geom = geom, seed = seed)
   }
 }
 
 # Organize the results
-clean_new = function(spread, data, diag){
+clean_new = function(spread, data, verbose = FALSE){
   
   stopifnot(spread %in% c("continuous", "discrete"))
   
   if(spread == "discrete"){
-    clean_dis(data = data, diag = diag)
+    clean_dis(data = data, verbose = verbose)
     
   } else {
     clean_cont(data = data)
@@ -27,12 +27,12 @@ clean_new = function(spread, data, diag){
 }
 
 # Organize the results for discrete case
-clean_dis = function(data, diag){
+clean_dis = function(data, verbose = FALSE){
   
   # Convert the list into a vector
   a = unlist(data)
   
-  if(diag == FALSE){
+  if(verbose == FALSE){
     
     # Produce a sequence of c(1,2) for element extraction
     ind = rep(x = c(1,2), times = length(data))
@@ -103,7 +103,7 @@ sim_iterate2 = function(n_seed, n_iter, Args, ...){
   a = map(.x = 1:n_seed, .f = sim_iterate, Args = Args, n_iter = n_iter)
   
   # Clean the data
-  b = clean_new(spread = Args$spread, data = a, diag = ...)
+  b = clean_new(spread = Args$spread, data = a, verbose = Args$verbose)
   
   # Add a vector for the seeds
   b$seed = rep(x = 1:n_seed, each = n_iter)
