@@ -328,16 +328,22 @@ assay_draw = function(data, M, m, m_sp, Mc, method_det, spread, case){
 }
 
 # Draw the distribution of mycotoxin in the discrete case
-sample_dist = function(data, Mc){
+sample_dist = function(raw, work, test, Mc){
   
-  temp = tibble(Conc = data) %>%
-    mutate(class = ifelse(test = Conc < Mc, yes = "L", no = "H"))
+  temp = tibble(Conc = c(raw, work, test),
+                Type = c(
+                  rep("raw", times = length(raw)),
+                  rep("work", times = length(work)),
+                  rep("test", times = length(test))
+                )) 
   
-  ggplot(data = temp, aes(x = Conc, fill = class)) +
-    geom_histogram(bins = 50) +
-    scale_x_log10() +
-    scale_y_sqrt() +
-    labs(x = "Concentration (ppb)", y = "Number of kernels") +
+  temp$Type = factor(x = temp$Type, levels = c("raw", "work", "test"))
+  
+  ggplot(data = temp) +
+    geom_boxplot(aes(x = Type, y = Conc, group = Type)) +
+    geom_hline(yintercept = Mc, color = "red") +
+    scale_y_log10() +
+    labs(x = "Sample type", y = "Concentration (ppb)") +
     theme_bw()
 }
 
