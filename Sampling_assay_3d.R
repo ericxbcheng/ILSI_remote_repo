@@ -48,15 +48,44 @@ sample_divider = function(data, container, m_kbar, tox = "AF"){
          message("Under construction"))
 }
 
+# Kernel grinder: homogeneity ranges from 0 to 1
+grinder = function(data, homogeneity){
+  
+  # Checkpoint
+  stopifnot(homogeneity >= 0 & homogeneity <= 1)
+  if(homogeneity < 0.6){
+    warning("Homogeneity lower than FGIS regulation (0.6).")
+  }
+  
+  # Grind the kernels based on homogeneity
+  if(homogeneity == 0){
+    return(data)
+    
+  } else {
+    
+    # Determine window length based on homogeneity
+    n = length(data) * homogeneity
+    ground = movingaves(x = data, window = n, integer = FALSE, max = FALSE)
+    return(ground)
+  }
+}
+
 # Get the work portion for aflatoxin
 get_work_portion_af = function(data, m_kbar){
   
   # Find the number of kernels that constitute 500g work portion
   k_num = round(500 / m_kbar)
   
-  a = sample(x = data, size = k_num, replace = FALSE)
-  
-  return(a)
+  # If ground kernel vector's length is < k_num, use sampling with replacement
+  if(length(data) >= k_num){
+    a = sample(x = data, size = k_num, replace = FALSE)
+    return(a)
+    
+  } else {
+    a = sample(x = data, size = k_num, replace = TRUE)
+    return(a) 
+    
+  }
 }
 
 # Get the work portion in general
@@ -82,13 +111,16 @@ get_test_portion = function(data, m_kbar){
 }
 
 # Wrapper function for getting work and test samples from raw data in the discrete case
-get_sample_dis = function(data, container, m_kbar, tox){
+get_sample_dis = function(data, container, m_kbar, tox, homogeneity){
   
   # Get raw sample that meet the sample size requirements
   #raw = sample_divider(data = a, container = container, m_kbar = m_kbar, tox = tox)
   
+  # Get ground raw sample
+  ground = grinder(data = data, homogeneity = homogeneity)
+  
   # get work portion
-  work = get_work_portion(data = data, m_kbar = m_kbar, tox = tox)
+  work = get_work_portion(data = ground, m_kbar = m_kbar, tox = tox)
   
   # get test portion
   test = get_test_portion(data = work, m_kbar = m_kbar)
