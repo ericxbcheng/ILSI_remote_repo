@@ -53,6 +53,8 @@ source(file = "Sampling_analysis.R")
       + Depend on the container type. Remember to convert it to meters. 
   * `rho` = average density of a kernel (g/cm3)
   * `m_kbar` = average mass of a kernel (g)
+  * `homogeneity` = degree to which kernels are ground
+      + FGIS requires at least 60% of the ground sample passes a U.S. Standard No. 20 sieve
   * `container` = container of corn
       + "truck"
           - `depth_ft` = the depth of corn inside the truck.
@@ -110,6 +112,7 @@ sp_radius = d / 2
 L = get_Lprobe(container = container, lims = lims)
 m_kbar = 0.3 
 rho = 1.28
+homogeneity = 0.6
 
 #n_sp = 5
 #depth_ft = 5
@@ -128,7 +131,7 @@ n_iter = 10
 ArgList_default = list(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat,
                        n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
                        sp_radius = sp_radius,container = container, L = L, rho = rho, m_kbar = m_kbar, 
-                       conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, verbose = FALSE)
+                       conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, verbose = FALSE, homogeneity = homogeneity)
 ```
 
 ###3. Set a parameter for tuning and a vector of values to tune over.
@@ -147,7 +150,7 @@ ArgList_default = list(n_contam = n_contam, lims = lims, spread = spread, covar_
   
 ```{r}
 param_name = "n_contam"
-vals = c(50, 100, 200)
+vals = c(100, 1000, 5000)
 seed = 5
 n_seed = 10
 ```
@@ -193,16 +196,14 @@ one_iteration = do.call(what = sim_intmed, args = ArgList_vis)
 ```{r, eval = FALSE, warning = FALSE, echo = FALSE, out.width = "50%"}
 overlay_draw(method_sp = method_sp, data = one_iteration[["contam_sp_xy"]]$combined , spread = spread, xlim = lims$xlim, ylim = lims$ylim)
 overlay_draw_probe(data = one_iteration[["contam_sp_xy"]]$combined, lims = lims, L = L)
-sample_dist(data = one_iteration$contam_sp_xy$raw, Mc = Mc)
-sample_dist(data = one_iteration$sample$work, Mc = Mc)
-sample_dist(data = one_iteration$sample$test, Mc = Mc)
+sample_dist(raw = one_iteration$contam_sp_xy$raw, work = one_iteration$sample$work, test = one_iteration$sample$test, Mc = Mc)
 assay_draw(data = one_iteration$sample$test, Mc = Mc, method_det = method_det, spread = spread)
 ```
 
 ###2. Visualize the probability of detection and acceptance. 
 
 ```{r}
-plot_metrics_cont(df = results_cleaned, xlab = "Number of contamination points")
+plot_metrics_dis(df = results_cleaned, xlab = "Number of contamination points")
 ```
 
 # Appendix
@@ -219,7 +220,7 @@ sp_xy = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims,
 dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy, spread = spread, 
                            method_sp = method_sp)
 contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, df_sp = sp_xy, dist = dist_contam_sp, spread = spread, L = L, rho = rho, m_kbar = m_kbar, sp_radius = sp_radius, conc_neg = conc_neg)
-sample_dis = get_sample_dis(data = contam_sp_xy$raw, container = container, m_kbar = m_kbar, tox = tox)
+sample_dis = get_sample_dis(data = contam_sp_xy$raw, container = container, m_kbar = m_kbar, tox = tox, homogeneity = homogeneity)
 decision = lot_decision_new(data = sample_dis$test, Mc = Mc, spread = spread, method_det = method_det)
 words(x = decision)
 
