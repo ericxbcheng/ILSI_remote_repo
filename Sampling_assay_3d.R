@@ -65,7 +65,7 @@ grinder = function(data, homogeneity){
     
     # Determine window length based on homogeneity
     n = length(data) * homogeneity
-    ground = roll_mean(x = data, n = n, fill = mean(data))
+    ground = runmean(x = data, k = n, alg = "fast", endrule = "constant", align = "right")
     return(ground)
   }
 }
