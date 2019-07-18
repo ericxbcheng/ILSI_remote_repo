@@ -65,7 +65,7 @@ grinder = function(data, homogeneity){
     
     # Determine window length based on homogeneity
     n = length(data) * homogeneity
-    ground = movingaves(x = data, window = n, integer = FALSE, max = FALSE)
+    ground = roll_mean(x = data, n = n, fill = mean(data))
     return(ground)
   }
 }
@@ -76,16 +76,8 @@ get_work_portion_af = function(data, m_kbar){
   # Find the number of kernels that constitute 500g work portion
   k_num = round(500 / m_kbar)
   
-  # If ground kernel vector's length is < k_num, use sampling with replacement
-  if(length(data) >= k_num){
-    a = sample(x = data, size = k_num, replace = FALSE)
-    return(a)
-    
-  } else {
-    a = sample(x = data, size = k_num, replace = TRUE)
-    return(a) 
-    
-  }
+  a = sample(x = data, size = k_num, replace = FALSE)
+  return(a)
 }
 
 # Get the work portion in general
