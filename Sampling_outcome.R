@@ -1,5 +1,3 @@
-
-
 # Create a function to idenfity points that falls within a certain distance from another point
 ## Determine which sample points fall within the spread_radius in the continuous spread case.
 calc_cover_cont = function(df_dist, r){
@@ -32,5 +30,3 @@ calc_cover = function(df_dist, spread_radius, sp_radius, spread, geom, df_contam
     stop("Unknown spread type.")
   }
 }
-
-
