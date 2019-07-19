@@ -87,8 +87,6 @@ contam_level_draw = function(dimension, method, spread_radius, LOC, df_contam, x
   }
 }
 
-
-
 # Sampling plan plots
 
 ## Simple random sampling
@@ -344,114 +342,6 @@ sample_dist = function(raw, work, test, Mc){
     geom_hline(yintercept = Mc, color = "red") +
     scale_y_log10() +
     labs(x = "Sample type", y = "Concentration (ppb)") +
-    theme_bw()
-}
-
-# Plot the ROD for multiple values of a single parameter
-plot_ROD = function(data, param_name){
-  
-  temp = data.frame(param = data$param, ROD = data$ROD)
-  
-  ggplot(data = temp, aes(x = param, y = ROD, group = param)) +
-    stat_boxplot(geom = "errorbar") +
-    geom_boxplot() +
-    labs(x = param_name, y = "Rate of detection (ROD)") +
-    theme_bw()
-}
-
-# Plot the detection probability for multiple values of a single parameter
-plot_Pdet = function(data, param_name){
-  
-  temp = split(x = data$I_det, f = data$param) %>%
-    map(.x = ., .f = calc_Pdet) %>%
-    unlist() %>%
-    data.frame(param = as.integer(names(.)), Pdet = .)
-  
-  ggplot(data = temp, aes(x = param, y = Pdet)) +
-    geom_line() +
-    geom_point() +
-    scale_x_continuous(breaks = temp$param) +
-    labs(x = param_name, y = "Detection probability") +
-    theme_bw()
-}
-
-# Plot the Probability of acceptance for multiple values of a single parameter
-plot_Paccept = function(data, param_name){
-  
-  temp = split(x = data$decision, f = data$param) %>% 
-    map(.x = ., .f = calc_Prej) %>%
-    unlist() %>%
-    data.frame(param = as.integer(names(.)), Prej = .) %>%
-    mutate(Paccept = 1 - Prej)
-  
-  ggplot(data = temp, aes(x = param, y = Paccept)) +
-    geom_line() +
-    geom_point() +
-    scale_x_continuous(breaks = temp$param) +
-    labs(x = param_name, y = "P(accept)") +
-    theme_bw()
-}
-
-# Plot the mean detection probability for multiple values of a single parameter
-plot_mean_Pdet = function(data, param_name){
-  temp = map(.x = data, .f = calc_Pdet2) %>%
-    unlist() %>%
-    data.frame(param = as.integer(names(.)), P_det = .)
-  
-  ggplot(data = temp) +
-    geom_boxplot(aes(x = param, y = P_det, group = param)) +
-    scale_x_continuous(breaks = temp$param) +
-    coord_cartesian(ylim = c(0, 1)) +
-    labs(x = param_name, y = "Mean detection probability") +
-    theme_bw()
-}
-
-# Plot the mean probability of acceptance for multiple values of a single parameter
-plot_mean_Paccept = function(data, param_name){
-  temp = map(.x = data, .f = calc_Prej2) %>%
-    unlist() %>%
-    data.frame(param = as.integer(names(.)), P_rej = .) %>%
-    mutate(Paccept = 1 - P_rej)
-  
-  ggplot(data = temp) +
-    geom_boxplot(aes(x = param, y = Paccept, group = param)) +
-    scale_x_continuous(breaks = temp$param) +
-    coord_cartesian(ylim = c(0, 1)) +
-    labs(x = param_name, y = "Mean probability of acceptance") +
-    theme_bw()
-}
-
-# Plot the mean rate of detection for multiple values of a single parameter 
-plot_mean_ROD = function(data, param_name){
-  temp = map(.x = data, .f = calc_mean_ROD) %>%
-    unlist() %>%
-    data.frame(param = as.integer(names(.)), mean_ROD = .)
-  
-  ggplot(data = temp) +
-    geom_boxplot(aes(x = param, y = mean_ROD, group = param)) +
-    scale_x_continuous(breaks = temp$param) +
-    coord_cartesian(ylim = c(0, 1)) +
-    labs(x = param_name, y = "Mean rate of detection") +
-    theme_bw()
-}
-
-# Plot probability of detection for different values of the tuning parameter and different sampling strategies
-plot_mean_Pdet2 = function(data, param_name){
-  ggplot(data = data, aes(x = param, y = P_det, group = interaction(param, method_sp))) +
-    geom_boxplot(aes(color = method_sp)) +
-    scale_x_continuous(breaks = data$param) +
-    coord_cartesian(ylim = c(0,1)) +
-    labs(x = param_name, y = "Probability of detection") +
-    theme_bw()
-}
-
-# Plot probability of acceptance for different values of the tuning parameter and different sampling strategies
-plot_mean_Paccept2 = function(data, param_name){
-  ggplot(data = data, aes(x = param, y = Paccept, group = interaction(param, method_sp))) +
-    geom_boxplot(aes(color = method_sp)) +
-    scale_x_continuous(breaks = data$param) +
-    coord_cartesian(ylim = c(0,1)) +
-    labs(x = param_name, y = "Probability of acceptance") +
     theme_bw()
 }
 
