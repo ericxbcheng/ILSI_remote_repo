@@ -92,13 +92,15 @@ conc_neg = rpert(n = 10^6, min = 0, mode = 0.7, max = 19.99, shape = 80)
 
 ```{r}
 ## Contamination
-n_contam = 100
+#n_contam = 100
+c_hat = 10
 x_lim = c(0, 3)
 y_lim = c(0, 2)
 z_lim = c(0, 1.5)
 lims = list(xlim = x_lim, ylim = y_lim, zlim = z_lim)
 
-dis_level = c("mode"= 40000, "lb" = 20)
+dis_level = list(type = "constant", args = 40000)
+#dis_level = list(type = "Gamma", args = list("mode"= 40000, "lb" = 20))
 spread = "discrete"
 n_affected = 0
 covar_mat = make_covar_mat(spread = spread, varx = 0.04, vary = 0.04, varz = 0.04, 
@@ -128,7 +130,7 @@ Mc = 20
 n_iter = 10
 
 # Wrap arguments into one single list
-ArgList_default = list(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat,
+ArgList_default = list(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat,
                        n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
                        sp_radius = sp_radius,container = container, L = L, rho = rho, m_kbar = m_kbar, 
                        conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, verbose = FALSE, homogeneity = homogeneity)
@@ -213,7 +215,8 @@ plot_metrics_dis(df = results_cleaned, xlab = "Number of contamination points")
   
 ```{r, eval = FALSE}
 # These functions produce intermediate data
-contam_xy = sim_contam_new(n_contam = n_contam, lims = lims, spread = spread, n_affected = n_affected, 
+contam_xy = sim_contam_new(c_hat = c_hat, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, 
+                           lims = lims, spread = spread, n_affected = n_affected, 
                            covar = covar_mat, dis_level = dis_level, seed = seed)
 sp_xy = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, 
                      radius = sp_radius, container = container)
