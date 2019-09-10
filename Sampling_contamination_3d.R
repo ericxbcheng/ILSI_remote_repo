@@ -10,47 +10,6 @@ make_covar_mat = function(spread, varx, vary, varz, covxy, covxz, covyz){
   }
 }
 
-# Continuous contamination
-contam_cont = function(spot_coord, n_contam, spread, spread_radius, cont_level){
-  
-  # Create labels for spots
-  label = c(rep("spot", times = n_contam))
-  
-  df = naming_total(n_contam = n_contam, spot_coord = spot_coord, spread_coord = NULL, spread = spread,
-                    label = label, spread_radius = spread_radius, cont_level = cont_level)
-  
-  return(df)
-}
-
-# Discrete contamination
-contam_dis = function(spot_coord, n_contam, n_affected, covar, spread, dis_level){
-  
-  # Create labels for spots and spreads
-  label = c(rep("spot", times = n_contam), rep("spread", times = n_contam * n_affected))
-  
-  if(n_affected == 0){
-    
-    df = naming_total(spot_coord = spot_coord, spread_coord = NULL, spread = spread, 
-                      label = label, spread_radius = NaN, dis_level = dis_level, n_contam = n_contam)
-  } else {
-
-    # Checkpoint: make sure the covariance matrix is 3 by 3
-    stopifnot(sum(dim(covar)) == 6)
-    
-    # Create spread contaminations. Use multivariate normal distribution.
-    spread_coord = apply(X = spot_coord, MARGIN = 1, FUN = mvrnorm, n = n_affected, Sigma = covar) %>%
-      split(x = ., f = col(.)) %>%
-      map(.x = ., .f = function(x) {matrix(x, ncol = ncol(spot_coord))}) %>%
-      do.call(what = rbind, args = .) %>%
-      as.data.frame(., stringsAsFactors = FALSE) %>%
-      naming_spread(df = ., spot = n_contam, spread = n_affected)
-    
-    df = naming_total(spot_coord = spot_coord, spread_coord = spread_coord, n_contam = n_contam, spread = spread, 
-                      label = label, spread_radius = NaN, dis_level = dis_level)
-  }
-  return(df)
-}
-
 # Create point-source contamination spots
 point_contam = function(n_contam, lims, spread){
   
@@ -88,6 +47,29 @@ area_contam = function(lims){
   matrix(data = c(x, y), ncol = 2)
 }
 
+# A function that returns a vector of concentrations for contaminated kernels
+# param must a list
+f_dis_level = function(n, param){
+  
+  # Check point
+  stopifnot(param[["type"]] %in% c("constant", "Gamma"))
+  
+  if(param[["type"]] == "constant"){
+    
+    # concentrations are constant
+    stopifnot(length(param[["args"]]) == 1)
+    return(as.numeric(param[["args"]]))
+    
+  } else {
+    
+    # concentrations follow 20 + Gamma(alpha = 2, mode)
+    stopifnot(length(param[["args"]]) == 2)
+    a = rgamma_lim(n = n, alpha = 2, mode = param[["args"]][["mode"]], lb = param[["args"]][["lb"]])
+    return(a)
+    
+  }
+}
+
 # Combine spots and spreads, create contamination levels, and add headers.
 naming_total = function(spot_coord, spread_coord, n_contam, spread, label, spread_radius, cont_level, dis_level){
   
@@ -116,7 +98,7 @@ naming_total = function(spot_coord, spread_coord, n_contam, spread, label, sprea
   } else {
     df3 = df2 %>%
       mutate(cont_level = NaN,
-             dis_level = rgamma_lim(n = nrow(.), alpha = 2, mode = dis_level[["mode"]], lb = dis_level[["lb"]], ub = NULL))
+             dis_level = f_dis_level(n = nrow(.), param = dis_level))
   }
   
   return(df3)
@@ -171,6 +153,39 @@ gen_contam_cont = function(geom, n_contam, lims, spread, spread_radius){
   return(list(spot_coord = spot_coord, n_contam = n_contam, spread_radius = spread_radius))
 }
 
+# Calculate the expected value of dis_level
+calc_E_dis_level = function(dis_level){
+  
+  # Checkpoint
+  stopifnot(dis_level[["type"]] %in% c("constant", "Gamma"))
+  
+  if(dis_level[["type"]] == "constant"){
+    return(as.numeric(dis_level[["args"]]))
+    
+  } else {
+    # Assume alpha = 2
+    # X ~ Gamma(alpha, theta) ==> E(X) = alpha * theta
+    # mode = (alpha - 1) * theta
+    return(2 * (dis_level[["args"]][["mode"]] - dis_level[["args"]][["lb"]]) / (2 - 1))
+  }
+  
+}
+
+# Calculate the number of contaminated kernels given an estimated aflatoxin concentration in the bin
+calc_n_contam = function(c_hat, lims, rho, m_kbar, dis_level, conc_neg){
+  
+  # Find the number of kernels in the container
+  n_k = calc_k_num(rho = rho, m_kbar = m_kbar, sampler = FALSE, lims = lims)
+  
+  # Calculate expected value of concentration for contaminated kernels
+  mean_c_contam = calc_E_dis_level(dis_level = dis_level)
+  
+  # Calculate number of contaminated kernels based on c_hat
+  n_contam = ceiling(n_k * (c_hat - mean(conc_neg)) / (mean_c_contam - mean(conc_neg))) 
+  
+  return(n_contam)
+}
+
 # Created contamination spots for discrete case
 gen_contam_dis = function(n_contam, lims, spread){
   spot_coord = point_contam(n_contam = n_contam, lims = lims, spread = spread) %>%
@@ -178,11 +193,53 @@ gen_contam_dis = function(n_contam, lims, spread){
   return(list(spot_coord = spot_coord, n_contam = n_contam))
 }
 
+# Continuous contamination
+contam_cont = function(spot_coord, n_contam, spread, spread_radius, cont_level){
+  
+  # Create labels for spots
+  label = c(rep("spot", times = n_contam))
+  
+  df = naming_total(n_contam = n_contam, spot_coord = spot_coord, spread_coord = NULL, spread = spread,
+                    label = label, spread_radius = spread_radius, cont_level = cont_level)
+  
+  return(df)
+}
+
+# Discrete contamination
+contam_dis = function(spot_coord, n_contam, n_affected, covar, spread, dis_level){
+  
+  # Create labels for spots and spreads
+  label = c(rep("spot", times = n_contam), rep("spread", times = n_contam * n_affected))
+  
+  if(n_affected == 0){
+    
+    df = naming_total(spot_coord = spot_coord, spread_coord = NULL, spread = spread, 
+                      label = label, spread_radius = NaN, dis_level = dis_level, n_contam = n_contam)
+  } else {
+    
+    # Checkpoint: make sure the covariance matrix is 3 by 3
+    stopifnot(sum(dim(covar)) == 6)
+    
+    # Create spread contaminations. Use multivariate normal distribution.
+    spread_coord = apply(X = spot_coord, MARGIN = 1, FUN = mvrnorm, n = n_affected, Sigma = covar) %>%
+      split(x = ., f = col(.)) %>%
+      map(.x = ., .f = function(x) {matrix(x, ncol = ncol(spot_coord))}) %>%
+      do.call(what = rbind, args = .) %>%
+      as.data.frame(., stringsAsFactors = FALSE) %>%
+      naming_spread(df = ., spot = n_contam, spread = n_affected)
+    
+    df = naming_total(spot_coord = spot_coord, spread_coord = spread_coord, n_contam = n_contam, spread = spread, 
+                      label = label, spread_radius = NaN, dis_level = dis_level)
+  }
+  return(df)
+}
+
 # Simulate contamination in 2D (continuous) or 3D (discrete) scenarios
-sim_contam_new = function(geom, n_contam, lims, spread, covar, n_affected, spread_radius, cont_level, dis_level, seed){
+sim_contam_new = function(geom, n_contam, c_hat, rho, m_kbar, conc_neg, lims, spread, 
+                          covar, n_affected, spread_radius, cont_level, dis_level, seed){
 
   # Checkpoints
-  stopifnot(n_contam > 0 & spread %in% c("continuous", "discrete"))
+  stopifnot(spread %in% c("continuous", "discrete"))
   
   # Maintain the old seed and reassign the current seed with the old seed when this function ends
   # If there is no user-defined seed, the system-generated seed will be used
@@ -198,24 +255,13 @@ sim_contam_new = function(geom, n_contam, lims, spread, covar, n_affected, sprea
   
   # Create contamination for either continuous or discrete case
   if(spread == "continuous"){
-    
-    #check point
-    stopifnot(geom %in% c("point", "area") & length(lims) == 2 & spread_radius >= 0)
-    
-    spot_temp = gen_contam_cont(geom = geom, n_contam = n_contam, lims = lims, 
-                                  spread = spread, spread_radius = spread_radius)
-    df = contam_cont(spot_coord = spot_temp$spot_coord, n_contam = spot_temp$n_contam, spread = spread, 
-                     spread_radius = spot_temp$spread_radius, cont_level = cont_level)
+    df = sim_contam_cont(geom = geom, lims = lims, n_contam = n_contam, spread = spread, 
+                         spread_radius = spread_radius, cont_level = cont_level)
     
   } else {
-    
-    # Check point
-    stopifnot(length(lims) == 3 & n_affected >= 0)
-    
-    spot_temp = gen_contam_dis(n_contam = n_contam, lims = lims, spread = spread)
-    
-    df = contam_dis(spot_coord = spot_temp$spot_coord, n_contam = spot_temp$n_contam, n_affected = n_affected, 
-                    covar = covar, spread = spread, dis_level = dis_level)  
+    df = sim_contam_dis(c_hat = c_hat, lims = lims, rho = rho, m_kbar = m_kbar, 
+                        dis_level = dis_level, conc_neg = conc_neg, spread = spread, 
+                        n_affected = n_affected, covar = covar)
       
   }
   
@@ -229,14 +275,41 @@ sim_contam_new = function(geom, n_contam, lims, spread, covar, n_affected, sprea
   return(df2)
 }
 
+# A sub-function for simulation contamination for continuous case
+sim_contam_cont = function(geom, lims, n_contam, spread, spread_radius, cont_level){
+  
+  #check point
+  stopifnot(n_contam > 0 & geom %in% c("point", "area") & length(lims) == 2 & spread_radius >= 0)
+  
+  spot_temp = gen_contam_cont(geom = geom, n_contam = n_contam, lims = lims, 
+                              spread = spread, spread_radius = spread_radius)
+  df = contam_cont(spot_coord = spot_temp$spot_coord, n_contam = spot_temp$n_contam, spread = spread, 
+                   spread_radius = spot_temp$spread_radius, cont_level = cont_level)
+  
+  return(df)
+}
+
+# A sub-function for simulation contamination for discrete case
+sim_contam_dis = function(c_hat, lims, rho, m_kbar, dis_level, conc_neg, spread, n_affected, covar){
+  
+  # Check point
+  stopifnot(length(lims) == 3 & n_affected >= 0)
+  
+  n_contam = calc_n_contam(c_hat = c_hat, lims = lims, rho = rho, m_kbar = m_kbar, dis_level = dis_level, conc_neg = conc_neg)
+  
+  spot_temp = gen_contam_dis(n_contam = n_contam, lims = lims, spread = spread)
+  
+  df = contam_dis(spot_coord = spot_temp$spot_coord, n_contam = spot_temp$n_contam, n_affected = n_affected, 
+                  covar = covar, spread = spread, dis_level = dis_level)  
+  
+  return(df)
+}
+
 ## Generate concentration levels
-rgamma_lim = function(n, alpha = 2, mode, lb, ub){
+rgamma_lim = function(n, alpha = 2, mode, lb){
   # Alpha = 2 by default, theta is calculated by mode
-  # Include lower bound and upper bound
+  # Include lower bound
   a = lb + rgamma(n = n, shape = alpha, scale = (mode-lb)/(alpha-1))
-  # When a number is > upper bound, replace it with the mode
-  if(!is.null(ub)){
-    a[a >= ub] = mode
-  } 
+
   return(a)
 }
