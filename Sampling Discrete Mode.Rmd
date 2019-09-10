@@ -34,11 +34,15 @@ source(file = "Sampling_analysis.R")
 
 **Sampling contamination**
 
-  * `n_contam` = the number of contamination points  
+  * `c_hat` = the estimated mycotoxin concentration in the container  
   * `x_lim` = the limits of the x-axis  
   * `y_lim` = the limits of the y-axis  
   * `z_lim` = the limits of the z-axis
-  * `dis_level` = a vector that indicates the mode (ppb) and the lower bound (ppb), assuming contamination level follows $lb+Gamma(\alpha, \theta=\frac {mode-20}{\alpha-1})$
+  * `dis_level` = a list of parameters associated with contamination level
+      + `type` = "constant"
+          - `args` = a constant value (ppb)
+      + `type` = "Gamma"    
+          - `args` = a list of the mode (ppb) and the lower bound (ppb), assuming contamination level follows $lb+Gamma(\alpha, \theta=\frac {mode-20}{\alpha-1})$
   * `n_affected` = the number of affected kernels near the contamination spot   
   * `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) = 0.25, var(Y) = 0.25 and cov(X, Y) = 0   
 
