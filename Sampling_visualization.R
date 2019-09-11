@@ -369,16 +369,16 @@ plot_metrics_cont = function(df, xlab){
 }
 
 # Plot P(acceptance) for discrete case
-plot_metrics_dis = function(df, xlab){
+plot_metrics_dis = function(df, xlab, verbose = FALSE){
   
   temp = df %>%
-    gather(data = ., key = "Metric", value = "Value", -c(seed, P_rej, sens, spec, param)) %>%
+    gather(data = ., key = "Metric", value = "Value", -c(seed, P_rej, sens, spec, param, c_true)) %>%
     group_by(param, Metric) %>%
     summarise(q2.5 = stats::quantile(x = Value, probs = 0.025),
               med = median(Value), 
               q97.5 = stats::quantile(x = Value, probs = 0.975))
   
-  ggplot(data = temp) +
+  a = ggplot(data = temp) +
     geom_ribbon(aes(x = param, ymin = q2.5, ymax = q97.5), alpha = 0.3) +
     geom_line(aes(x = param, y = med)) +
     geom_point(aes(x = param, y = med)) +
@@ -387,4 +387,16 @@ plot_metrics_dis = function(df, xlab){
     labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") +
     theme_bw() +
     theme(legend.position = "top")
+  
+  if(verbose == FALSE){
+    return(a)
+  } else {
+    b = ggplot(data = df) +
+      stat_summary(aes(x = param, y = c_true), geom = "pointrange") +
+      geom_abline(slope = 1, intercept = 0, color = "red") +
+      labs(x = "Input concentration (ppb)", y = "True concentration (ppb)") +
+      theme_bw()
+    
+    return(list(a,b))
+  }
 }

@@ -15,7 +15,7 @@ calc_perc_contam = function(df_dist, spread_radius, LOC, fun){
 
 # Create a function that calculates the Euclidean distance between points and only outputs the distances between sample points and contamination points. If spotONLY == TRUE, then only calculate the distance between spots and sample points
 calc_dist_2d = function(df_contam, df_sp, probe = FALSE){
-  
+
   # Combine by row
   df = rbind.data.frame(df_contam, df_sp, stringsAsFactors = FALSE)
   
@@ -30,9 +30,7 @@ calc_dist_2d = function(df_contam, df_sp, probe = FALSE){
   attr(x = a, which = "dimnames") = list(df$ID[cont_ind], df$ID[sp_ind])
   
   # Gather the matrix into a long format
-  b = melt(data = a, varnames = c("ID_contam", "ID_sp"), value.name = "Distance")
-  b$ID_contam = as.character(b$ID_contam)
-  b$ID_sp = as.character(b$ID_sp)
+  b = melt(data = a, varnames = c("ID_contam", "ID_sp"), value.name = "Distance", as.is = TRUE)
   
   # Attach the labels for each contamination point
   # If we are using probes for kernels, we need to have the Z-coordinates
@@ -251,7 +249,7 @@ gen_conc_neg = function(n, conc_neg){
 
 # Form a pooled sample
 get_pooled_sample = function(df_contam, df_sp, dist, method_sp, L, rho, m_kbar, sp_radius, conc_neg){
-  
+ 
   # Find the number of kernels for each sampler
   n_k = calc_k_num(method_sp = method_sp, L = L, rho = rho, m_kbar = m_kbar, sp_radius = sp_radius)
   
