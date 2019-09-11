@@ -1,11 +1,12 @@
 # Create intermediate datasets for discrete case
-sim_intmed_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_level, 
+sim_intmed_dis = function(c_hat, lims, spread, covar_mat, n_affected, dis_level, 
                           method_sp, sp_radius, container, compartment, type, L, 
                           rho, m_kbar, conc_neg, tox, seed, homogeneity){
   
   # Generate the coordinates of contamination points
-  contam_xy = sim_contam_new(n_contam = n_contam, lims = lims, spread = spread, covar = covar_mat, 
-                             n_affected = n_affected, spread_radius = NA, dis_level = dis_level, seed = seed) 
+  contam_xy = sim_contam_new(c_hat = c_hat, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, 
+                             lims = lims, spread = spread, n_affected = n_affected, 
+                             covar = covar_mat, dis_level = dis_level, seed = seed) 
   
   # Generate the coordinates of sample points
   sp_xy = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, radius = sp_radius, 
@@ -49,7 +50,7 @@ sim_intmed_cont = function(n_contam, lims, spread, spread_radius, cont_level,
 }
 
 # Create intermediate datasets
-sim_intmed = function(n_contam, lims, spread, covar_mat, n_affected, spread_radius, dis_level, cont_level,
+sim_intmed = function(n_contam, c_hat, lims, spread, covar_mat, n_affected, spread_radius, dis_level, cont_level,
                       method_sp, sp_radius, container, compartment, type, L, rho, m_kbar, conc_neg, tox, 
                       n_sp, n_strata, by, LOC, fun, bg_level, geom, seed, homogeneity){
   
@@ -58,7 +59,7 @@ sim_intmed = function(n_contam, lims, spread, covar_mat, n_affected, spread_radi
   
   if(spread == "discrete"){
     
-    sim_intmed_dis(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat, 
+    sim_intmed_dis(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat, 
                    n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
                    sp_radius = sp_radius, container = container, compartment = compartment,
                    type = type, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, 
@@ -99,12 +100,12 @@ sim_outcome_cont = function(n_contam, lims, spread, spread_radius, cont_level, b
 }
 
 # Outcome simulation for discrete case
-sim_outcome_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_level, 
+sim_outcome_dis = function(c_hat, lims, spread, covar_mat, n_affected, dis_level, 
                            method_sp, sp_radius, container, L, rho, m_kbar, conc_neg, 
                            tox, Mc, method_det, verbose = FALSE, seed, homogeneity){
   
   # Create intermediate datasets
-  a = sim_intmed(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat, 
+  a = sim_intmed(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat, 
                  n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
                  sp_radius = sp_radius, container = container, L = L, rho = rho, 
                  m_kbar = m_kbar, conc_neg = conc_neg, tox = tox, seed = seed, homogeneity = homogeneity)
@@ -137,14 +138,14 @@ sim_outcome_dis = function(n_contam, lims, spread, covar_mat, n_affected, dis_le
 }
 
 # Outcome simulation
-sim_outcome_new = function(n_contam, lims, spread, spread_radius, method_sp, n_sp, 
+sim_outcome_new = function(n_contam, c_hat, lims, spread, spread_radius, method_sp, n_sp, 
                            n_strata, by, LOC, fun, case, m, M, m_sp, method_det, 
                            covar_mat, n_affected, dis_level, cont_level, bg_level, 
                            sp_radius, container, L, rho, m_kbar, conc_neg, tox, 
                            Mc, verbose = FALSE, geom, seed, homogeneity){
   
   if(spread == "discrete"){
-    sim_outcome_dis(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat, 
+    sim_outcome_dis(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat, 
                     n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
                     sp_radius = sp_radius, container = container, L = L, rho = rho, m_kbar = m_kbar, 
                     conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, verbose = verbose, seed = seed, homogeneity = homogeneity)
