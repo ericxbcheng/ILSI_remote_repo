@@ -149,6 +149,26 @@ calc_metrics_n = function(data, Mc){
   return(b)
 }
 
+get_c_true_one = function(data){
+  # Since c_true should be the same when seed is fixed, we only extract the first element in each c_true vector
+  split(x = data$c_true, f = data$seed) %>%
+    map(.x = ., .f = `[`, 1) %>%
+    unlist()
+}
+
+get_c_true_n = function(data){
+  
+  # Checkpoint
+  if(!is.null(names(data))){
+    stop("Data should be a list of lists, not a single list.")
+  }
+  
+  a = map(.x = data, .f = get_c_true_one) %>%
+        unlist()
+  
+  return(a)
+}
+
 metrics_dis_n = function(data, Mc){
   
   # Checkpoint
@@ -165,8 +185,11 @@ metrics_dis_n = function(data, Mc){
   # Get parameter values
   c = map_dbl(.x = data, .f = function(x) x$param[[1]])
   
-  # Form output
-  d = cbind(a, b, param = rep(x = c, each = nrow(a) / length(data)))
+  # Get c_true
+  d = get_c_true_n(data = data)
   
-  return(d)
+  # Form output
+  e = cbind(a, b, param = rep(x = c, each = nrow(a) / length(data)), c_true = d)
+  
+  return(e)
 }
