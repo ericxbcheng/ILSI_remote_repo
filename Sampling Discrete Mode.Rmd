@@ -106,8 +106,8 @@ lims = list(xlim = x_lim, ylim = y_lim, zlim = z_lim)
 dis_level = list(type = "constant", args = 40000)
 #dis_level = list(type = "Gamma", args = list("mode"= 40000, "lb" = 20))
 spread = "discrete"
-n_affected = 0
-covar_mat = make_covar_mat(spread = spread, varx = 0.04, vary = 0.04, varz = 0.04, 
+n_affected = 2
+covar_mat = make_covar_mat(spread = spread, varx = 0.0009, vary = 0.0009, varz = 0.0009, 
                            covxy = 0, covxz = 0, covyz = 0)
 
 # Sampling
