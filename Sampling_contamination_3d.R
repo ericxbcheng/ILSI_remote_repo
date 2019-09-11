@@ -295,9 +295,14 @@ sim_contam_dis = function(c_hat, lims, rho, m_kbar, dis_level, conc_neg, spread,
   # Check point
   stopifnot(length(lims) == 3 & n_affected >= 0)
   
-  n_contam = calc_n_contam(c_hat = c_hat, lims = lims, rho = rho, m_kbar = m_kbar, dis_level = dis_level, conc_neg = conc_neg)
+  # n_contam_total = n_spot + n_spot * n_affected
+  n_contam_total = calc_n_contam(c_hat = c_hat, lims = lims, rho = rho, m_kbar = m_kbar, dis_level = dis_level, conc_neg = conc_neg)
   
-  spot_temp = gen_contam_dis(n_contam = n_contam, lims = lims, spread = spread)
+  # Calculate n_spot
+  n_spot = ceiling(n_contam_total / (1 + n_affected))
+  
+  # Generate contamination spots
+  spot_temp = gen_contam_dis(n_contam = n_spot, lims = lims, spread = spread)
   
   df = contam_dis(spot_coord = spot_temp$spot_coord, n_contam = spot_temp$n_contam, n_affected = n_affected, 
                   covar = covar, spread = spread, dis_level = dis_level)  
