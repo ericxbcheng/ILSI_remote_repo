@@ -155,8 +155,8 @@ ArgList_default = list(c_hat = c_hat, lims = lims, spread = spread, covar_mat = 
   * `n_seed` = the number of seeds.
   
 ```{r}
-param_name = "n_contam"
-vals = c(100, 1000, 5000)
+param_name = "c_hat"
+vals = c(10, 20, 30)
 seed = 5
 n_seed = 10
 ```
@@ -209,7 +209,7 @@ assay_draw(data = one_iteration$sample$test, Mc = Mc, method_det = method_det, s
 ###2. Visualize the probability of detection and acceptance. 
 
 ```{r}
-plot_metrics_dis(df = results_cleaned, xlab = "Number of contamination points")
+plot_metrics_dis(df = results_cleaned, xlab = "Input aflatoxin concentration (ppb)", verbose = TRUE)
 ```
 
 # Appendix
@@ -232,20 +232,20 @@ decision = lot_decision_new(data = sample_dis$test, Mc = Mc, spread = spread, me
 words(x = decision)
 
 # This function produces the dataframe "contam_sp_xy" and the distance dataframe
-test1 = sim_intmed(n_contam = n_contam, lims = lims, spread = spread, covar_mat = covar_mat,
+test1 = sim_intmed(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat,
                    n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
                    container = container, sp_radius = sp_radius, L = L, rho = rho, 
                    m_kbar = m_kbar, tox = tox, conc_neg = conc_neg, seed = seed, homogeneity = homogeneity)
 
 # This function produces
-test2 = sim_outcome_new(n_contam = n_contam, lims = lims, spread = spread, method_sp = method_sp, 
+test2 = sim_outcome_new(c_hat = c_hat, lims = lims, spread = spread, method_sp = method_sp, 
                         method_det = method_det, covar_mat = covar_mat, n_affected = n_affected, 
                         dis_level = dis_level, sp_radius = sp_radius, container = container, 
                         L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, Mc = Mc,
                         tox = tox, verbose = TRUE, seed = seed, homogeneity = homogeneity)
 
 # This function produces a sim_outcome_new() function with all the input parameters loaded
-test3 = gen_sim_outcome_new(n_contam = n_contam, lims = lims, spread = spread, 
+test3 = gen_sim_outcome_new(c_hat = c_hat, lims = lims, spread = spread, 
                             method_sp = method_sp, method_det = method_det, covar_mat = covar_mat, 
                             n_affected = n_affected, dis_level = dis_level, sp_radius = sp_radius, 
                             container = container, L = L, rho = rho, m_kbar = m_kbar, Mc = Mc, 
@@ -258,5 +258,5 @@ test4 = sim_iterate(n_iter = n_iter, Args = ArgList_default, seed = seed)
 test5 = sim_iterate2(n_seed = n_seed, n_iter = n_iter, Args = ArgList_default)
 
 # Tuning layer
-test6 = tune_param(Args = ArgList_default, n_seed = n_seed, n_iter = n_iter, param = param_name, val = 1000)
+test6 = tune_param(Args = ArgList_default, n_seed = n_seed, n_iter = n_iter, param = param_name, val = 30)
 ```
