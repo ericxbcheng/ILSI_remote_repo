@@ -166,7 +166,8 @@ calc_E_dis_level = function(dis_level){
     # Assume alpha = 2
     # X ~ Gamma(alpha, theta) ==> E(X) = alpha * theta
     # mode = (alpha - 1) * theta
-    return(2 * (dis_level[["args"]][["mode"]] - dis_level[["args"]][["lb"]]) / (2 - 1))
+    # E(C_pos) = lb + alpha * theta
+    return(dis_level[["args"]][["lb"]] + 2 * (dis_level[["args"]][["mode"]] - dis_level[["args"]][["lb"]]) / (2 - 1))
   }
   
 }
