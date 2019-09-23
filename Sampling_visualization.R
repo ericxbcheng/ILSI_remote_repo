@@ -67,7 +67,7 @@ contam_level_draw_3d = function(method, df_contam, xlim, ylim, spread_radius, LO
   
   ### Make the 3D plot
   if(interactive == FALSE){
-    scatter3D(x = a$X, y = a$Y, z = a$Z, colvar = a$Z, zlab = "log CFU/mL")
+    scatter3D(x = a$X, y = a$Y, z = a$Z, colvar = a$Z, zlab = "log CFU/mL", pch = 16)
   } else {
     plot_ly(x = a$X, y = a$Y, z = a$Z, color = a$Z,type = "scatter3d") 
   }
