@@ -1,0 +1,195 @@
+---
+title: "Validation Discrete Mode"
+author: "Xianbin Cheng"
+date: "September 24, 2019"
+output: html_document
+---
+
+# Objective
+
+  Use Whitaker's data to validate our 3D model.
+  
+# Method
+
+###1. Load libraries and source R code.
+
+```{r, warning = FALSE, message = FALSE}
+source(file = "Sampling_libraries.R")
+source(file = "Sampling_contamination.R")
+source(file = "Sampling_contamination_3d.R")
+source(file = "Sampling_visualization.R")
+source(file = "Sampling_assay_prep.R")
+source(file = "Sampling_plan.R")
+source(file = "Sampling_plan_3d.R")
+source(file = "Sampling_assay_3d.R")
+source(file = "Sampling_assay.R")
+source(file = "Sampling_outcome_3d.R")
+source(file = "Sampling_outcome.R")
+source(file = "Sampling_iteration.R")
+source(file = "Sampling_tuning_3d.R")
+source(file = "Sampling_analysis.R")
+source(file = "Validation.R")
+library(lme4)
+```
+
+###2. List important parameters.
+
+  * Whitaker's experimental conditions:
+      + Total corn mass = 100 lbs
+      + Container: presumedly a cube
+      + `dis_level` = distribution of aflatoxin concentration in contaminated kernels. Assume it's a constant.
+      + `homogeneity` = degree of grinding.
+      + Contaminated kernels distribution: We assume they distribution uniformly in the container.
+
+```{r}
+# Pre-generate healthy kernel concentrations to save time
+conc_neg = rpert(n = 10^6, min = 0, mode = 0.7, max = 19.99, shape = 80)
+```
+
+```{r}
+## Contamination
+m_kbar = 0.3 
+rho = 1.28
+cube_side = get_cube_side(pound = 100, rho = rho)
+x_lim = c(0, cube_side)
+y_lim = c(0, cube_side)
+z_lim = c(0, cube_side)
+lims = list(xlim = x_lim, ylim = y_lim, zlim = z_lim)
+
+c_hat = 10
+dis_level = list(type = "constant", args = 40000)
+#dis_level = list(type = "Gamma", args = list("mode"= 40000, "lb" = 20))
+spread = "discrete"
+n_affected = 0
+covar_mat = make_covar_mat(spread = spread, varx = 0.0009, vary = 0.0009, varz = 0.0009, 
+                           covxy = 0, covxz = 0, covyz = 0)
+
+# Sampling
+homogeneity = 0.6
+
+# Randomness
+seed = NA
+```
+
+###3. Produce simulated data and run ANOVA with random effects
+
+  * `n` = Number of test samples (32)
+  * `n_sub` = Number of subsamples per test sample (2)
+  * `m_sp` = mass of subsample (50g)
+  * `unbalanced` = indicator for unbalanced design
+  * `c_hat_vec` = vector containing all the aflatoxin concentrations in Whitaker's data
+
+```{r}
+n = 32
+n_sub = 2
+m_sp = 50
+unbalanced = FALSE
+
+c_hat_vec = c(5.8, 6.4, 6.7, 8.6, 11.8, 15.9, 18.2, 25.6, 27.3, 32.9, 56.7, 57.1, 94.7, 95.6, 113.8, 276.9, 298.9, 676.6)
+```
+
+```{r}
+# Generate simulation data
+sim_data = sim_intmed_dis_val(c_hat = c_hat, rho = rho, m_kbar = m_kbar, 
+                              conc_neg = conc_neg, lims = lims, covar = covar_mat,
+                              spread = spread, n_affected = n_affected, 
+                              dis_level = dis_level, seed = seed, n = n, m_sp = m_sp, 
+                              n_sub = n_sub, homogeneity = homogeneity, unbalanced = unbalanced)
+
+str(sim_data$df)
+```
+
+```{r}
+# ANOVA
+summary(lmer(formula = value ~ 1 + (1|test_sp), data = sim_data$df, REML = TRUE))
+```
+
+###5. Wrap things up into a single function and run the function for all the concentrations
+
+```{r}
+# Wrap arguments into one single list
+ArgList_default = list(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat,
+                       n_affected = n_affected, dis_level = dis_level, n = n, 
+                       rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, homogeneity = homogeneity, 
+                       m_sp = m_sp, n_sub = n_sub, unbalanced = unbalanced)
+
+n_seed = 10
+n_iter = 10
+```
+
+```{r}
+result = map(.x = c_hat_vec, .f = tune_param_val, Args = ArgList_default, n_seed = n_seed, n_iter = n_iter, param = "c_hat")
+```
+
+```{r}
+result_cleaned = metrics_dis_n_val(data = result)
+str(result_cleaned)
+```
+
+# Result
+
+
+```{r, echo = FALSE}
+f_vis = function(data, type){
+  
+  a = data %>%
+    group_by(param, metrics) %>%
+    summarise(lb = quantile(x = value, probs = 0.025), 
+              med = median(x = value),
+              ub = quantile(x = value, probs = 0.975))
+  
+  if(type == "contam"){
+    
+    b = a %>%
+      dplyr::filter(.data = ., metrics %in% c("c_test", "c_true"))
+    
+    ggplot(data = b) +
+      geom_ribbon(aes(x = param, ymin = lb, ymax = ub, fill = metrics), alpha = 0.3) +
+      geom_line(aes(x = param, y = med, color = metrics)) +
+      geom_point(aes(x = param, y = med, color = metrics)) +
+      scale_color_discrete(name = "Type", labels = c("Test concentration", "True concentration")) +
+      scale_fill_discrete(name = "Type", labels = c("Test concentration", "True concentration")) +
+      labs(x = "Input concentration (ppb)", y = "Output concentration (2.5th - 97.5th percentile)") +
+      theme_bw() +
+      theme(legend.position = "top")
+      
+  } else if(type == "var"){
+    
+    c = a %>%
+      dplyr::filter(.data = ., metrics %in% c("var_sub", "var_test"))
+    
+    ggplot(data = c) +
+      geom_ribbon(aes(x = param, ymin = lb, ymax = ub, fill = metrics), alpha = 0.3) +
+      geom_line(aes(x = param, y = med, color = metrics)) +
+      geom_point(aes(x = param, y = med, color = metrics)) +
+      scale_color_discrete(name = "Type", labels = c("Subsample", "Test sample")) +
+      scale_fill_discrete(name = "Type", labels = c("Subsample", "Test sample")) +
+      labs(x = "Input concentration (ppb)", y = "Variance component (2.5th - 97.5th percentile)") +
+      theme_bw() +
+      theme(legend.position = "top")
+    
+  } else {
+    stop("Unknown type.")
+  }
+}
+```
+
+1. Show the true contamination level and contamination level from sampling VS input contamination level. This is a quality control step.
+
+```{r}
+f_vis(data = result_cleaned, type = "contam")
+```
+
+2. Show the variance components VS input contamination level. 
+
+```{r}
+f_vis(data = result_cleaned, type = "var")
+```
+
+# Debug
+
+```{r}
+test1 = sim_iterate_val(n_iter = 5, Args = ArgList_default, seed = 123)
+test2 = sim_iterate2_val(n_seed = n_seed, n_iter = n_iter, Args = ArgList_default)
+test3 = tune_param_val(Args = ArgList_default, n_seed = n_seed, n_iter = n_iter, param = "c_hat", val = c_hat)
+```
