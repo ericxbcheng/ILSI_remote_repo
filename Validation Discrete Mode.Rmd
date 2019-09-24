@@ -109,19 +109,21 @@ summary(lmer(formula = value ~ 1 + (1|test_sp), data = sim_data$df, REML = TRUE)
 ```{r}
 # Wrap arguments into one single list
 ArgList_default = list(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat,
-                       n_affected = n_affected, dis_level = dis_level, 
+                       n_affected = n_affected, dis_level = dis_level, n = n, 
                        rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, homogeneity = homogeneity, 
                        m_sp = m_sp, n_sub = n_sub, unbalanced = unbalanced)
 
-sim_result = sim_outcome_val(c_hat = c_hat, rho = rho, m_kbar = m_kbar,conc_neg = conc_neg, 
-                             lims = lims, covar = covar_mat,spread = spread, 
-                             n_affected = n_affected,dis_level = dis_level, 
-                             seed = seed, n = n, m_sp = m_sp, n_sub = n_sub, 
-                             homogeneity = homogeneity, unbalanced = unbalanced)
-
-
+n_seed = 2
+n_iter = 5
 ```
 
+```{r}
+result = map(.x = c_hat_vec, .f = tune_param_val, Args = ArgList_default, n_seed = n_seed, n_iter = n_iter, param = "c_hat")
+```
+
+```{r}
+result_cleaned = metrics_dis_n_val(data = result)
+```
 
 # Result
 
@@ -131,4 +133,11 @@ sim_result = sim_outcome_val(c_hat = c_hat, rho = rho, m_kbar = m_kbar,conc_neg 
 sim_data$c_true
 ```
 
+# Debug
+
+```{r}
+test1 = sim_iterate_val(n_iter = 5, Args = ArgList_default, seed = 123)
+test2 = sim_iterate2_val(n_seed = n_seed, n_iter = n_iter, Args = ArgList_default)
+test3 = tune_param_val(Args = ArgList_default, n_seed = n_seed, n_iter = n_iter, param = "c_hat", val = c_hat)
+```
 
