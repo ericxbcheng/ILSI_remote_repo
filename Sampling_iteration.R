@@ -35,7 +35,7 @@ clean_dis = function(data, verbose = FALSE){
   if(verbose == FALSE){
     
     # Produce a sequence of c(1,2) for element extraction
-    ind = rep(x = c(1,2), times = length(data))
+    ind = rep(x = c(1,2), length.out = length(a))
     
     c_true = a[ind == 1]
     decision = a[ind == 2]
@@ -46,7 +46,7 @@ clean_dis = function(data, verbose = FALSE){
   } else {
     
     # Produce a sequence of c(1,2,3,4,5) for element extraction
-    ind = rep(x = c(1,2,3,4,5), times = length(data))
+    ind = rep(x = c(1,2,3,4,5), length.out = length(a))
     
     c_true = a[ind == 1]
     decision = a[ind == 2]
@@ -66,7 +66,7 @@ clean_cont = function(data){
   a = unlist(data)
   
   #Produce a sequence of indices for element extraction
-  ind = rep(x = c(1,2), times = length(data))
+  ind = rep(x = c(1,2), length.out = length(a))
   
   # Extract elements respectively
   I_det = a[ind == 1]
