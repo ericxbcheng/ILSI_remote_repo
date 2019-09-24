@@ -123,9 +123,13 @@ sim_intmed_dis_val = function(geom, n_contam, c_hat, rho, m_kbar, conc_neg, lims
                              spread_radius = spread_radius, cont_level = cont_level, 
                              dis_level = dis_level, seed = seed)
   
-  contam_sp_xy = gen_sim_data_val(df_contam = contam_xy, rho = rho, m_kbar = m_kbar, lims = lims, conc_neg = conc_neg)
+  contam_sp_xy = gen_sim_data_val(df_contam = contam_xy, rho = rho, 
+                                  m_kbar = m_kbar, lims = lims, conc_neg = conc_neg)
   
-  sample_dis = get_sample_dis_val(data = contam_sp_xy$raw, n = n, homogeneity = homogeneity, m_sp = m_sp, m_kbar = m_kbar, unbalanced = unbalanced, n_sub = n_sub)
+  sample_dis = get_sample_dis_val(data = contam_sp_xy$raw, n = n, 
+                                  homogeneity = homogeneity, m_sp = m_sp, 
+                                  m_kbar = m_kbar, unbalanced = unbalanced, 
+                                  n_sub = n_sub)
   
   return(list(c_true = contam_sp_xy$c_true, df = clean_val(sample_dis)))
 }
@@ -143,20 +147,142 @@ calc_var_comp = function(df){
     as.numeric()
   var_test = var_comp[1]
   var_sub = var_comp[2]
-  var_total = var_test + var_sub
   
-  return(list(c_test = c_test, var_test = var_test, var_sub = var_sub, var_total = var_total))
+  return(list(c_test = c_test, var_test = var_test, var_sub = var_sub))
 }
 
 sim_outcome_val = function(geom, n_contam, c_hat, rho, m_kbar, conc_neg, lims, spread, 
                            covar_mat, n_affected, spread_radius, cont_level, dis_level, seed,
                            n, n_sub, m_sp, homogeneity, unbalanced){
   
-  a = sim_intmed_dis_val(geom = geom, n_contam = n_contam, c_hat = c_hat, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, lims = lims, spread = spread, 
-                         covar = covar, n_affected = n_affected, spread_radius = spread_radius, cont_level = cont_level, dis_level = dis_level, seed = seed,
-                         n = n, n_sub = n_sub, m_sp = m_sp, homogeneity = homogeneity, unbalanced = unbalanced)
+  a = sim_intmed_dis_val(geom = geom, n_contam = n_contam, c_hat = c_hat, rho = rho, 
+                         m_kbar = m_kbar, conc_neg = conc_neg, lims = lims, spread = spread, 
+                         covar = covar, n_affected = n_affected, spread_radius = spread_radius, 
+                         cont_level = cont_level, dis_level = dis_level, seed = seed,
+                         n = n, n_sub = n_sub, m_sp = m_sp, homogeneity = homogeneity, 
+                         unbalanced = unbalanced)
   
   b = calc_var_comp(df = a$df)
   
   return(c(c_true = a$c_true, b))
+}
+
+# function factory
+gen_sim_outcome_val = function(geom, n_contam, c_hat, rho, m_kbar, conc_neg, lims, spread, 
+                               covar_mat, n_affected, spread_radius, cont_level, dis_level, seed,
+                               n, n_sub, m_sp, homogeneity, unbalanced){
+  function(...){
+    sim_outcome_val(geom = geom, n_contam = n_contam, c_hat = c_hat, rho = rho, 
+                    m_kbar = m_kbar, conc_neg = conc_neg, lims = lims, spread = spread, 
+                    covar = covar, n_affected = n_affected, spread_radius = spread_radius, 
+                    cont_level = cont_level, dis_level = dis_level, seed = seed,
+                    n = n, n_sub = n_sub, m_sp = m_sp, homogeneity = homogeneity, 
+                    unbalanced = unbalanced)
+  }
+}
+
+clean_val2 = function(data){
+  
+  # Convert the list into a vector
+  a = unlist(data)
+  
+  # Split the list by list names (c_true, c_test, var_test, var_sub)
+  b = split(x = a, f = names(a)) %>%
+    map(.x = ., .f = `names<-`, value = NULL)
+  
+  return(list("c_true" = b$c_true, "c_test" = b$c_test, "var_test" = b$var_test, "var_sub" = b$var_sub))
+}
+
+
+# First layer of iteration
+sim_iterate_val = function(n_iter, Args, seed){
+  
+  # Check point: Is n_iter >= 1?
+  stopifnot(n_iter >= 1)
+  
+  # Include seed into arguments list
+  Args$seed = seed
+  
+  # Generate a sim_outcome_new() with loaded arguments
+  a = do.call(what = gen_sim_outcome_val, args = Args)
+  
+  # Iterate that manufactured function for n_iter times
+  b = map(.x = 1:n_iter, .f = a)
+  
+  return(b)
+}
+
+# Second layer iteration
+sim_iterate2_val = function(n_seed, n_iter, Args, ...){
+  
+  # Run the model for n_iter times under each seed
+  a = map(.x = 1:n_seed, .f = sim_iterate_val, Args = Args, n_iter = n_iter)
+  
+  # Clean the data
+  b = clean_val2(data = a)
+  
+  # Add a vector for the seeds
+  b$seed = rep(x = 1:n_seed, each = n_iter)
+  
+  return(b)
+}
+
+# Create a function that passes tuning parameters to sim_iterate2()
+tune_param_val = function(Args, n_seed, n_iter, param, val, ...){
+  
+  # Get tuning parameters
+  a = make_tune_args(Args = Args, param = param, val = val)
+  
+  # 2 layers of iteration
+  b = sim_iterate2_val(n_seed = n_seed, n_iter = n_iter, Args = a)
+  
+  # Add a vector of tuning parameter value
+  b$param = rep.int(x = val, times = n_seed * n_iter)
+  
+  return(b)
+}
+
+# This function is for the most nested list (the lowest level element) and it only works for one metric
+mean_by_seed = function(data, name){
+  
+  # Split a vector by seed
+  a = split(x = data[[name]], f = data$seed) %>%
+    map_dbl(.x = ., .f = mean)
+  return(a)
+}
+
+
+# This function is for the most nested list and it works for all 4 metrics
+metrics_dis_one_val = function(data){
+  
+  # Find the names that we want to apply "mean" to
+  c_true = mean_by_seed(data = data, name = "c_true")
+  c_test = mean_by_seed(data = data, name = "c_test")
+  var_test = mean_by_seed(data = data, name = "var_test")
+  var_sub = mean_by_seed(data = data, name = "var_sub")
+  
+  return(list(c_true = c_true, c_test = c_test, var_test = var_test, var_sub = var_sub))
+}
+
+# This function is for all the lists
+metrics_dis_n_val = function(data){
+  
+  # Get all the means
+  a = map(.x = data, .f = metrics_dis_one_val) %>%
+    unlist()
+  
+  # split the names
+  b = str_split(string = names(a), pattern = "[.]", simplify = TRUE)
+  
+  # Get the seeds and metric names
+  metrics = b[,1]
+  seed = b[,2]
+  
+  # Get parameter values
+  param = map_dbl(.x = data, .f = function(x) x$param[[1]]) %>%
+    rep(x = ., each = length(unique(metrics)) * length(unique(seed)))
+  
+  c = tibble(param = param, metrics = metrics, seed = seed, value = a)
+  
+  return(c)
 }
