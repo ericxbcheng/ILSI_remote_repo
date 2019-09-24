@@ -113,8 +113,8 @@ ArgList_default = list(c_hat = c_hat, lims = lims, spread = spread, covar_mat = 
                        rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, homogeneity = homogeneity, 
                        m_sp = m_sp, n_sub = n_sub, unbalanced = unbalanced)
 
-n_seed = 2
-n_iter = 5
+n_seed = 10
+n_iter = 10
 ```
 
 ```{r}
@@ -123,14 +123,67 @@ result = map(.x = c_hat_vec, .f = tune_param_val, Args = ArgList_default, n_seed
 
 ```{r}
 result_cleaned = metrics_dis_n_val(data = result)
+str(result_cleaned)
 ```
 
 # Result
 
-1. Show the true contamination level VS input contamination level.
+
+```{r, echo = FALSE}
+f_vis = function(data, type){
+  
+  a = data %>%
+    group_by(param, metrics) %>%
+    summarise(lb = quantile(x = value, probs = 0.025), 
+              med = median(x = value),
+              ub = quantile(x = value, probs = 0.975))
+  
+  if(type == "contam"){
+    
+    b = a %>%
+      dplyr::filter(.data = ., metrics %in% c("c_test", "c_true"))
+    
+    ggplot(data = b) +
+      geom_ribbon(aes(x = param, ymin = lb, ymax = ub, fill = metrics), alpha = 0.3) +
+      geom_line(aes(x = param, y = med, color = metrics)) +
+      geom_point(aes(x = param, y = med, color = metrics)) +
+      scale_color_discrete(name = "Type", labels = c("Test concentration", "True concentration")) +
+      scale_fill_discrete(name = "Type", labels = c("Test concentration", "True concentration")) +
+      labs(x = "Input concentration (ppb)", y = "Output concentration (2.5th - 97.5th percentile)") +
+      theme_bw() +
+      theme(legend.position = "top")
+      
+  } else if(type == "var"){
+    
+    c = a %>%
+      dplyr::filter(.data = ., metrics %in% c("var_sub", "var_test"))
+    
+    ggplot(data = c) +
+      geom_ribbon(aes(x = param, ymin = lb, ymax = ub, fill = metrics), alpha = 0.3) +
+      geom_line(aes(x = param, y = med, color = metrics)) +
+      geom_point(aes(x = param, y = med, color = metrics)) +
+      scale_color_discrete(name = "Type", labels = c("Subsample", "Test sample")) +
+      scale_fill_discrete(name = "Type", labels = c("Subsample", "Test sample")) +
+      labs(x = "Input concentration (ppb)", y = "Variance component (2.5th - 97.5th percentile)") +
+      theme_bw() +
+      theme(legend.position = "top")
+    
+  } else {
+    stop("Unknown type.")
+  }
+}
+```
+
+1. Show the true contamination level and contamination level from sampling VS input contamination level. This is a quality control step.
 
 ```{r}
-sim_data$c_true
+f_vis(data = result_cleaned, type = "contam")
+```
+
+2. Show the variance components VS input contamination level. 
+
+```{r}
+f_vis(data = result_cleaned, type = "var")
 ```
 
 # Debug
@@ -140,4 +193,3 @@ test1 = sim_iterate_val(n_iter = 5, Args = ArgList_default, seed = 123)
 test2 = sim_iterate2_val(n_seed = n_seed, n_iter = n_iter, Args = ArgList_default)
 test3 = tune_param_val(Args = ArgList_default, n_seed = n_seed, n_iter = n_iter, param = "c_hat", val = c_hat)
 ```
-
