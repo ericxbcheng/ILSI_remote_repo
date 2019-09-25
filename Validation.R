@@ -70,6 +70,7 @@ get_subsample = function(data, m_sp, m_kbar, n_sub){
   }
 }
 
+# Split the bulk into n test samples and produce subsamples in lists
 get_sample_dis_val = function(data, n, homogeneity, m_sp, m_kbar, unbalanced, n_sub){
  
   # Generate n test samples
@@ -151,9 +152,14 @@ calc_var_comp = function(df){
   return(list(c_test = c_test, var_test = var_test, var_sub = var_sub))
 }
 
+# Calculate the prob of acceptance
+calc_Paccept_val = function(df, Mc){
+  mean(df$value < Mc)
+}
+
 sim_outcome_val = function(geom, n_contam, c_hat, rho, m_kbar, conc_neg, lims, spread, 
                            covar_mat, n_affected, spread_radius, cont_level, dis_level, seed,
-                           n, n_sub, m_sp, homogeneity, unbalanced){
+                           n, n_sub, m_sp, homogeneity, unbalanced, Mc){
   
   a = sim_intmed_dis_val(geom = geom, n_contam = n_contam, c_hat = c_hat, rho = rho, 
                          m_kbar = m_kbar, conc_neg = conc_neg, lims = lims, spread = spread, 
@@ -164,20 +170,22 @@ sim_outcome_val = function(geom, n_contam, c_hat, rho, m_kbar, conc_neg, lims, s
   
   b = calc_var_comp(df = a$df)
   
-  return(c(c_true = a$c_true, b))
+  c = calc_Paccept_val(df = a$df, Mc = Mc)
+  
+  return(c(c_true = a$c_true, b, Paccept = c))
 }
 
 # function factory
 gen_sim_outcome_val = function(geom, n_contam, c_hat, rho, m_kbar, conc_neg, lims, spread, 
                                covar_mat, n_affected, spread_radius, cont_level, dis_level, seed,
-                               n, n_sub, m_sp, homogeneity, unbalanced){
+                               n, n_sub, m_sp, homogeneity, unbalanced, Mc){
   function(...){
     sim_outcome_val(geom = geom, n_contam = n_contam, c_hat = c_hat, rho = rho, 
                     m_kbar = m_kbar, conc_neg = conc_neg, lims = lims, spread = spread, 
                     covar = covar, n_affected = n_affected, spread_radius = spread_radius, 
                     cont_level = cont_level, dis_level = dis_level, seed = seed,
                     n = n, n_sub = n_sub, m_sp = m_sp, homogeneity = homogeneity, 
-                    unbalanced = unbalanced)
+                    unbalanced = unbalanced, Mc = Mc)
   }
 }
 
@@ -186,11 +194,11 @@ clean_val2 = function(data){
   # Convert the list into a vector
   a = unlist(data)
   
-  # Split the list by list names (c_true, c_test, var_test, var_sub)
+  # Split the list by list names (c_true, c_test, var_test, var_sub, Paccept)
   b = split(x = a, f = names(a)) %>%
     map(.x = ., .f = `names<-`, value = NULL)
   
-  return(list("c_true" = b$c_true, "c_test" = b$c_test, "var_test" = b$var_test, "var_sub" = b$var_sub))
+  return(list("c_true" = b$c_true, "c_test" = b$c_test, "var_test" = b$var_test, "var_sub" = b$var_sub, "Paccept" = b$Paccept))
 }
 
 
@@ -260,8 +268,9 @@ metrics_dis_one_val = function(data){
   c_test = mean_by_seed(data = data, name = "c_test")
   var_test = mean_by_seed(data = data, name = "var_test")
   var_sub = mean_by_seed(data = data, name = "var_sub")
+  Paccept = mean_by_seed(data = data, name = "Paccept")
   
-  return(list(c_true = c_true, c_test = c_test, var_test = var_test, var_sub = var_sub))
+  return(list(c_true = c_true, c_test = c_test, var_test = var_test, var_sub = var_sub, Paccept = Paccept))
 }
 
 # This function is for all the lists

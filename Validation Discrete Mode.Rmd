@@ -77,6 +77,7 @@ seed = NA
   * `n_sub` = Number of subsamples per test sample (2)
   * `m_sp` = mass of subsample (50g)
   * `unbalanced` = indicator for unbalanced design
+  * `Mc` = mycotoxin threshold level (ng/g)
   * `c_hat_vec` = vector containing all the aflatoxin concentrations in Whitaker's data
 
 ```{r}
@@ -84,6 +85,7 @@ n = 32
 n_sub = 2
 m_sp = 50
 unbalanced = FALSE
+Mc = 20
 
 c_hat_vec = c(5.8, 6.4, 6.7, 8.6, 11.8, 15.9, 18.2, 25.6, 27.3, 32.9, 56.7, 57.1, 94.7, 95.6, 113.8, 276.9, 298.9, 676.6)
 ```
@@ -111,7 +113,7 @@ summary(lmer(formula = value ~ 1 + (1|test_sp), data = sim_data$df, REML = TRUE)
 ArgList_default = list(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat,
                        n_affected = n_affected, dis_level = dis_level, n = n, 
                        rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, homogeneity = homogeneity, 
-                       m_sp = m_sp, n_sub = n_sub, unbalanced = unbalanced)
+                       m_sp = m_sp, n_sub = n_sub, unbalanced = unbalanced, Mc = Mc)
 
 n_seed = 10
 n_iter = 10
@@ -130,7 +132,7 @@ str(result_cleaned)
 
 
 ```{r, echo = FALSE}
-f_vis = function(data, type){
+f_vis = function(data, type, Mc){
   
   a = data %>%
     group_by(param, metrics) %>%
@@ -138,8 +140,10 @@ f_vis = function(data, type){
               med = median(x = value),
               ub = quantile(x = value, probs = 0.975))
   
-  if(type == "contam"){
+  
+  if(type == "diag"){
     
+    # This shows comparison between c_test, c_true, and c_hat
     b = a %>%
       dplyr::filter(.data = ., metrics %in% c("c_test", "c_true"))
     
@@ -155,6 +159,7 @@ f_vis = function(data, type){
       
   } else if(type == "var"){
     
+    # This shows variance components var_sub, var_test VS c_hat
     c = a %>%
       dplyr::filter(.data = ., metrics %in% c("var_sub", "var_test"))
     
@@ -168,28 +173,53 @@ f_vis = function(data, type){
       theme_bw() +
       theme(legend.position = "top")
     
+  } else if (type == "OC"){
+    
+    # This plots Paccept against c_hat
+    d = a %>%
+      dplyr::filter(.data = ., metrics == "Paccept")
+    
+    ggplot(data = d) +
+      geom_ribbon(aes(x = param, ymin = lb, ymax = ub), alpha = 0.3) +
+      geom_line(aes(x = param, y = med)) +
+      geom_point(aes(x = param, y = med)) +
+      geom_vline(xintercept = Mc, color = "red") +
+      scale_x_log10() +
+      coord_cartesian(ylim = c(0,1)) +
+      labs(x = "Input concentration (ppb)", y = "Probability of acceptance (2.5th - 97.5th percentile)") +
+      theme_bw() +
+      theme(legend.position = "top")
+    
   } else {
     stop("Unknown type.")
   }
 }
 ```
 
-1. Show the true contamination level and contamination level from sampling VS input contamination level. This is a quality control step.
+1. Show the OC curve
 
-```{r}
-f_vis(data = result_cleaned, type = "contam")
+```{r, echo = FALSE}
+f_vis(data = result_cleaned, type = "OC", Mc = Mc)
 ```
+
 
 2. Show the variance components VS input contamination level. 
 
-```{r}
+```{r, echo = FALSE}
 f_vis(data = result_cleaned, type = "var")
+```
+
+3. Show the true contamination level and contamination level from sampling VS input contamination level. This is a quality control step.
+
+```{r, echo = FALSE}
+f_vis(data = result_cleaned, type = "diag")
 ```
 
 # Debug
 
 ```{r}
-test1 = sim_iterate_val(n_iter = 5, Args = ArgList_default, seed = 123)
-test2 = sim_iterate2_val(n_seed = n_seed, n_iter = n_iter, Args = ArgList_default)
-test3 = tune_param_val(Args = ArgList_default, n_seed = n_seed, n_iter = n_iter, param = "c_hat", val = c_hat)
+test1 = do.call(what = sim_outcome_val, args = c(ArgList_default, "seed" = NA))
+test2 = sim_iterate_val(n_iter = 5, Args = ArgList_default, seed = 123)
+test3 = sim_iterate2_val(n_seed = n_seed, n_iter = n_iter, Args = ArgList_default)
+test4 = tune_param_val(Args = ArgList_default, n_seed = n_seed, n_iter = n_iter, param = "c_hat", val = c_hat)
 ```
