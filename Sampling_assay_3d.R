@@ -53,9 +53,6 @@ grinder = function(data, homogeneity){
   
   # Checkpoint
   stopifnot(homogeneity >= 0 & homogeneity <= 1)
-  if(homogeneity < 0.6){
-    warning("Homogeneity lower than FGIS regulation (0.6).")
-  }
   
   # Grind the kernels based on homogeneity
   if(homogeneity == 0){
