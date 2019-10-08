@@ -77,7 +77,8 @@ get_sample_dis_val = function(data, n, homogeneity, m_sp, m_kbar, unbalanced, n_
   a = split_grains(data = data, n = n)
   
   # Grind each test sample
-  b = map(.x = a, .f = grinder, homogeneity = homogeneity)
+  homogeneity_eval = eval(homogeneity)
+  b = map(.x = a, .f = grinder, homogeneity = homogeneity_eval)
   
   if(unbalanced == TRUE){
     # For half of the test samples, get 2 subsamples
