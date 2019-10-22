@@ -90,13 +90,13 @@ contam_level_draw = function(dimension, method, spread_radius, LOC, df_contam, x
 # Sampling plan plots
 
 ## Simple random sampling
-sp_draw_srs = function(data, spread, xlim, ylim){
+sp_draw_srs = function(data, spread, xlim, ylim, sp_radius){
   if(spread == "discrete"){
     ggplot() +
       geom_point(data = data, aes(x = X, y = Y, color = label, shape = label)) +
       scale_color_manual(values = c("darkgreen")) +
       scale_shape_manual(values = 15) +
-      geom_circle(data = data, aes(x0 = X, y0 = Y, r = r), fill = "darkgreen", alpha = 0.1) +
+      geom_circle(data = data, aes(x0 = X, y0 = Y, r = sp_radius), fill = "darkgreen", alpha = 0.1) +
       coord_fixed(ratio = 1, xlim = xlim, ylim = ylim) +
       theme_bw()
   } else if (spread == "continuous"){
@@ -110,24 +110,39 @@ sp_draw_srs = function(data, spread, xlim, ylim){
 }
 
 ## Stratified random sampling
-sp_draw_strs = function(data, spread, xlim, ylim, n_strata, by){
-  base = sp_draw_srs(data = data, spread = spread, xlim = xlim, ylim = ylim)
-  bounds = calc_bounds(xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
+sp_draw_strs = function(data, spread, xlim, ylim, n_strata, by, ...){
+  base = sp_draw_srs(data = data, spread = spread, xlim = xlim, ylim = ylim, ...)
+  
   if(by == "row"){
+    bounds = calc_bounds_2d(xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
+    
     base + 
       geom_hline(yintercept = bounds, color = "darkgrey")
   } else if (by == "column"){
+    bounds = calc_bounds_2d(xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
+    
     base +
       geom_vline(xintercept = bounds, color = "darkgrey")
+  } else if (by == "2d"){
+    n_x = n_strata[1]
+    n_y = n_strata[2]
+    xbounds = calc_bounds_2d(xlim = xlim, ylim = ylim, n_strata = n_x, by = "column")
+    ybounds = calc_bounds_2d(xlim = xlim, ylim = ylim, n_strata = n_y, by = "row")
+    
+    base +
+      geom_hline(yintercept = ybounds, color = "darkgrey") +
+      geom_vline(xintercept = xbounds, color = "darkgrey")
+  } else {
+    stop("Unknown sampling strategy.")
   }
 }
 
 ### A wrapper function
-sp_draw = function(method_sp, data, spread, xlim, ylim, n_strata, by){
+sp_draw = function(method_sp, data, spread, xlim, ylim, n_strata, by, ...){
   if(method_sp %in% c("srs", "ss")){
-    sp_draw_srs(data = data, spread = spread, xlim = xlim, ylim = ylim)
+    sp_draw_srs(data = data, spread = spread, xlim = xlim, ylim = ylim, ...)
   } else if (method_sp == "strs"){
-    sp_draw_strs(data = data, spread = spread, xlim = xlim, ylim = ylim, n_strata = n_strata, by = by)
+    sp_draw_strs(data = data, spread = spread, xlim = xlim, ylim = ylim, n_strata = n_strata, by = by, ...)
   }
 }
 
