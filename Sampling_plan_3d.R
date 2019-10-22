@@ -22,7 +22,7 @@ naming_sp_3d = function(n_sp, x_sp, y_sp, z_sp, radius){
   return(df)
 }
 
-# 3D: simple random sampling
+# 3D: simple random sampling (probe)
 sim_plan_srs_3d = function(n_sp, lims, radius){
   
   # Check point: make sure the dimension is 3
@@ -31,34 +31,22 @@ sim_plan_srs_3d = function(n_sp, lims, radius){
   ## Generate a data frame that contains the coordinates of the sampling points
   x_sp = runif(n = n_sp, min = lims$xlim[1], max = lims$xlim[2])
   y_sp = runif(n = n_sp, min = lims$ylim[1], max = lims$ylim[2])
-  z_sp = runif(n = n_sp, min = lims$zlim[1], max = lims$zlim[2])
+  z_sp = 0
   
   naming_sp_3d(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, z_sp = z_sp, radius = radius)
 }
 
-
-# Create a function that calculates the boundaries of each stratum on z-axis
-calc_bounds_3d = function(lims, n_strata){
-  seq(from = lims$zlim[1], to = lims$zlim[2], by = (lims$zlim[2] - lims$zlim[1])/n_strata)
-}
-
-# 3D: Create a function that generates a stratified random sampling plan
-sim_plan_strs_3d = function(n_sp, n_strata, lims, radius){
+# 3D: Create a function that generates a stratified random sampling plan (probe)
+sim_plan_strs_3d = function(n_sp, n_strata, by, lims, radius){
   
   # Check points
   stopifnot(length(lims) == 3)
   
-  if (n_sp %% n_strata != 0) {
-    stop("n_sp is not a multiple of n_strata.")
-  } else {
-    bounds = calc_bounds_3d(lims = lims, n_strata = n_strata)
-    
-    x_sp = runif(n = n_sp, min = lims$xlim[1], max = lims$xlim[2])
-    y_sp = runif(n = n_sp, min = lims$ylim[1], max = lims$ylim[2])
-    z_sp = runif(n = n_sp, min = bounds[1:length(bounds) - 1], max = bounds[2:length(bounds)])
-  }
-  
-  naming_sp_3d(n_sp = n_sp, x_sp = x_sp, y_sp = y_sp, z_sp = z_sp, radius = radius)
+  a = sim_plan_strs_2d(n_sp = n_sp, n_strata = n_strata, by = by, 
+                       xlim = lims$xlim, ylim = lims$ylim, radius = radius) %>%
+    mutate(Z = 0) %>%
+    dplyr::select(X, Y, Z, ID, label, r, cont_level, dis_level)
+  return(a)
 }
 
 # systematic sampling for 3D
@@ -74,7 +62,7 @@ sim_plan_ss_3d = function(container, lims, radius, compartment, type){
          "hopper" = ss_hopper(lims = lims, compartment = compartment, type = type, radius = radius))
 }
 
-sim_plan_3d = function(method_sp, n_sp, lims, radius, container, compartment, type){
+sim_plan_3d = function(method_sp, n_sp, n_strata, by, lims, radius, container, compartment, type){
   
   # Check points
   stopifnot(method_sp %in% c("srs", "strs", "ss"))
@@ -82,7 +70,7 @@ sim_plan_3d = function(method_sp, n_sp, lims, radius, container, compartment, ty
   if(method_sp == "srs"){
     sim_plan_srs_3d(n_sp = n_sp, lims = lims, radius = radius)
   } else if (method_sp == "strs"){
-    sim_plan_strs_3d(n_sp = n_sp, n_strata = n_strata, lims = lims, radius = radius)
+    sim_plan_strs_3d(n_sp = n_sp, n_strata = n_strata, lims = lims, radius = radius, by = by)
   } else if (method_sp == "ss"){
     sim_plan_ss_3d(container = container, lims = lims, radius = radius, compartment = compartment, type = type)
   } else {
@@ -96,9 +84,11 @@ sim_plan_new = function(method_sp, spread, n_sp, lims, radius, n_strata, by, com
   stopifnot(spread %in% c("continuous", "discrete"))
   
   if(spread == "continuous"){
-    sim_plan_2d(method_sp = method_sp, n_sp = n_sp, xlim = lims$xlim, ylim = lims$ylim, radius = radius, n_strata = n_strata, by = by)
+    sim_plan_2d(method_sp = method_sp, n_sp = n_sp, xlim = lims$xlim, ylim = lims$ylim, 
+                radius = radius, n_strata = n_strata, by = by)
   } else if(spread == "discrete"){
-    sim_plan_3d(method_sp = method_sp, n_sp, lims = lims, radius = radius, container = container, compartment = compartment, type = type)
+    sim_plan_3d(method_sp = method_sp, n_sp = n_sp, lims = lims, radius = radius, 
+                container = container, compartment = compartment, type = type, n_strata = n_strata, by = by)
   }
 }
 
