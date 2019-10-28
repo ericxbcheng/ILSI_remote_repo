@@ -98,7 +98,7 @@ conc_neg = rpert(n = 10^6, min = 0, mode = 0.7, max = 19.99, shape = 80)
 ```{r}
 ## Contamination
 #n_contam = 100
-c_hat = 10
+c_hat = 5
 x_lim = c(0, 3)
 y_lim = c(0, 2)
 z_lim = c(0, 1.5)
@@ -108,7 +108,7 @@ dis_level = list(type = "constant", args = 40000)
 #dis_level = list(type = "Gamma", args = list("mode"= 40000, "lb" = 20))
 spread = "discrete"
 n_affected = 0
-covar_mat = make_covar_mat(spread = spread, varx = 0.0009, vary = 0.0009, varz = 0.0009, 
+covar_mat = make_covar_mat(spread = spread, varx = 0.0004, vary = 0.0004, varz = 0.0004, 
                            covxy = 0, covxz = 0, covyz = 0)
 
 # Sampling
@@ -116,7 +116,7 @@ method_sp = "strs"
 n_sp = 24
 n_strata = c(3,4) 
 by = "2d"
-d = 0.05
+d = 0.04
 sp_radius = d / 2
 L = z_lim[2]
 m_kbar = 0.3 
@@ -141,7 +141,7 @@ n_iter = 10
 # Wrap arguments into one single list
 ArgList_default = list(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat,
                        n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
-                       sp_radius = sp_radius,container = container, L = L, rho = rho, m_kbar = m_kbar, 
+                       sp_radius = sp_radius, n_sp = n_sp, n_strata = n_strata, by = by, L = L, rho = rho, m_kbar = m_kbar, 
                        conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, verbose = FALSE, homogeneity = homogeneity)
 ```
 
@@ -205,7 +205,7 @@ one_iteration = do.call(what = sim_intmed, args = ArgList_vis)
 ```
 
 ```{r, eval = FALSE, warning = FALSE, echo = FALSE, out.width = "50%"}
-overlay_draw(method_sp = method_sp, data = one_iteration[["contam_sp_xy"]]$combined , spread = spread, xlim = lims$xlim, ylim = lims$ylim)
+overlay_draw(method_sp = method_sp, data = one_iteration[["contam_sp_xy"]]$combined , spread = spread, xlim = lims$xlim, ylim = lims$ylim, n_strata = n_strata, by = by)
 overlay_draw_probe(data = one_iteration[["contam_sp_xy"]]$combined, lims = lims, L = L)
 sample_dist(raw = one_iteration$contam_sp_xy$raw, work = one_iteration$sample$work, test = one_iteration$sample$test, Mc = Mc)
 assay_draw(data = one_iteration$sample$test, Mc = Mc, method_det = method_det, spread = spread)
@@ -232,25 +232,25 @@ sp_xy = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims,
 dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy, spread = spread, 
                            method_sp = method_sp)
 contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, df_sp = sp_xy, dist = dist_contam_sp, spread = spread, L = L, rho = rho, m_kbar = m_kbar, sp_radius = sp_radius, conc_neg = conc_neg)
-sample_dis = get_sample_dis(data = contam_sp_xy$raw, container = container, m_kbar = m_kbar, tox = tox, homogeneity = homogeneity)
+sample_dis = get_sample_dis(data = contam_sp_xy$raw, m_kbar = m_kbar, tox = tox, homogeneity = homogeneity)
 decision = lot_decision_new(data = sample_dis$test, Mc = Mc, spread = spread, method_det = method_det)
 words(x = decision)
 
 # This function produces the dataframe "contam_sp_xy" and the distance dataframe
 test1 = sim_intmed(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat,
-                   n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
-                   container = container, sp_radius = sp_radius, L = L, rho = rho, 
+                   n_affected = n_affected, dis_level = dis_level, method_sp = method_sp,
+                   n_sp = n_sp, n_strata = n_strata, by = by, container = container, sp_radius = sp_radius, L = L, rho = rho, 
                    m_kbar = m_kbar, tox = tox, conc_neg = conc_neg, seed = seed, homogeneity = homogeneity)
 
 # This function produces
 test2 = sim_outcome_new(c_hat = c_hat, lims = lims, spread = spread, method_sp = method_sp, 
                         method_det = method_det, covar_mat = covar_mat, n_affected = n_affected, 
-                        dis_level = dis_level, sp_radius = sp_radius, container = container, 
+                        dis_level = dis_level, sp_radius = sp_radius, n_sp = n_sp, n_strata = n_strata, by = by, container = container, 
                         L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, Mc = Mc,
                         tox = tox, verbose = TRUE, seed = seed, homogeneity = homogeneity)
 
 # This function produces a sim_outcome_new() function with all the input parameters loaded
-test3 = gen_sim_outcome_new(c_hat = c_hat, lims = lims, spread = spread, 
+test3 = gen_sim_outcome_new(c_hat = c_hat, lims = lims, spread = spread, n_sp = n_sp, n_strata = n_strata, by = by,
                             method_sp = method_sp, method_det = method_det, covar_mat = covar_mat, 
                             n_affected = n_affected, dis_level = dis_level, sp_radius = sp_radius, 
                             container = container, L = L, rho = rho, m_kbar = m_kbar, Mc = Mc, 
