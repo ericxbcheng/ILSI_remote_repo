@@ -137,15 +137,10 @@ calc_dist = function(df_contam, df_sp, spread, method_sp){
     calc_dist_2d(df_contam = df_contam, df_sp = df_sp, probe = FALSE)
   } else if(spread == "discrete"){
     
-    # When method_sp == 'ss', we only calculate 2D Euclidean distance as we are using probes
-    # When method_sp == 'srs', 'strs', we calculate 3D Euclidean distance as we are using a spherical sampelr
-    stopifnot(method_sp %in% c("srs", "strs", "ss"))
+    # we only calculate 2D Euclidean distance as we are using probes
+    #stopifnot(method_sp %in% c("srs", "strs", "ss"))
     
-    if(method_sp == "ss"){
-      calc_dist_2d(df_contam = df_contam, df_sp = df_sp, probe = TRUE)
-    } else {
-      calc_dist_3d(df_contam = df_contam, df_sp = df_sp, probe = FALSE)
-    }
+    calc_dist_2d(df_contam = df_contam, df_sp = df_sp, probe = TRUE)
   }
 }
 
@@ -186,25 +181,13 @@ calc_k_num = function(method_sp, sp_radius, L, rho, m_kbar, sampler = TRUE, lims
   
   if(sampler == TRUE){
     
-    # Check point
-    stopifnot(method_sp %in% c("srs", "strs", "ss"))
-    
-    if(method_sp == "ss"){
-      # Estimate the number of kernels in each probe
-      ## V = pi * r^2 * L
-      ## m = rho * V, remember rho's unit = g/cm3, and V's unit is m3
-      V_probe = pi * (sp_radius) ^ 2 * L
-      m_probe = rho * V_probe * 10 ^ 6
-      n_k = round(x = m_probe/m_kbar, digits = 0)
+    # Estimate the number of kernels in each probe
+    ## V = pi * r^2 * L
+    ## m = rho * V, remember rho's unit = g/cm3, and V's unit is m3
+    V_probe = pi * (sp_radius) ^ 2 * L
+    m_probe = rho * V_probe * 10 ^ 6
+    n_k = round(x = m_probe/m_kbar, digits = 0)
       
-    } else {
-      # Estimate the number of kernels in a sphere
-      ## V = 4/3 * pi * r^3
-      ## m = rho * V, remember rho's unit = g/cm3, and V's unit is m3
-      V_probe = 4/3 * pi * sp_radius ^ 3
-      m_probe = rho * V_probe * 10 ^ 6
-      n_k = round(x = m_probe/m_kbar, digits = 0)
-    }
   } else {
     # Estimate the number of kernels in the whole container
     ## V = xlim[2] * ylim[2] * zlim[2] (in m^3)
