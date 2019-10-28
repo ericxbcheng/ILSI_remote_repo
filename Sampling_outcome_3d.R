@@ -1,7 +1,7 @@
 # Create intermediate datasets for discrete case
 sim_intmed_dis = function(c_hat, lims, spread, covar_mat, n_affected, dis_level, 
                           method_sp, sp_radius, container, compartment, type, L, 
-                          rho, m_kbar, conc_neg, tox, seed, homogeneity){
+                          rho, m_kbar, conc_neg, tox, seed, homogeneity, n_sp, n_strata, by){
   
   # Generate the coordinates of contamination points
   contam_xy = sim_contam_new(c_hat = c_hat, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, 
@@ -10,7 +10,8 @@ sim_intmed_dis = function(c_hat, lims, spread, covar_mat, n_affected, dis_level,
   
   # Generate the coordinates of sample points
   sp_xy = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, radius = sp_radius, 
-                       container = container, compartment = compartment, type = type)
+                       container = container, compartment = compartment, type = type, 
+                       n_sp = n_sp, n_strata = n_strata, by = by)
   
   # Generate the distance matrix
   dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy, spread = spread, method_sp = method_sp)
@@ -20,8 +21,7 @@ sim_intmed_dis = function(c_hat, lims, spread, covar_mat, n_affected, dis_level,
                                   spread = spread, sp_radius = sp_radius, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg)
   
   # Create work portion and test portion
-  sample_dis = get_sample_dis(data = contam_sp_xy$raw, container = container, 
-                              m_kbar = m_kbar, tox = tox, homogeneity = homogeneity)
+  sample_dis = get_sample_dis(data = contam_sp_xy$raw, m_kbar = m_kbar, tox = tox, homogeneity = homogeneity)
   
   return(list(contam_sp_xy = contam_sp_xy, dist = dist_contam_sp, sample = sample_dis))
 }
@@ -63,7 +63,7 @@ sim_intmed = function(n_contam, c_hat, lims, spread, covar_mat, n_affected, spre
                    n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
                    sp_radius = sp_radius, container = container, compartment = compartment,
                    type = type, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, 
-                   tox = tox, seed = seed, homogeneity = homogeneity)
+                   tox = tox, seed = seed, homogeneity = homogeneity, n_sp = n_sp, n_strata = n_strata, by = by)
   } else {
     
     sim_intmed_cont(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, 
@@ -102,13 +102,14 @@ sim_outcome_cont = function(n_contam, lims, spread, spread_radius, cont_level, b
 # Outcome simulation for discrete case
 sim_outcome_dis = function(c_hat, lims, spread, covar_mat, n_affected, dis_level, 
                            method_sp, sp_radius, container, L, rho, m_kbar, conc_neg, 
-                           tox, Mc, method_det, verbose = FALSE, seed, homogeneity){
+                           tox, Mc, method_det, verbose = FALSE, seed, homogeneity, n_sp, n_strata, by){
   
   # Create intermediate datasets
   a = sim_intmed(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat, 
                  n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
                  sp_radius = sp_radius, container = container, L = L, rho = rho, 
-                 m_kbar = m_kbar, conc_neg = conc_neg, tox = tox, seed = seed, homogeneity = homogeneity)
+                 m_kbar = m_kbar, conc_neg = conc_neg, tox = tox, seed = seed, 
+                 homogeneity = homogeneity, n_sp = n_sp, n_strata = n_strata, by = by)
   
   # Extract intermediate datasets
   c_true = a$contam_sp_xy$c_true
@@ -148,7 +149,8 @@ sim_outcome_new = function(n_contam, c_hat, lims, spread, spread_radius, method_
     sim_outcome_dis(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat, 
                     n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
                     sp_radius = sp_radius, container = container, L = L, rho = rho, m_kbar = m_kbar, 
-                    conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, verbose = verbose, seed = seed, homogeneity = homogeneity)
+                    conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, verbose = verbose, 
+                    seed = seed, homogeneity = homogeneity, n_sp = n_sp, n_strata = n_strata, by = by)
     
   } else {
     sim_outcome_cont(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, cont_level = cont_level,
