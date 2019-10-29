@@ -301,7 +301,9 @@ sim_contam_dis = function(c_hat, lims, rho, m_kbar, dis_level, conc_neg, spread,
   
   # Calculate n_spot
   # Set the boundary for n_affected: 0 <= n_affected <= n_contam_total - 1
-  stopifnot(n_affected <= n_contam_total - 1)
+  if(n_affected <= n_contam_total - 1){
+    stop(cat("n_affected must be <=", n_contam_total - 1))
+  }
   
   n_spot = ceiling(n_contam_total / (1 + n_affected))
   
