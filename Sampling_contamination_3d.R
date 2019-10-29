@@ -300,6 +300,11 @@ sim_contam_dis = function(c_hat, lims, rho, m_kbar, dis_level, conc_neg, spread,
   n_contam_total = calc_n_contam(c_hat = c_hat, lims = lims, rho = rho, m_kbar = m_kbar, dis_level = dis_level, conc_neg = conc_neg)
   
   # Calculate n_spot
+  # Set the boundary for n_affected: 0 <= n_affected <= n_contam_total - 1
+  if(n_affected <= n_contam_total - 1){
+    stop(cat("n_affected must be <=", n_contam_total - 1))
+  }
+  
   n_spot = ceiling(n_contam_total / (1 + n_affected))
   
   # Generate contamination spots
