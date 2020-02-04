@@ -25,9 +25,9 @@ get_attr_plan = function(case, m, M){
   
   ## Make sure 2-class cases have m = M = 0
   if(case %in% 10:15){
-    if(M != 0 | m != 0){
-      warning(paste0("Case ", case, ": 2-class plan. m and M are coerced to 0." ))
-      m = M = 0
+    if(M != 0){
+      warning(paste0("Case ", case, ": 2-class plan. M is coerced to 0." ))
+      M = 0
     }
   }
   
