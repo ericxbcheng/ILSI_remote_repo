@@ -39,13 +39,17 @@ v_manual_2d = sidebarLayout(
         numericInput(inputId = "m_sp", label = "Individual sample mass (g)", value = 25, min = 0),
         selectInput(inputId = "method_det", label = "Detection method", choices = list("Plating", "Enrichment")),
         sliderInput(inputId = "case", label = "Case", min = 1, value = 10, max = 15, step = 1, round = TRUE),
+        numericInput(inputId = "m", label = "m", value = 0, min = 0),
+        numericInput(inputId = "M", label = "M", value = 0, min = 0),
         numericInput(inputId = "n_iter", label = "Number of iteration", value = 10, min = 1, step = 1),
         splitLayout(actionButton(inputId = "vis", label = "Visualize"),
                     submitButton(text = "Run"))
         
     ),
     mainPanel(
-        plotOutput(outputId = "contam_sp_xy", hover = "plot_hover")
+        # plotOutput(outputId = "contam_sp_xy", hover = "plot_hover"),
+        # verbatimTextOutput(outputId = "debug"),
+        verbatimTextOutput(outputId = "debug2")
     )
 )
 
@@ -61,15 +65,14 @@ v_manual_3d = sidebarLayout(
 )
 
 v_manual = tabsetPanel(
+    id = "v_manual",
     tabPanel(title = "2D", v_manual_2d),
     tabPanel(title = "3D", v_manual_3d)
 )
 
-
-
 page_inputs = tabsetPanel(
-        tabPanel(title = "Smart Version", v_smart),
-        tabPanel(title = "Manual Version", v_manual)
+    tabPanel(title = "Smart Version", v_smart),
+    tabPanel(title = "Manual Version", v_manual)
 )
 
 
