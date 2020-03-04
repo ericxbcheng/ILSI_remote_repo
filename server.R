@@ -8,6 +8,7 @@
 #
 
 library(shiny)
+library(shinydashboard)
 
 source(file = "Sampling_libraries.R")
 source(file = "Sampling_contamination.R")
@@ -25,6 +26,11 @@ source(file = "Sampling_tuning_3d.R")
 source(file = "Sampling_analysis.R")
 
 shinyServer(function(input, output) {
+  
+  observe(x = {print(input$menu1)})
+  observe(x = {print(input$manual_input)})
+  observe(x = {print(input$n_contam)})
+  
   # observeEvent(eventExpr = {input$v_manual == "2D"}, handlerExpr = {
   #     
   #     # output$debug = renderPrint(expr = input$v_manual)
