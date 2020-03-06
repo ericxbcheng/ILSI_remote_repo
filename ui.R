@@ -24,14 +24,16 @@ library(shinydashboard)
 sidebar = dashboardSidebar(
     
     sidebarMenu(
-        id = "menu1",
+        id = "sidebarMenu",
         menuItem(text = "Introduction", 
                  tabName = "intro"),
         menuItem(text = "Inputs", 
-                 menuSubItem(text = "Smart Version", 
+                 menuItem(text = "Smart Version", 
                              tabName = "v_smart"), 
-                 menuSubItem(text = "Manual Version", 
-                             tabName = "v_manual"),
+                 menuItem(text = "Manual Version", 
+                             tabName = "v_manual", 
+                          menuSubItem(text = "2D", tabName = "2D"), 
+                          menuSubItem(text = "3D", tabName = "3D")),
                  tabName = "inputs"),
         menuItem(text = "Outputs", 
                  menuSubItem(text = "Visualization", tabName = "vis"),
@@ -63,18 +65,7 @@ v_manual_2D = fluidPage(
     numericInput(inputId = "M", label = "M", value = 0, min = 0),
     numericInput(inputId = "n_iter", label = "Number of iteration", value = 10, min = 1, step = 1),
     splitLayout(actionButton(inputId = "vis", label = "Visualize"),
-                submitButton(text = "Run"))
-)
-
-v_manual = fluidRow(
-    
-    tabBox(title = "Input parameters",
-           id = "manual_inputs", 
-           tabPanel(title = "2D", 
-                    v_manual_2D), 
-           tabPanel(title = "3D", 
-                    p("3D inputs."))
-           )
+                actionButton(inputId = "iteration", label = "Iterate"))
 )
 
 body = dashboardBody(
@@ -84,7 +75,8 @@ body = dashboardBody(
                 h2("This is the introduction page.")),
         tabItem(tabName = "v_smart", 
                 h2("This is the smart version page.")),
-        tabItem(tabName = "v_manual", v_manual),
+        tabItem(tabName = "2D", v_manual_2D),
+        tabItem(tabName = "3D", h2("3D inputs.")),
         tabItem(tabName = "vis", 
                 h2("This is the visualization page.")),
         tabItem(tabName = "export",

@@ -27,8 +27,7 @@ source(file = "Sampling_analysis.R")
 
 shinyServer(function(input, output) {
   
-  observe(x = {print(input$menu1)})
-  observe(x = {print(input$manual_input)})
+  observe(x = {print(input$sidebarMenu)})
   observe(x = {print(input$n_contam)})
   
   # observeEvent(eventExpr = {input$v_manual == "2D"}, handlerExpr = {
@@ -51,11 +50,11 @@ shinyServer(function(input, output) {
   #     one_iteration = reactive(x = {do.call(what = sim_intmed, args = ArgList_vis())})
   #   })
   
-  observeEvent(eventExpr = input$vis, handlerExpr = {
-    output$debug2 = renderPrint(expr = "Visualization")
-    # output$contam_sp_xy = renderPlot(expr = {overlay_draw(method_sp = input$method_sp, data = one_iteration()[["contam_sp_xy"]] ,
-    #                                                                    spread = "continuous", xlim = input$x_lim, ylim = input$y_lim, 
-    #                                                                    n_strata = input$n_strata, by = input$by)})
-  })
+  # observeEvent(eventExpr = input$vis, handlerExpr = {
+  #   output$debug2 = renderPrint(expr = "Visualization")
+  #   # output$contam_sp_xy = renderPlot(expr = {overlay_draw(method_sp = input$method_sp, data = one_iteration()[["contam_sp_xy"]] ,
+  #   #                                                                    spread = "continuous", xlim = input$x_lim, ylim = input$y_lim, 
+  #   #                                                                    n_strata = input$n_strata, by = input$by)})
+  # })
   
 })
