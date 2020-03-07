@@ -45,36 +45,62 @@ sidebar = dashboardSidebar(
 v_manual_2D = fluidRow(
     
     box(title = "2D Input Parameters",
-        numericInput(inputId = "n_contam", label = "Number of contamination points", value = 1, min = 1, step = 1),
+        selectInput(inputId = "geom", label = "Geometry", choices = list("Point-source" = "point", "Area-based" = "area"), multiple = FALSE),
+        conditionalPanel(
+            condition = "input.geom == 'point'",
+            numericInput(inputId = "n_contam", label = "Number of contamination points", value = 1, min = 1, step = 1)
+        ),
         numericInput(inputId = "x_lim", label = "Length (m)", value = 10, min = 1),
         numericInput(inputId = "y_lim", label = "Width (m)", value = 10, min = 1),
-        selectInput(inputId = "geom", label = "Geometry", choices = list("point", "area"), multiple = FALSE),
         numericInput(inputId = "cont_level_mu", label = "Mean contamination level (log CFU/g)", value = 3),
         numericInput(inputId = "cont_level_sd", label = "Standard deviation of contamination level (log CFU/g)", value = 1),
         numericInput(inputId = "bg_level", label = "Background level (CFU/g)", value = 0.00001, min = 0),
         numericInput(inputId = "spread_radius", label = "Radius of contamination area (m)", value = 1, min = 0),
         numericInput(inputId = "LOC", label = "LOC", value = 0.001),
         selectInput(inputId = "fun", label = "Decay function", choices = list("Exponential" = "exp", "Gaussian" = "norm", "Uniform" = "unif")),
+        numericInput(inputId = "n_sp", label = "Number of sample points", value = 5, min = 1),
         selectInput(inputId = "method_sp", label = "Sampling strategy", choices = list("SRS" = "srs", "STRS" = "strs", "k-step SS" = "ss")),
-        numericInput(inputId = "n_sp", label = "Number of sample points", value = 1, min = 1),
-        selectInput(inputId = "by", label = "By", choices = list("Row" = "row", "Column" = "column", "2D" = "2d")),
-        numericInput(inputId = "n_strata", label = "Number of strata", value = NULL, min = 1),
+        conditionalPanel(
+            condition = "input.method_sp == 'strs'",
+            selectInput(inputId = "by", label = "Stratify by", choices = list("Row" = "row", "Column" = "column", "2D" = "2d")),
+            conditionalPanel(
+                condition = "input.by != '2d'",
+                numericInput(inputId = "n_strata", label = "Number of strata", value = NULL, min = 1)
+            ),
+            conditionalPanel(
+                condition = "input.by == '2d'",
+                numericInput(inputId = "n_strata_row", label = "Number of strata (row)", value = NULL, min = 1),
+                numericInput(inputId = "n_strata_col", label = "Number of strata (column)", value = NULL, min = 1)
+            )
+        ),
+        conditionalPanel(
+            condition = "input.method_sp == 'ss'",
+            selectInput(inputId = "by", label = "By", choices = list("Row" = "row", "Column" = "column"))
+        ),
         numericInput(inputId = "m_sp", label = "Individual sample mass (g)", value = 25, min = 0),
         selectInput(inputId = "method_det", label = "Detection method", choices = list("Plating", "Enrichment")),
         sliderInput(inputId = "case", label = "Case", min = 1, value = 10, max = 15, step = 1, round = TRUE),
-        numericInput(inputId = "m", label = "m", value = 0, min = 0),
-        numericInput(inputId = "M", label = "M", value = 0, min = 0),
+        numericInput(inputId = "m", label = "m", value = NULL, min = 0),
+        conditionalPanel(
+            condition = "input.case < 10",
+            numericInput(inputId = "M", label = "M", value = NULL, min = 0)
+        ),
         numericInput(inputId = "n_iter", label = "Number of iteration", value = 10, min = 1, step = 1),
-        splitLayout(actionButton(inputId = "vis", label = "Visualize"),
-                    actionButton(inputId = "iteration", label = "Iterate"))),
+        actionButton(inputId = "load", label = "Load parameters"),
+        h2(),
+        conditionalPanel(
+            condition = "input.load == true",
+            splitLayout(
+                actionButton(inputId = "vis", label = "Visualize"),
+                actionButton(inputId = "iteration", label = "Iterate")
+            )
+        )
+    ),
     
     box(title = "Visualization for one iteration",
         plotOutput(outputId = "overlay_draw"),
         plotOutput(outputId = "contam_level_draw")
-        
-        )
-    
-    
+    )
 )
 
 body = dashboardBody(

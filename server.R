@@ -25,38 +25,62 @@ source(file = "Sampling_iteration.R")
 source(file = "Sampling_tuning_3d.R")
 source(file = "Sampling_analysis.R")
 
-shinyServer(function(input, output) {
+vis_once = function(input, output, spread, ArgList){
   
   observeEvent(eventExpr = {input$vis}, handlerExpr = {
+    
+    if(spread == "continuous"){
       
-      if(input$sidebarMenu == "2D"){
-        spread = "continuous"
-      } else if(input$sidebarMenu == "3D"){
-        spread = "discrete"
-      } else {
-        stop("Unknown manual mode")
-      }
-
-      ArgList_default = list(n_contam = input$n_contam, lims = list(xlim = c(0, input$x_lim), ylim = c(0, input$y_lim)),
-                                           spread = spread, spread_radius = input$spread_radius,
-                                           cont_level = c(input$cont_level_mu, input$cont_level_sd), method_sp = input$method_sp,
-                                           n_sp = input$n_sp, n_strata = input$n_strata, by = input$by, LOC = input$LOC,
-                                           fun = input$fun, case = input$case, m = input$m, M = input$M, m_sp = input$m_sp,
-                                           method_det = input$method_det, bg_level = input$bg_level, geom = input$geom)
-
       # Remove unnecessary arguments
-      ArgList_vis = ArgList_default
+      ArgList_vis = ArgList
       ArgList_vis[c("case", "M", "m_sp", "method_det")] = NULL
       ArgList_vis$seed = NaN
       print(ArgList_vis)
       # Produce intermediate outputs
       one_iteration = do.call(what = sim_intmed, args = ArgList_vis)
       output$overlay_draw = renderPlot(expr = {overlay_draw(method_sp = ArgList_vis$method_sp, data = one_iteration[["contam_sp_xy"]] , 
-                                         spread = ArgList_vis$spread, xlim = ArgList_vis$lims$xlim, ylim = ArgList_vis$lims$ylim, 
-                                         n_strata = ArgList_vis$n_strata, by = ArgList_vis$by)})
-      output$contam_level_draw = renderPlot(expr = {contam_level_draw(dimension = "3d", method = ArgList_vis$fun, spread_radius = ArgList_vis$spread_radius, 
-                                                   LOC = ArgList_vis$LOC, df_contam = one_iteration[["contam_sp_xy"]] , 
-                                                   xlim = ArgList_vis$lims$xlim, ylim = ArgList_vis$lims$ylim, bg_level = ArgList_vis$bg_level, geom = ArgList_vis$geom)})
-    })
+                                                            spread = ArgList_vis$spread, xlim = ArgList_vis$lims$xlim, ylim = ArgList_vis$lims$ylim, 
+                                                            n_strata = ArgList_vis$n_strata, by = ArgList_vis$by)})
+      output$contam_level_draw = renderPlot(expr = {contam_level_draw(dimension = "3d", method = ArgList_vis$fun, 
+                                                                      spread_radius = ArgList_vis$spread_radius, LOC = ArgList_vis$LOC, 
+                                                                      df_contam = one_iteration[["contam_sp_xy"]] , xlim = ArgList_vis$lims$xlim, 
+                                                                      ylim = ArgList_vis$lims$ylim, bg_level = ArgList_vis$bg_level, 
+                                                                      geom = ArgList_vis$geom)})
+      
+    } else {
+      message("Under construction.") 
+    }
+  })
+}
+
+
+
+shinyServer(function(input, output) {
+  
+  # Load the parameters
+  observeEvent(eventExpr = {input$load}, handlerExpr = {
+    
+    if(input$sidebarMenu == "2D"){
+      spread = "continuous"
+      
+      ArgList_default = list(n_contam = input$n_contam, lims = list(xlim = c(0, input$x_lim), ylim = c(0, input$y_lim)),
+                             spread = spread, spread_radius = input$spread_radius,
+                             cont_level = c(input$cont_level_mu, input$cont_level_sd), method_sp = input$method_sp,
+                             n_sp = input$n_sp, n_strata = input$n_strata, by = input$by, LOC = input$LOC,
+                             fun = input$fun, case = input$case, m = input$m, M = input$M, m_sp = input$m_sp,
+                             method_det = input$method_det, bg_level = input$bg_level, geom = input$geom)
+      
+      vis_once(input = input, output = output, spread = spread, ArgList = ArgList_default)
+      
+    } else if(input$sidebarMenu == "3D"){
+      spread = "discrete"
+    } else {
+      stop("Unknown manual mode")
+    }
+    
+  })
+  
+  # Visualize for one iteration
+  
   
 })
