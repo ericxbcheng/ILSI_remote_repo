@@ -70,9 +70,9 @@ load_once = function(input, output){
 }
 
 # Iterate the model without any tuning parameters
-iterate_tune0 = function(input, output, Args){
+iterate_tune0 = function(input, Args){
   
-  output$data_raw = sim_iterate2(n_seed = input$n_seed, n_iter = input$n_iter, Args = Args)
+  return(sim_iterate2(n_seed = input$n_seed, n_iter = input$n_iter, Args = Args))
   
 }
 
@@ -84,15 +84,28 @@ parse_num_vec = function(string){
 }
 
 # Iterate the model with one tuning parameter
-iterate_tune1 = function(input, output, Args){
+iterate_tune1 = function(input, Args){
   
   vals = parse_num_vec(string = input$val_prim)
   
-  output$data_raw = map(.x = vals, .f = tune_param, Args = ArgList_default, n_seed = input$n_seed, n_iter = input$n_iter, param = input$var_prim)
+  return(map(.x = vals, .f = tune_param, Args = ArgList_default, n_seed = input$n_seed, n_iter = input$n_iter, param = input$var_prim))
   
 }
 
-
+plot_tune0 = function(data){
+  
+  # Calculate the acceptance prob
+  a = calc_Prej_one(data) %>%
+    tibble(seed = as.numeric(names(.)), Paccept = 1 - .)
+  
+  ggplot(data = a) +
+    geom_boxplot(aes(x = "NA", y = Paccept)) +
+    geom_point(aes(x = "NA",  y = mean(a$Paccept)), color = "red", pch = 4, size = 5) +
+    labs(x = NULL, y = "Probability of acceptance") +
+    scale_y_continuous(breaks = seq(0,1,0.1)) +
+    coord_cartesian(ylim = c(0,1)) +
+    theme_bw()
+}
 
 shinyServer(function(input, output) {
   
@@ -112,5 +125,23 @@ shinyServer(function(input, output) {
   observeEvent(eventExpr = {input$val_prim},handlerExpr = {
     b = parse_num_vec(string = input$val_prim)
     print(b)
+  })
+  
+  observeEvent(eventExpr = {input$iteration}, handlerExpr = {
+    
+    if(input$n_vars == 0){
+      
+      b = iterate_tune0(input = input, Args = a$ArgList_default)
+      output$plot_iterate = renderPlot(expr = {plot_tune0(data = b)})
+      
+    } else if (input$n_vars == 1){
+      
+      message("Under construction")
+      
+    } else {
+      
+      message("Under construction")
+      
+    }
   })
 })
