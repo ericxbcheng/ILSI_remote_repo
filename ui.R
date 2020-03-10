@@ -52,7 +52,7 @@ v_manual_2D = fluidRow(
       selectInput(inputId = "fun", label = "Decay function", choices = list("Exponential" = "exp", "Gaussian" = "norm", "Uniform" = "unif")),
       conditionalPanel(
         condition = "input.fun != 'unif'",
-        numericInput(inputId = "LOC", label = "Limit of contamination contribution", value = 0.001, min = 0, max = 1)
+        numericInput(inputId = "LOC", label = "Limit of contamination contribution (0 - 1)", value = 0.001, min = 0, max = 1)
       ),
       numericInput(inputId = "n_sp", label = "Number of sample points", value = 5, min = 1, step = 1),
       selectInput(inputId = "method_sp", label = "Sampling strategy", choices = list("SRS" = "srs", "STRS" = "strs", "k-step SS" = "ss")),
@@ -76,12 +76,12 @@ v_manual_2D = fluidRow(
       numericInput(inputId = "m_sp", label = "Individual sample mass (g)", value = 25, min = 0),
       selectInput(inputId = "method_det", label = "Detection method", choices = list("Plating" = "plating", "Enrichment" = "enrichment")),
       sliderInput(inputId = "case", label = "Case", min = 1, value = 10, max = 15, step = 1, round = TRUE),
-      numericInput(inputId = "m", label = "m", value = NULL, min = 0),
-      conditionalPanel(
-        condition = "input.case < 10",
-        numericInput(inputId = "M", label = "M", value = NULL, min = 0)
+      splitLayout(
+        numericInput(inputId = "m", label = "m", value = 0, min = 0),
+        numericInput(inputId = "M", label = "M", value = 0, min = 0)
       ),
-      h2(),
+      h3(),
+      h2("Iteration section"),
       splitLayout(
         numericInput(inputId = "n_seed", label = "Number of contamination patterns", value = 1, min = 1, step = 1),
         numericInput(inputId = "n_iter", label = "Number of sampling patterns per contamination pattern", value = 1, min = 1, step = 1)
