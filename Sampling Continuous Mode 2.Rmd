@@ -94,8 +94,8 @@ LOC = 10^(-3)
 fun = "exp"
 
 # Sampling
-method_sp = "strs"
-n_sp = 64
+method_sp = "srs"
+n_sp = 5
 n_strata = c(2,2)
 by = "2d"
 

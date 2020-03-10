@@ -1,6 +1,6 @@
 # Create a function that returns the proper attribute plan based on the case
 get_attr_plan = function(case, m, M){
-  stopifnot(is.double(case), is.double(m), is.double(M))
+  stopifnot(is.numeric(case), is.numeric(m), is.numeric(M))
   stopifnot(m >=0, M >= 0)
   
   ## Select the case
