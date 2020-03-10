@@ -1,5 +1,5 @@
 # Create a function that returns the proper attribute plan based on the case
-get_attr_plan = function(case, m, M){
+get_attr_plan = function(case, m, M = 0){
   stopifnot(is.numeric(case), is.numeric(m), is.numeric(M))
   stopifnot(m >=0, M >= 0)
   
