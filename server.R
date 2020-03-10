@@ -31,8 +31,8 @@ vis_once = function(input, output, spread, ArgList){
     # Remove unnecessary arguments
     ArgList_vis = ArgList
     ArgList_vis[c("case", "M", "m_sp", "method_det")] = NULL
-    ArgList_vis$seed = NaN
-    print(ArgList_vis)
+    ArgList_vis$seed = 123
+    
     # Produce intermediate outputs
     one_iteration = do.call(what = sim_intmed, args = ArgList_vis)
     output$overlay_draw = renderPlot(expr = {overlay_draw(method_sp = ArgList_vis$method_sp, data = one_iteration[["contam_sp_xy"]] , 
@@ -54,10 +54,16 @@ load_once = function(input, output){
   if(input$sidebarMenu == "2D"){
     spread = "continuous"
     
+    if(input$by == "2d"){
+      n_strata = c(input$n_strata_row, input$n_strata_col)
+    } else {
+      n_strata = input$n_strata
+    }
+    
     ArgList_default = list(n_contam = input$n_contam, lims = list(xlim = c(0, input$x_lim), ylim = c(0, input$y_lim)),
                            spread = spread, spread_radius = input$spread_radius,
                            cont_level = c(input$cont_level_mu, input$cont_level_sd), method_sp = input$method_sp,
-                           n_sp = input$n_sp, n_strata = input$n_strata, by = input$by, LOC = input$LOC,
+                           n_sp = input$n_sp, n_strata = n_strata, by = input$by, LOC = input$LOC,
                            fun = input$fun, case = input$case, m = input$m, M = input$M, m_sp = input$m_sp,
                            method_det = input$method_det, bg_level = input$bg_level, geom = input$geom)
     
@@ -122,10 +128,10 @@ shinyServer(function(input, output) {
     vis_once(input = input, output = output, spread = a$spread, ArgList = a$ArgList_default)
   })
   
-  observeEvent(eventExpr = {input$val_prim},handlerExpr = {
-    b = parse_num_vec(string = input$val_prim)
-    print(b)
-  })
+  # observeEvent(eventExpr = {input$val_prim},handlerExpr = {
+  #   b = parse_num_vec(string = input$val_prim)
+  #   print(b)
+  # })
   
   observeEvent(eventExpr = {input$iteration}, handlerExpr = {
     
