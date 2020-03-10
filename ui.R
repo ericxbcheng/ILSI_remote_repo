@@ -74,7 +74,7 @@ v_manual_2D = fluidRow(
         selectInput(inputId = "by", label = "By", choices = list("Row" = "row", "Column" = "column"))
       ),
       numericInput(inputId = "m_sp", label = "Individual sample mass (g)", value = 25, min = 0),
-      selectInput(inputId = "method_det", label = "Detection method", choices = list("Plating", "Enrichment")),
+      selectInput(inputId = "method_det", label = "Detection method", choices = list("Plating" = "plating", "Enrichment" = "enrichment")),
       sliderInput(inputId = "case", label = "Case", min = 1, value = 10, max = 15, step = 1, round = TRUE),
       numericInput(inputId = "m", label = "m", value = NULL, min = 0),
       conditionalPanel(
@@ -128,12 +128,13 @@ v_manual_2D = fluidRow(
 
 
 # Visualization page
-# page_vis = fluidRow(
-#   
-#   box(title = "Selected parameters", 
-#       verbatimTextOutput(outputId = "print_param")),
-#   box(title = "Visualization for multiple iterations")
-# )
+page_vis = fluidRow(
+
+  box(title = "Selected parameters",
+      verbatimTextOutput(outputId = "print_param")),
+  box(title = "Visualization for multiple iterations",
+      plotOutput(outputId = "plot_iterate"))
+)
 
 
 body = dashboardBody(
@@ -145,7 +146,7 @@ body = dashboardBody(
             h2("This is the smart version page.")),
     tabItem(tabName = "2D", v_manual_2D),
     tabItem(tabName = "3D", h2("3D inputs.")),
-    tabItem(tabName = "vis", h2("This is the visualization page")),
+    tabItem(tabName = "vis", page_vis),
     tabItem(tabName = "export",
             h2("This is the data export page."))
   )
