@@ -31,6 +31,7 @@ sidebar = dashboardSidebar(
   )
 )
 
+# Manual version for 2D
 v_manual_2D = fluidRow(
   
   box(title = "2D Input Parameters",
@@ -94,7 +95,7 @@ v_manual_2D = fluidRow(
                     choices = list("Number of contamination points" = "n_contam",
                                    "Number of sample points" = "n_sp",
                                    "Individual sample mass (g)" = "m_sp")),
-        textInput(inputId = "val_prim", label = "Tuning value(s)", value = NULL)
+        textInput(inputId = "val_prim", label = "Tuning value(s) (separated by a comma)", value = "1,2,3")
       ),
       conditionalPanel(
         condition = "input.n_vars == 2",
@@ -107,7 +108,7 @@ v_manual_2D = fluidRow(
         selectInput(inputId = "var_sec", 
                     label = "Secondary tuning parameter", 
                     choices = list("Sampling strategy" = "method_sp")),
-        textInput(inputId = "val_sec", label = "Tuning value(s)", value = NULL)
+        textInput(inputId = "val_sec", label = "Tuning value(s) (separated by a comma)", value = NULL)
       ),
       actionButton(inputId = "load", label = "Load parameters"),
       h2(),
@@ -123,6 +124,17 @@ v_manual_2D = fluidRow(
   box(title = "Visualization for one iteration",
       plotOutput(outputId = "overlay_draw"),
       plotOutput(outputId = "contam_level_draw")
+  )
+)
+
+# Manual version for 3D
+v_manual_3D = fluidRow(
+  
+  box(
+    title = "3D Input Parameters"
+  ),
+  box(
+    title = "Visualization for one iteration"
   )
 )
 
@@ -145,7 +157,7 @@ body = dashboardBody(
     tabItem(tabName = "v_smart", 
             h2("This is the smart version page.")),
     tabItem(tabName = "2D", v_manual_2D),
-    tabItem(tabName = "3D", h2("3D inputs.")),
+    tabItem(tabName = "3D", v_manual_3D),
     tabItem(tabName = "vis", page_vis),
     tabItem(tabName = "export",
             h2("This is the data export page."))
