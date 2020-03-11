@@ -94,7 +94,7 @@ iterate_tune1 = function(input, Args){
   
   vals = parse_num_vec(string = input$val_prim)
   
-  return(map(.x = vals, .f = tune_param, Args = ArgList_default, n_seed = input$n_seed, n_iter = input$n_iter, param = input$var_prim))
+  return(map(.x = vals, .f = tune_param, Args = Args, n_seed = input$n_seed, n_iter = input$n_iter, param = input$var_prim))
   
 }
 
@@ -113,36 +113,71 @@ plot_tune0 = function(data){
     theme_bw()
 }
 
+plot_tune1 = function(data, input){
+  
+  if(input$var_prim == "n_contam"){
+    xlab = "Number of contamination points"
+    
+  } else if(input$var_prim == "n_sp"){
+    xlab = "Number of sample points"
+    
+  } else if(input$var_prim == "m_sp"){
+    xlab = "Individual sample mass (g)"
+    
+  } else {
+    stop("Unknown primary tuning parameter")
+  }
+  
+  # Summarise the data
+  a = data %>%
+    gather(data = ., key = "metric", value = "value", -c(seed, param)) %>%
+    group_by(param, metric) %>%
+    summarise(lb = quantile(x = value, probs = 0.025), 
+              med = median(x = value),
+              ub = quantile(x = value, probs = 0.975)) %>%
+    dplyr::filter(metric == "Paccept")
+  
+  # Visualize
+  b = ggplot(data = a) +
+    geom_ribbon(aes_string(x = "param", ymin = "lb", ymax = "ub"), alpha = 0.3, color = "lightgrey") +
+    geom_line(aes_string(x = "param", y = "med")) +
+    geom_point(aes_string(x = "param", y = "med")) +
+    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
+    coord_cartesian(ylim = c(0,1)) +
+    labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") +
+    theme_bw() 
+  return(b)
+}
+
 shinyServer(function(input, output) {
   
-  a = list()
+  list_load = list()
   
   # Load the parameter once
   observeEvent(eventExpr = {input$load}, handlerExpr = {
-    a <<- load_once(input = input, output = output)
-    output$print_param = renderPrint(expr = a$ArgList_default)
+    list_load <<- load_once(input = input, output = output)
+    output$print_param = renderPrint(expr = list_load$ArgList_default)
   })
   
   # Visualize for one iteration
   observeEvent(eventExpr = {input$vis}, handlerExpr = {
-    vis_once(input = input, output = output, spread = a$spread, ArgList = a$ArgList_default)
+    vis_once(input = input, output = output, spread = list_load$spread, ArgList = list_load$ArgList_default)
   })
-  
-  # observeEvent(eventExpr = {input$val_prim},handlerExpr = {
-  #   b = parse_num_vec(string = input$val_prim)
-  #   print(b)
-  # })
   
   observeEvent(eventExpr = {input$iteration}, handlerExpr = {
     
     if(input$n_vars == 0){
       
-      b = iterate_tune0(input = input, Args = a$ArgList_default)
-      output$plot_iterate = renderPlot(expr = {plot_tune0(data = b)})
+      # When there is no tuning parameter
+      data_raw = iterate_tune0(input = input, Args = list_load$ArgList_default)
+      output$plot_iterate = renderPlot(expr = {plot_tune0(data = data_raw)})
       
     } else if (input$n_vars == 1){
       
-      message("Under construction")
+      # When there is 1 tuning parameter
+      data_raw = iterate_tune1(input = input, Args = list_load$ArgList_default)
+      data_cleaned = metrics_cont_n(data = data_raw)
+      output$plot_iterate = renderPlot(expr = {plot_tune1(data = data_cleaned, input = input)})
       
     } else {
       
