@@ -31,7 +31,7 @@ vis_once = function(input, output, spread, ArgList){
     # Remove unnecessary arguments
     ArgList_vis = ArgList
     ArgList_vis[c("case", "M", "m_sp", "method_det")] = NULL
-    ArgList_vis$seed = 123
+    ArgList_vis$seed = NaN
     
     # Produce intermediate outputs
     one_iteration = do.call(what = sim_intmed, args = ArgList_vis)
@@ -98,21 +98,28 @@ iterate_tune1 = function(input, Args){
   
 }
 
-plot_tune0 = function(data){
+# A summary function for 0 tuning parameter
+metrics_cont_0 = function(data){
   
   # Calculate the acceptance prob
   a = calc_Prej_one(data) %>%
-    tibble(seed = as.numeric(names(.)), Paccept = 1 - .)
+    tibble(P_rej = ., seed = as.numeric(names(.)), Paccept = 1 - .)
+  return(a)
+}
+
+# Plot when there is no tuning parameter
+plot_tune0 = function(data){
   
-  ggplot(data = a) +
+  ggplot(data = data) +
     geom_boxplot(aes(x = "NA", y = Paccept)) +
-    geom_point(aes(x = "NA",  y = mean(a$Paccept)), color = "red", pch = 4, size = 5) +
+    geom_point(aes(x = "NA",  y = mean(data$Paccept)), color = "red", pch = 4, size = 5) +
     labs(x = NULL, y = "Probability of acceptance") +
     scale_y_continuous(breaks = seq(0,1,0.1)) +
     coord_cartesian(ylim = c(0,1)) +
     theme_bw()
 }
 
+# Plot when there is one tuning parameter
 plot_tune1 = function(data, input){
   
   if(input$var_prim == "n_contam"){
@@ -164,19 +171,21 @@ shinyServer(function(input, output) {
     vis_once(input = input, output = output, spread = list_load$spread, ArgList = list_load$ArgList_default)
   })
   
+  # Multiple iterations
   observeEvent(eventExpr = {input$iteration}, handlerExpr = {
     
     if(input$n_vars == 0){
       
       # When there is no tuning parameter
       data_raw = iterate_tune0(input = input, Args = list_load$ArgList_default)
-      output$plot_iterate = renderPlot(expr = {plot_tune0(data = data_raw)})
+      data_cleaned <<- metrics_cont_0(data = data_raw)
+      output$plot_iterate = renderPlot(expr = {plot_tune0(data = data_cleaned)})
       
     } else if (input$n_vars == 1){
       
       # When there is 1 tuning parameter
       data_raw = iterate_tune1(input = input, Args = list_load$ArgList_default)
-      data_cleaned = metrics_cont_n(data = data_raw)
+      data_cleaned <<- metrics_cont_n(data = data_raw)
       output$plot_iterate = renderPlot(expr = {plot_tune1(data = data_cleaned, input = input)})
       
     } else {
@@ -185,4 +194,13 @@ shinyServer(function(input, output) {
       
     }
   })
+  
+  # Download
+  output$downloadData = downloadHandler(
+    filename = "simulation.csv",
+    content = function(file){
+      write.csv(x = data_cleaned, file)
+    },
+    contentType = "text/csv"
+  )
 })

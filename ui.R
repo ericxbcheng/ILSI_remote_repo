@@ -148,19 +148,31 @@ page_vis = fluidRow(
       plotOutput(outputId = "plot_iterate"))
 )
 
+page_export = fluidRow(
+  
+  box(title = "Download the simulation data",
+      p("Click the following button to download the csv file that contains the simulation data."),
+      downloadButton(outputId = "downloadData", label = "Download")
+      ),
+  
+  box(
+    title = "Variable interpretation",
+    p("The csv file contains a header with multiple variables. The interpretation is as follows.")
+  )
+  
+)
+
 
 body = dashboardBody(
   
   tabItems(
     tabItem(tabName = "intro", 
             h2("This is the introduction page.")),
-    tabItem(tabName = "v_smart", 
-            h2("This is the smart version page.")),
+    tabItem(tabName = "v_smart"),
     tabItem(tabName = "2D", v_manual_2D),
     tabItem(tabName = "3D", v_manual_3D),
     tabItem(tabName = "vis", page_vis),
-    tabItem(tabName = "export",
-            h2("This is the data export page."))
+    tabItem(tabName = "export", page_export)
   )
 )    
 
