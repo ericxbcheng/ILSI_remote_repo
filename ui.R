@@ -57,25 +57,22 @@ v_manual_2D = fluidRow(
       ),
       numericInput(inputId = "n_sp", label = "Number of sample points", value = 5, min = 1, step = 1),
       selectInput(inputId = "method_sp", label = "Sampling strategy", choices = list("SRS" = "srs", "STRS" = "strs", "k-step SS" = "ss")),
-      conditionalPanel(
-        condition = "input.method_sp == 'strs'",
-        selectInput(inputId = "by", label = "Stratify by", choices = list("Row" = "row", "Column" = "column", "2D" = "2d")),
-        conditionalPanel(
-          condition = "input.by != '2d'",
-          numericInput(inputId = "n_strata", label = "Number of strata", value = NULL, min = 1)
-        ),
-        conditionalPanel(
-          condition = "input.by == '2d'",
-          numericInput(inputId = "n_strata_row", label = "Number of strata (row)", value = NULL, min = 1),
-          numericInput(inputId = "n_strata_col", label = "Number of strata (column)", value = NULL, min = 1)
-        )
-      ),
-      conditionalPanel(
-        condition = "input.method_sp == 'ss'",
-        selectInput(inputId = "by", label = "By", choices = list("Row" = "row", "Column" = "column"))
+      wellPanel(
+        selectInput(inputId = "by", 
+                    label = "Stratify by", 
+                    choices = list("Row" = "row", "Column" = "column", "2D" = "2d"), 
+                    selected = NA,
+                    multiple = FALSE),
+        numericInput(inputId = "n_strata", label = "Number of strata", value = 5, min = 1),
+        numericInput(inputId = "n_strata_row", label = "Number of row strata (2D only)", value = NULL, min = 1),
+        numericInput(inputId = "n_strata_col", label = "Number of column strata (2D only)", value = NULL, min = 1)
       ),
       numericInput(inputId = "m_sp", label = "Individual sample mass (g)", value = 25, min = 0),
-      selectInput(inputId = "method_det", label = "Detection method", choices = list("Plating" = "plating", "Enrichment" = "enrichment")),
+      selectInput(inputId = "method_det", 
+                  label = "Detection method", 
+                  choices = list("Plating" = "plating", "Enrichment" = "enrichment"), 
+                  selected = "enrichment", 
+                  multiple = FALSE),
       sliderInput(inputId = "case", label = "Case", min = 1, value = 10, max = 15, step = 1, round = TRUE),
       splitLayout(
         numericInput(inputId = "m", label = "m", value = 0, min = 0),
@@ -104,11 +101,11 @@ v_manual_2D = fluidRow(
                     choices = list("Number of contamination points" = "n_contam",
                                    "Number of sample points" = "n_sp",
                                    "Individual sample mass (g)" = "m_sp")),
-        textInput(inputId = "val_prim", label = "Tuning value(s)", value = NULL),
+        textInput(inputId = "val_prim", label = "Tuning value(s)", value = "1,2,3"),
         selectInput(inputId = "var_sec", 
                     label = "Secondary tuning parameter", 
                     choices = list("Sampling strategy" = "method_sp")),
-        textInput(inputId = "val_sec", label = "Tuning value(s) (separated by a comma)", value = NULL)
+        textInput(inputId = "val_sec", label = "Tuning value(s) (separated by a comma)", value = "srs, strs, ss")
       ),
       actionButton(inputId = "load", label = "Load parameters"),
       h2(),
