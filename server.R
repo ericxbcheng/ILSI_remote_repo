@@ -89,6 +89,17 @@ parse_num_vec = function(string){
            as.numeric())
 }
 
+# Parse the string "a,b,c" from val_sec into a character vector c("a","b","c")
+parse_char_vec = function(string){
+  
+  # Split by the comma
+  a = str_split(string = string, pattern = ",") %>%
+    unlist() 
+  
+  # Remove extra whitespace
+  return(str_trim(a))
+}
+
 # Iterate the model with one tuning parameter
 iterate_tune1 = function(input, Args){
   
@@ -98,6 +109,35 @@ iterate_tune1 = function(input, Args){
   
 }
 
+# Function to update arguments
+update_arg = function(arg_list, name, value){
+  
+  a = arg_list
+  a[[name]] = value
+  return(a)
+}
+
+# Secondary tuning parameter iterations
+iterate_tune2 = function(input, Args){
+  
+  # Parse tuning values for primary and secondary parameters
+  vals_prim = parse_num_vec(string = input$val_prim)
+  vals_sec = parse_char_vec(string = input$val_sec)
+  
+  # Create a list of argument lists, each argument list corresponding to one secondary tuning value
+  Args_sec = map(.x = vals_sec, .f = update_arg, arg_list = Args, name = input$var_sec)
+  
+  # For each argument list in Args_sec, do iterate_tune1()
+  sim_data = list()
+  for(i in 1:length(vals_sec)){
+    
+    sim_data[[i]] = map(.x = vals_prim, .f = tune_param, 
+                      Args = Args_sec[[i]], n_seed = input$n_seed, n_iter = input$n_iter,param = input$var_prim)
+    
+  }
+  return(list(sim_data = sim_data, vals_prim = vals_prim, vals_sec = vals_sec))
+}
+
 # A summary function for 0 tuning parameter
 metrics_cont_0 = function(data){
   
@@ -105,6 +145,25 @@ metrics_cont_0 = function(data){
   a = calc_Prej_one(data) %>%
     tibble(P_rej = ., seed = as.numeric(names(.)), Paccept = 1 - .)
   return(a)
+}
+
+# Data cleaning function for secondary tuning scenarios
+metrics_cont_sec = function(data, input, vals_prim, vals_sec){
+  
+  # Data should contain 2 layers. 
+  # The outer layer contains data for different secondary tuning. 
+  # The inner layer contains data for different primary tuning under each value of the secondary tuning.
+  a = map(.x = data, .f = metrics_cont_n) %>%
+    bind_rows()
+  
+  # Add a column to indicate secondary tuning values
+  b = rep(x = vals_sec, each = input$n_seed * length(vals_prim))
+  
+  # Combine by columns
+  c = cbind.data.frame(a, b, stringsAsFactors = FALSE)
+  colnames(c)[colnames(c) == "b"] = "param2"
+  
+  return(c)
 }
 
 # Plot when there is no tuning parameter
@@ -119,21 +178,23 @@ plot_tune0 = function(data){
     theme_bw()
 }
 
+# Generate labels according to variables
+gen_label = function(var){
+  
+  a = switch(EXPR = var,
+             "n_contam" = "Number of contamination points",
+             "n_sp" = "NUmber of sample points",
+             "m_sp" = "Individual sample mass (g)",
+             "method_sp" = "Sample strategy",
+             stop("Unknown variable"))
+  
+  return(a)
+}
+
 # Plot when there is one tuning parameter
 plot_tune1 = function(data, input){
   
-  if(input$var_prim == "n_contam"){
-    xlab = "Number of contamination points"
-    
-  } else if(input$var_prim == "n_sp"){
-    xlab = "Number of sample points"
-    
-  } else if(input$var_prim == "m_sp"){
-    xlab = "Individual sample mass (g)"
-    
-  } else {
-    stop("Unknown primary tuning parameter")
-  }
+  xlab = gen_label(var = input$var_prim)
   
   # Summarise the data
   a = data %>%
@@ -150,6 +211,36 @@ plot_tune1 = function(data, input){
     geom_line(aes_string(x = "param", y = "med")) +
     geom_point(aes_string(x = "param", y = "med")) +
     scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
+    coord_cartesian(ylim = c(0,1)) +
+    labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") +
+    theme_bw() 
+  return(b)
+}
+
+# Plot when there is one tuning parameter
+plot_tune2 = function(data, input){
+  
+  # Make the x axis and legend labels
+  xlab = gen_label(var = input$var_prim)
+  legend_lab = gen_label(var = input$var_sec)
+  
+  # Summarise the data
+  a = data %>%
+    gather(data = ., key = "metric", value = "value", -c(seed, param, param2)) %>%
+    group_by(param2, param, metric) %>%
+    summarise(lb = quantile(x = value, probs = 0.025), 
+              med = median(x = value),
+              ub = quantile(x = value, probs = 0.975)) %>%
+    dplyr::filter(metric == "Paccept")
+  
+  # Visualize
+  b = ggplot(data = a) +
+    geom_ribbon(aes_string(x = "param", ymin = "lb", ymax = "ub", group = "param2", fill = "param2"), alpha = 0.3) +
+    geom_line(aes_string(x = "param", y = "med", color = "param2")) +
+    geom_point(aes_string(x = "param", y = "med", color = "param2")) +
+    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
+    scale_fill_discrete(name = legend_lab) +
+    scale_color_discrete(name = legend_lab) +
     coord_cartesian(ylim = c(0,1)) +
     labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") +
     theme_bw() 
@@ -188,10 +279,17 @@ shinyServer(function(input, output) {
       data_cleaned <<- metrics_cont_n(data = data_raw)
       output$plot_iterate = renderPlot(expr = {plot_tune1(data = data_cleaned, input = input)})
       
+    } else if (input$n_vars == 2) {
+      
+      data_raw = iterate_tune2(input = input, Args = list_load$ArgList_default)
+      data_cleaned <<- metrics_cont_sec(data = data_raw[["sim_data"]], 
+                                        input = input, 
+                                        vals_prim = data_raw[["vals_prim"]], 
+                                        vals_sec = data_raw[["vals_sec"]])
+      output$plot_iterate = renderPlot(expr = {plot_tune2(data = data_cleaned, input = input)})
+      
     } else {
-      
       message("Under construction")
-      
     }
   })
   
