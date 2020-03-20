@@ -140,7 +140,7 @@ v_manual_3D = fluidRow(
 page_vis = fluidRow(
 
   box(title = "Selected parameters",
-      verbatimTextOutput(outputId = "print_param")),
+      tableOutput(outputId = "print_param")),
   box(title = "Visualization for multiple iterations",
       plotOutput(outputId = "plot_iterate"))
 )
