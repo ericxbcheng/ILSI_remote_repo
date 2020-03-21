@@ -293,3 +293,19 @@ plot_tune2 = function(data, input){
     theme_bw() 
   return(b)
 }
+
+f_questionnaire = function(input){
+  
+  if(input$spread == "continuous"){
+    p("2. ")
+    splitLayout(
+      numericInput(inputId = "x_lim", label = "Length (m)", value = 10, min = 1),
+      numericInput(inputId = "y_lim", label = "Width (m)", value = 10, min = 1)
+    )
+    p("3. ")
+  } else if (input$spread == "discrete"){
+    message("Under construction")
+  } else {
+    stop("Unknown product type")
+  }
+}

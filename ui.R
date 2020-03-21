@@ -135,6 +135,26 @@ v_manual_3D = fluidRow(
   )
 )
 
+# Smart version 
+v_smart = fluidRow(
+  
+  box(
+    title = "Questionnaire",
+    p("1. Which type of product do you want to simulate?"),
+    radioButtons(inputId = "spread", 
+                 label = NULL, 
+                 selected = character(0),
+                 inline = TRUE, 
+                 choiceNames = list("Produce in a field", "Grains in a bin"), 
+                 choiceValues = list("continuous", "discrete")),
+    uiOutput(outputId = "questionnaire")
+  ),
+  box(
+    title = "Visualization for one iteration"
+  )
+  
+  
+)
 
 # Visualization page
 page_vis = fluidRow(
@@ -165,7 +185,7 @@ body = dashboardBody(
   tabItems(
     tabItem(tabName = "intro", 
             h2("This is the introduction page.")),
-    tabItem(tabName = "v_smart"),
+    tabItem(tabName = "v_smart", v_smart),
     tabItem(tabName = "2D", v_manual_2D),
     tabItem(tabName = "3D", v_manual_3D),
     tabItem(tabName = "vis", page_vis),

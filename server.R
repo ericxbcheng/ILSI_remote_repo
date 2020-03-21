@@ -30,6 +30,11 @@ shinyServer(function(input, output) {
   
   list_load = list()
   
+  # Smart version
+  observeEvent(eventExpr = {input$spread}, handlerExpr = {
+    output$questionnaire = renderUI(expr = f_questionnaire(input = input))
+  })
+  
   # Load the parameter once
   observeEvent(eventExpr = {input$load}, handlerExpr = {
     
