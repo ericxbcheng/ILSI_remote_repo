@@ -265,7 +265,7 @@ plot_tune1 = function(data, input){
 }
 
 # Plot when there is one tuning parameter
-plot_tune2 = function(data, input){
+plot_tune2_ribbon = function(data, input){
   
   # Make the x axis and legend labels
   xlab = gen_label(var = input$var_prim)
@@ -290,6 +290,32 @@ plot_tune2 = function(data, input){
     scale_color_discrete(name = legend_lab) +
     coord_cartesian(ylim = c(0,1)) +
     labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") +
-    theme_bw() 
+    theme_bw() +
+    theme(legend.position = "top")
+  
+  
   return(b)
+}
+
+# Visualize with boxplots
+plot_tune2_boxplot = function(data, input, yvar){
+  
+  # Make the x axis and legend labels
+  xlab = gen_label(var = input$var_prim)
+  ylab = switch(EXPR = yvar, 
+                "P_det" = "Detection Probability", 
+                "Paccept" = "Probability of acceptance")
+  legend_lab = gen_label(var = input$var_sec)
+  
+  # Summarise the data
+  
+  a = ggplot(data = data, aes_string(y = yvar)) +
+    geom_boxplot(aes(x = as.factor(param), group = interaction(param, param2), fill = param2)) +
+    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
+    coord_cartesian(ylim = c(0,1)) +
+    scale_fill_discrete(name = legend_lab) +
+    labs(x = xlab, y = ylab) +
+    theme_bw()+
+    theme(legend.position = "top")
+  return(a)
 }

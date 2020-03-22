@@ -69,7 +69,11 @@ shinyServer(function(input, output) {
                                         input = input, 
                                         vals_prim = data_raw[["vals_prim"]], 
                                         vals_sec = data_raw[["vals_sec"]])
-      output$plot_iterate = renderPlot(expr = {plot_tune2(data = data_cleaned, input = input)})
+      
+      observeEvent(eventExpr = {input$yvar}, handlerExpr = {
+        output$plot_iterate = renderPlot(expr = {plot_tune2_boxplot(data = data_cleaned, input = input, yvar = input$yvar)})
+        
+      })
       
     } else {
       message("Under construction")

@@ -142,6 +142,11 @@ page_vis = fluidRow(
   box(title = "Selected parameters",
       tableOutput(outputId = "print_param")),
   box(title = "Visualization for multiple iterations",
+      radioButtons(inputId = "yvar", 
+                   label = NULL, 
+                   choices = list("Detection probability" = "P_det", 
+                                  "Acceptance probability" = "Paccept"),
+                   inline = TRUE),
       plotOutput(outputId = "plot_iterate"))
 )
 
