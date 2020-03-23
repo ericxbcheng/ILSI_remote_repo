@@ -85,28 +85,7 @@ v_manual_2D = fluidRow(
         numericInput(inputId = "n_iter", label = "Number of sampling patterns per contamination pattern", value = 1, min = 1, step = 1)
       ),
       selectInput(inputId = "n_vars", label = "Number of tuning parameters", choices = list(0,1,2), multiple = FALSE),
-      conditionalPanel(
-        condition = "input.n_vars == 1",
-        selectInput(inputId = "var_prim", 
-                    label = "Primary tuning parameter", 
-                    choices = list("Number of contamination points" = "n_contam",
-                                   "Number of sample points" = "n_sp",
-                                   "Individual sample mass (g)" = "m_sp")),
-        textInput(inputId = "val_prim", label = "Tuning value(s) (separated by a comma)", value = "1,2,3")
-      ),
-      conditionalPanel(
-        condition = "input.n_vars == 2",
-        selectInput(inputId = "var_prim", 
-                    label = "Primary tuning parameter", 
-                    choices = list("Number of contamination points" = "n_contam",
-                                   "Number of sample points" = "n_sp",
-                                   "Individual sample mass (g)" = "m_sp")),
-        textInput(inputId = "val_prim", label = "Tuning value(s)", value = "1,2,3"),
-        selectInput(inputId = "var_sec", 
-                    label = "Secondary tuning parameter", 
-                    choices = list("Sampling strategy" = "method_sp")),
-        textInput(inputId = "val_sec", label = "Tuning value(s) (separated by a comma)", value = "srs, strs, ss")
-      ),
+      uiOutput(outputId = "ui_tuning"),
       actionButton(inputId = "load", label = "Load parameters"),
       h2(),
       conditionalPanel(
@@ -162,6 +141,7 @@ page_vis = fluidRow(
   box(title = "Selected parameters",
       tableOutput(outputId = "print_param")),
   box(title = "Visualization for multiple iterations",
+      uiOutput(outputId = "yvar"),
       plotOutput(outputId = "plot_iterate"))
 )
 
