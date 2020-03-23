@@ -25,17 +25,61 @@ source(file = "Sampling_tuning_3d.R")
 source(file = "Sampling_analysis.R")
 source(file = "R/Sampling_shiny_helpers.R")
 
-
 shinyServer(function(input, output) {
   
+  # Tuning conditional panels
+  output$ui_tuning = renderUI(expr = {
+    if(input$n_vars == 0){
+      NULL
+      
+    } else if(input$n_vars == 1){
+      verticalLayout(
+        selectInput(inputId = "var_prim",
+                    label = "Primary tuning parameter",
+                    choices = list("Number of contamination points" = "n_contam",
+                                   "Number of sample points" = "n_sp",
+                                   "Individual sample mass (g)" = "m_sp")),
+        textInput(inputId = "val_prim", label = "Tuning value(s) (separated by a comma)", value = "1,2,3")
+      )
+      
+    } else if(input$n_vars == 2) {
+      verticalLayout(
+        selectInput(inputId = "var_prim",
+                    label = "Primary tuning parameter",
+                    choices = list("Number of contamination points" = "n_contam",
+                                   "Number of sample points" = "n_sp",
+                                   "Individual sample mass (g)" = "m_sp")),
+        textInput(inputId = "val_prim", label = "Tuning value(s)", value = "1,2,3"),
+        selectInput(inputId = "var_sec",
+                    label = "Secondary tuning parameter",
+                    choices = list("Sampling strategy" = "method_sp")),
+        textInput(inputId = "val_sec", label = "Tuning value(s) (separated by a comma)", value = "srs, strs, ss")
+      )
+    } else {
+      stop("Unknown number of tuning paramters")
+    }
+  })
+  
+  # The P_det/Paccept visualization switch (only for 2 tuning parameters)
+  output$yvar = renderUI(expr = {
+    
+    if(input$n_vars == 2){
+      radioButtons(inputId = "yvar", 
+                   label = NULL, 
+                   choices = list("Detection probability" = "P_det", 
+                                  "Acceptance probability" = "Paccept"),
+                   inline = TRUE)
+    }
+  })
+
+  ### Load the parameter once
   list_load = list()
   
-  # Load the parameter once
   observeEvent(eventExpr = {input$load}, handlerExpr = {
     
     list_load <<- load_once(input = input, output = output)
     output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default, input = input))
-    
+
   })
   
   # Visualize for one iteration
@@ -72,7 +116,6 @@ shinyServer(function(input, output) {
       
       observeEvent(eventExpr = {input$yvar}, handlerExpr = {
         output$plot_iterate = renderPlot(expr = {plot_tune2_boxplot(data = data_cleaned, input = input, yvar = input$yvar)})
-        
       })
       
     } else {

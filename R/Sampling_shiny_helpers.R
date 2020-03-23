@@ -1,29 +1,3 @@
-# A function for visualizing one iteration
-vis_once = function(input, output, spread, ArgList){
-  
-  if(spread == "continuous"){
-    
-    # Remove unnecessary arguments
-    ArgList_vis = ArgList
-    ArgList_vis[c("case", "M", "m_sp", "method_det")] = NULL
-    ArgList_vis$seed = NaN
-    
-    # Produce intermediate outputs
-    one_iteration = do.call(what = sim_intmed, args = ArgList_vis)
-    output$overlay_draw = renderPlot(expr = {overlay_draw(method_sp = ArgList_vis$method_sp, data = one_iteration[["contam_sp_xy"]] , 
-                                                          spread = ArgList_vis$spread, xlim = ArgList_vis$lims$xlim, ylim = ArgList_vis$lims$ylim, 
-                                                          n_strata = ArgList_vis$n_strata, by = ArgList_vis$by)})
-    output$contam_level_draw = renderPlot(expr = {contam_level_draw(dimension = "3d", method = ArgList_vis$fun, 
-                                                                    spread_radius = ArgList_vis$spread_radius, LOC = ArgList_vis$LOC, 
-                                                                    df_contam = one_iteration[["contam_sp_xy"]] , xlim = ArgList_vis$lims$xlim, 
-                                                                    ylim = ArgList_vis$lims$ylim, bg_level = ArgList_vis$bg_level, 
-                                                                    geom = ArgList_vis$geom)})
-    
-  } else {
-    message("Under construction.") 
-  }
-}
-
 # A function for loading the input parameters into a list
 load_once = function(input, output){
   
@@ -50,6 +24,35 @@ load_once = function(input, output){
   }
   return(list(spread = spread, ArgList_default = ArgList_default))
 }
+
+# A function for visualizing one iteration
+vis_once = function(input, output, spread, ArgList){
+  
+  if(spread == "continuous"){
+    
+    # Remove unnecessary arguments
+    ArgList_vis = ArgList
+    ArgList_vis[c("case", "M", "m_sp", "method_det")] = NULL
+    ArgList_vis$seed = NaN
+    
+    # Produce intermediate outputs
+    one_iteration = do.call(what = sim_intmed, args = ArgList_vis)
+    output$overlay_draw = renderPlot(expr = {overlay_draw(method_sp = ArgList_vis$method_sp, data = one_iteration[["contam_sp_xy"]] , 
+                                                          spread = ArgList_vis$spread, xlim = ArgList_vis$lims$xlim, ylim = ArgList_vis$lims$ylim, 
+                                                          n_strata = ArgList_vis$n_strata, by = ArgList_vis$by)})
+    output$contam_level_draw = renderPlot(expr = {contam_level_draw(dimension = "3d", method = ArgList_vis$fun, 
+                                                                    spread_radius = ArgList_vis$spread_radius, LOC = ArgList_vis$LOC, 
+                                                                    df_contam = one_iteration[["contam_sp_xy"]] , xlim = ArgList_vis$lims$xlim, 
+                                                                    ylim = ArgList_vis$lims$ylim, bg_level = ArgList_vis$bg_level, 
+                                                                    geom = ArgList_vis$geom)})
+    
+  } else {
+    message("Under construction.") 
+  }
+}
+
+
+
 
 # A variable-interpretation look-up table. The argument 'var' takes a variable name and returns its interpretation
 explain_var = function(var){
@@ -84,7 +87,6 @@ explain_var = function(var){
          stop("Unknown variable name"))
 }
 
-
 # A function that presents the list of arguments in a nice table
 make_var_table = function(Args, input){
   
@@ -102,11 +104,13 @@ make_var_table = function(Args, input){
     
   } else if (input$n_vars == 1){
     
-    d = c(c, "var_prim" = input$val_prim)
+    d = c(c, "var_prim" = paste(input$var_prim, input$val_prim, sep = ":"))
     
   } else if (input$n_vars == 2) {
     
-    d = c(c, "var_prim" = input$val_prim, "var_sec" = input$val_sec)
+    d = c(c, 
+          "var_prim" = paste(input$var_prim, input$val_prim, sep = ": "), 
+          "var_sec" = paste(input$var_sec, input$val_sec, sep = ": "))
     
   } else {
     stop("Unknown number of tuning variables")
@@ -156,14 +160,6 @@ iterate_tune1 = function(input, Args){
   
 }
 
-# Function to update arguments
-update_arg = function(arg_list, name, value){
-  
-  a = arg_list
-  a[[name]] = value
-  return(a)
-}
-
 # Secondary tuning parameter iterations
 iterate_tune2 = function(input, Args){
   
@@ -184,6 +180,16 @@ iterate_tune2 = function(input, Args){
   }
   return(list(sim_data = sim_data, vals_prim = vals_prim, vals_sec = vals_sec))
 }
+
+# Function to update arguments
+update_arg = function(arg_list, name, value){
+  
+  a = arg_list
+  a[[name]] = value
+  return(a)
+}
+
+
 
 # A summary function for 0 tuning parameter
 metrics_cont_0 = function(data){
@@ -230,7 +236,7 @@ gen_label = function(var){
   
   a = switch(EXPR = var,
              "n_contam" = "Number of contamination points",
-             "n_sp" = "NUmber of sample points",
+             "n_sp" = "Number of sample points",
              "m_sp" = "Individual sample mass (g)",
              "method_sp" = "Sample strategy",
              stop("Unknown variable"))
