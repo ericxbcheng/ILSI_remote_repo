@@ -303,23 +303,6 @@ plot_tune2_ribbon = function(data, input){
   return(b)
 }
 
-# Questionnaire
-f_questionnaire = function(input){
-  
-  if(input$spread == "continuous"){
-    p("2. ")
-    splitLayout(
-      numericInput(inputId = "x_lim", label = "Length (m)", value = 10, min = 1),
-      numericInput(inputId = "y_lim", label = "Width (m)", value = 10, min = 1)
-    )
-    p("3. ")
-  } else if (input$spread == "discrete"){
-    message("Under construction")
-  } else {
-    stop("Unknown product type")
-  }
-}
-
 # Visualize with boxplots
 plot_tune2_boxplot = function(data, input, yvar){
   

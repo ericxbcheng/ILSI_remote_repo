@@ -114,25 +114,16 @@ v_manual_3D = fluidRow(
   )
 )
 
+# Place holder
+ph = p("Under development")
+
 # Smart version 
-v_smart = fluidRow(
-  
-  box(
-    title = "Questionnaire",
-    p("1. Which type of product do you want to simulate?"),
-    radioButtons(inputId = "spread", 
-                 label = NULL, 
-                 selected = character(0),
-                 inline = TRUE, 
-                 choiceNames = list("Produce in a field", "Grains in a bin"), 
-                 choiceValues = list("continuous", "discrete")),
-    uiOutput(outputId = "questionnaire")
-  ),
-  box(
-    title = "Visualization for one iteration"
-  )
-  
-  
+v_smart = fluidPage(
+  fluidRow(
+    box(title = "Questionnaire", ph),
+    
+    box(title = "Visualization for one iteration", ph)
+    )
 )
 
 # Visualization page

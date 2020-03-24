@@ -25,7 +25,7 @@ source(file = "Sampling_tuning_3d.R")
 source(file = "Sampling_analysis.R")
 source(file = "R/Sampling_shiny_helpers.R")
 
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
   
   # Tuning conditional panels
   output$ui_tuning = renderUI(expr = {
@@ -73,10 +73,10 @@ shinyServer(function(input, output) {
   })
 
   # Smart version
-  observeEvent(eventExpr = {input$spread}, handlerExpr = {
-    output$questionnaire = renderUI(expr = f_questionnaire(input = input))
-  })
 
+  
+  
+  
   # Load the parameter once
   list_load = list()
   observeEvent(eventExpr = {input$load}, handlerExpr = {
