@@ -135,6 +135,7 @@ v_smart = fluidPage(
         uiOutput(outputId = "ui_geom"),
         uiOutput(outputId = "ui_contam"),
         uiOutput(outputId = "ui_sp"),
+        uiOutput(outputId = "ui_method_sp"),
         uiOutput(outputId = "ui_assay"),
         uiOutput(outputId = "ui_iter")),
     
