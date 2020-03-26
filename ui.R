@@ -32,9 +32,12 @@ sidebar = dashboardSidebar(
 )
 
 # Manual version for 2D
+# v_manual_2D = uiOutput(outputId = "v_manual_2D")
+
+
 v_manual_2D = fluidRow(
-  
-  box(title = "2D Input Parameters",
+
+  box(title = "2D Input Parameters", 
       splitLayout(
         numericInput(inputId = "x_lim", label = "Length (m)", value = 10, min = 1),
         numericInput(inputId = "y_lim", label = "Width (m)", value = 10, min = 1)
@@ -58,9 +61,9 @@ v_manual_2D = fluidRow(
       numericInput(inputId = "n_sp", label = "Number of sample points", value = 5, min = 1, step = 1),
       selectInput(inputId = "method_sp", label = "Sampling strategy", choices = list("SRS" = "srs", "STRS" = "strs", "k-step SS" = "ss")),
       wellPanel(
-        selectInput(inputId = "by", 
-                    label = "Stratify by", 
-                    choices = list("Row" = "row", "Column" = "column", "2D" = "2d"), 
+        selectInput(inputId = "by",
+                    label = "Stratify by",
+                    choices = list("Row" = "row", "Column" = "column", "2D" = "2d"),
                     selected = NA,
                     multiple = FALSE),
         numericInput(inputId = "n_strata", label = "Number of strata", value = 5, min = 1),
@@ -68,10 +71,10 @@ v_manual_2D = fluidRow(
         numericInput(inputId = "n_strata_col", label = "Number of column strata (2D only)", value = NULL, min = 1)
       ),
       numericInput(inputId = "m_sp", label = "Individual sample mass (g)", value = 25, min = 0),
-      selectInput(inputId = "method_det", 
-                  label = "Detection method", 
-                  choices = list("Plating" = "plating", "Enrichment" = "enrichment"), 
-                  selected = "enrichment", 
+      selectInput(inputId = "method_det",
+                  label = "Detection method",
+                  choices = list("Plating" = "plating", "Enrichment" = "enrichment"),
+                  selected = "enrichment",
                   multiple = FALSE),
       sliderInput(inputId = "case", label = "Case", min = 1, value = 10, max = 15, step = 1, round = TRUE),
       splitLayout(
@@ -96,7 +99,7 @@ v_manual_2D = fluidRow(
         )
       )
   ),
-  
+
   box(title = "Visualization for one iteration",
       plotOutput(outputId = "overlay_draw"),
       plotOutput(outputId = "contam_level_draw")
@@ -105,7 +108,7 @@ v_manual_2D = fluidRow(
 
 # Manual version for 3D
 v_manual_3D = fluidRow(
-  
+
   box(
     title = "3D Input Parameters"
   ),
@@ -120,7 +123,20 @@ ph = p("Under development")
 # Smart version 
 v_smart = fluidPage(
   fluidRow(
-    box(title = "Questionnaire", ph),
+    box(title = "Questionnaire", 
+        p("Q1: Which type of product do you want to simulate?"),
+        radioButtons(inputId = "spread_vs",
+                     label = NULL,
+                     selected = character(0),
+                     inline = TRUE,
+                     choiceNames = list("Produce in a field", "Grains in a bin"),
+                     choiceValues = list("continuous", "discrete")),
+        uiOutput(outputId = "ui_dims"),
+        uiOutput(outputId = "ui_geom"),
+        uiOutput(outputId = "ui_contam"),
+        uiOutput(outputId = "ui_sp"),
+        uiOutput(outputId = "ui_assay"),
+        uiOutput(outputId = "ui_iter")),
     
     box(title = "Visualization for one iteration", ph)
     )
