@@ -137,7 +137,10 @@ v_smart = fluidPage(
         uiOutput(outputId = "ui_sp"),
         uiOutput(outputId = "ui_method_sp"),
         uiOutput(outputId = "ui_assay"),
-        uiOutput(outputId = "ui_iter")),
+        uiOutput(outputId = "ui_iter"),
+        uiOutput(outputId = "ui_tuning_vs"),
+        uiOutput(outputId = "ui_load"),
+        uiOutput(outputId = "ui_vis_iter")),
     
     box(title = "Visualization for one iteration", ph)
     )
