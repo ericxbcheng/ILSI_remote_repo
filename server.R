@@ -334,19 +334,19 @@ shinyServer(function(input, output, session) {
     })
   })
   
-  # Load the parameter once
+  # Load the parameter once (for both smart and manual version)
   list_load = list()
-  observeEvent(eventExpr = {input$load}, handlerExpr = {
-    
+  observeEvent(eventExpr = {c(input$load, input$load_vs)}, handlerExpr = {
+
     list_load <<- load_once(input = input, output = output)
     output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default, input = input))
 
-  })
+  }, ignoreInit = TRUE)
   
   # Visualize for one iteration
   observeEvent(eventExpr = {input$vis}, handlerExpr = {
     
-    vis_once(input = input, output = output, spread = list_load$spread, ArgList = list_load$ArgList_default)
+    vis_once(input = input, output = output, ArgList = list_load$ArgList_default)
     
   })
   

@@ -2,6 +2,8 @@
 load_once = function(input, output){
   
   if(input$sidebarMenu == "2D"){
+    # Manual mode: 2D
+    
     spread = "continuous"
     
     if(input$by == "2d"){
@@ -18,17 +20,47 @@ load_once = function(input, output){
                            method_det = input$method_det, bg_level = input$bg_level, geom = input$geom)
     
   } else if(input$sidebarMenu == "3D"){
+    # Manual mode: 3D
     spread = "discrete"
+    
+  } else if (input$sidebarMenu == "v_smart"){
+    # Smart mode: 2D
+    if(input$spread_vs == "continuous"){
+      
+      # STRS or k-step SS
+      if(input$method_sp != "srs"){
+        if(input$by_vs == "2d"){
+          n_strata = c(input$n_strata_row_vs, input$n_strata_col_vs)
+        } else {
+          n_strata = input$n_strata_vs
+        }
+      } else {
+        n_strata = NA
+      }
+      
+      ArgList_default = list(n_contam = input$n_contam_vs, lims = list(xlim = c(0, input$x_lim_vs), ylim = c(0, input$y_lim_vs)),
+                             spread = input$spread_vs, spread_radius = input$spread_radius_vs,
+                             cont_level = c(input$cont_level_mu_vs, input$cont_level_sd_vs), method_sp = input$method_sp_vs,
+                             n_sp = input$n_sp_vs, n_strata = n_strata, by = input$by_vs, LOC = input$LOC_vs,
+                             fun = input$fun_vs, case = input$case_vs, m = input$m_vs, M = input$M_vs, m_sp = input$m_sp_vs,
+                             method_det = input$method_det_vs, bg_level = input$bg_level_vs, geom = input$geom_vs)
+      
+    } else if (input$spread_vs == "discrete"){
+      ph
+    } else {
+      stop("Unknown spread type")
+    }
+    
   } else {
     stop("Unknown manual mode")
   }
-  return(list(spread = spread, ArgList_default = ArgList_default))
+  return(list(ArgList_default = ArgList_default))
 }
 
 # A function for visualizing one iteration
-vis_once = function(input, output, spread, ArgList){
+vis_once = function(input, output, ArgList){
   
-  if(spread == "continuous"){
+  if(ArgList$spread == "continuous"){
     
     # Remove unnecessary arguments
     ArgList_vis = ArgList
@@ -50,9 +82,6 @@ vis_once = function(input, output, spread, ArgList){
     message("Under construction.") 
   }
 }
-
-
-
 
 # A variable-interpretation look-up table. The argument 'var' takes a variable name and returns its interpretation
 explain_var = function(var){
@@ -82,47 +111,75 @@ explain_var = function(var){
          "method_det" = "Detection method",
          "n_seed" = "Number of contamination patterns",
          "n_iter" = "Number of sampling patterns per contamination pattern",
+         "n_total_iter_vs" = "Total number of iterations",
          "var_prim" = "Primary tuning parameter",
          "var_sec" = "Secondary tuning parameter",
          stop("Unknown variable name"))
 }
 
+get_tuning_info = function(n_vars, var_prim, var_sec, val_prim, val_sec){
+  if(n_vars == 0){
+    return(NULL)
+    
+  } else if (n_vars == 1){
+    return(c("var_prim" = paste(var_prim, val_prim, sep = ":")))
+    
+  } else if (n_vars == 2){
+    return(c("var_prim" = paste(var_prim, val_prim, sep = ": "), 
+             "var_sec" = paste(var_sec, val_sec, sep = ": ")))
+    
+  } else {
+    stop("Unknown number of tuning variables")
+  }
+}
+
 # A function that presents the list of arguments in a nice table
 make_var_table = function(Args, input){
-  
+  browser()
   # Remove unnecessary arguments
   a = unlist(Args)
   bool = names(a) %in% c("lims.xlim1", "lims.ylim1", "lims.zlim1")
   b = a[!bool]
   
   # Get the iteration information
-  c = c(b, "n_seed" = input$n_seed, "n_iter" = input$n_iter)
+  if(input$sidebarMenu != "v_smart"){
+    c = c(b, "n_seed" = input$n_seed, "n_iter" = input$n_iter)
+    d = get_tuning_info(n_vars = input$n_vars, var_prim = input$var_prim, 
+                        var_sec = input$var_sec, val_prim = input$val_prim, val_sec = input$val_sec)
+    
+  } else if (input$sidebarMenu == "v_smart"){
+    c = c(b, "n_iter_total_vs" = input$n_iter_total_vs)
+    d = get_tuning_info(n_vars = input$n_vars_vs, var_prim = input$var_prim_vs, 
+                        var_sec = input$var_sec_vs, val_prim = input$val_prim_vs, val_sec = input$val_sec_vs)
   
-  if(input$n_vars == 0){
-    
-    d = c
-    
-  } else if (input$n_vars == 1){
-    
-    d = c(c, "var_prim" = paste(input$var_prim, input$val_prim, sep = ":"))
-    
-  } else if (input$n_vars == 2) {
-    
-    d = c(c, 
-          "var_prim" = paste(input$var_prim, input$val_prim, sep = ": "), 
-          "var_sec" = paste(input$var_sec, input$val_sec, sep = ": "))
+  
+  # if(input$n_vars == 0){
+  #   
+  #   d = c
+  #   
+  # } else if (input$n_vars == 1){
+  #   
+  #   d = c(c, "var_prim" = paste(input$var_prim, input$val_prim, sep = ":"))
+  #   
+  # } else if (input$n_vars == 2) {
+  #   
+  #   d = c(c, 
+  #         "var_prim" = paste(input$var_prim, input$val_prim, sep = ": "), 
+  #         "var_sec" = paste(input$var_sec, input$val_sec, sep = ": "))
     
   } else {
     stop("Unknown number of tuning variables")
   }
   
+  e = c(c, d)
+  
   # Interpret the variables
-  var_meanings = map_chr(.x = names(d), .f = explain_var)
+  var_meanings = map_chr(.x = names(e), .f = explain_var)
   
   # Make a tibble
-  e = tibble(Variable = var_meanings, Value = d)
+  f = tibble(Variable = var_meanings, Value = e)
   
-  return(e)
+  return(f)
 }
 
 
