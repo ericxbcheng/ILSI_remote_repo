@@ -1,0 +1,138 @@
+# A function for visualizing one iteration
+vis_once = function(input, output, ArgList, chosen_mode){
+  
+  if(chosen_mode != "v_smart"){
+    if(ArgList$spread == "continuous"){
+      
+      # Remove unnecessary arguments
+      ArgList_vis = ArgList
+      ArgList_vis[c("case", "M", "m_sp", "method_det")] = NULL
+      ArgList_vis$seed = NaN
+      
+      # Produce intermediate outputs
+      one_iteration = do.call(what = sim_intmed, args = ArgList_vis)
+      output$overlay_draw = renderPlot(expr = {overlay_draw(method_sp = ArgList_vis$method_sp, data = one_iteration[["contam_sp_xy"]] , 
+                                                            spread = ArgList_vis$spread, xlim = ArgList_vis$lims$xlim, ylim = ArgList_vis$lims$ylim, 
+                                                            n_strata = ArgList_vis$n_strata, by = ArgList_vis$by)})
+      output$contam_level_draw = renderPlot(expr = {contam_level_draw(dimension = "3d", method = ArgList_vis$fun, 
+                                                                      spread_radius = ArgList_vis$spread_radius, LOC = ArgList_vis$LOC, 
+                                                                      df_contam = one_iteration[["contam_sp_xy"]] , xlim = ArgList_vis$lims$xlim, 
+                                                                      ylim = ArgList_vis$lims$ylim, bg_level = ArgList_vis$bg_level, 
+                                                                      geom = ArgList_vis$geom)})
+    } else if (ArgList$spread == "discrete"){
+      message("Under construction.")
+    } else {stop("Unknown spread type.")
+    }
+  } else if (chosen_mode == "v_smart"){
+    
+  } else {
+    stop("Unknown chosen mode.")
+  }
+}
+
+# Generate labels according to variables
+gen_label = function(var){
+  
+  a = switch(EXPR = var,
+             "n_contam" = "Number of contamination points",
+             "n_sp" = "Number of sample points",
+             "m_sp" = "Individual sample mass (g)",
+             "method_sp" = "Sample strategy",
+             stop("Unknown variable"))
+  
+  return(a)
+}
+
+# Plot when there is no tuning parameter
+plot_tune0 = function(data){
+  
+  ggplot(data = data) +
+    geom_boxplot(aes(x = "NA", y = Paccept)) +
+    geom_point(aes(x = "NA",  y = mean(data$Paccept)), color = "red", pch = 4, size = 5) +
+    labs(x = NULL, y = "Probability of acceptance") +
+    scale_y_continuous(breaks = seq(0,1,0.1)) +
+    coord_cartesian(ylim = c(0,1)) +
+    theme_bw()
+}
+
+# Plot when there is one tuning parameter
+plot_tune1 = function(data, input){
+  
+  xlab = gen_label(var = input$var_prim)
+  
+  # Summarise the data
+  a = data %>%
+    gather(data = ., key = "metric", value = "value", -c(seed, param)) %>%
+    group_by(param, metric) %>%
+    summarise(lb = quantile(x = value, probs = 0.025), 
+              med = median(x = value),
+              ub = quantile(x = value, probs = 0.975)) %>%
+    dplyr::filter(metric == "Paccept")
+  
+  # Visualize
+  b = ggplot(data = a) +
+    geom_ribbon(aes_string(x = "param", ymin = "lb", ymax = "ub"), alpha = 0.3, color = "lightgrey") +
+    geom_line(aes_string(x = "param", y = "med")) +
+    geom_point(aes_string(x = "param", y = "med")) +
+    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
+    coord_cartesian(ylim = c(0,1)) +
+    labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") +
+    theme_bw() 
+  return(b)
+}
+
+# Plot when there is one tuning parameter
+plot_tune2_ribbon = function(data, input){
+  
+  # Make the x axis and legend labels
+  xlab = gen_label(var = input$var_prim)
+  legend_lab = gen_label(var = input$var_sec)
+  
+  # Summarise the data
+  a = data %>%
+    gather(data = ., key = "metric", value = "value", -c(seed, param, param2)) %>%
+    group_by(param2, param, metric) %>%
+    summarise(lb = quantile(x = value, probs = 0.025), 
+              med = median(x = value),
+              ub = quantile(x = value, probs = 0.975)) %>%
+    dplyr::filter(metric == "Paccept")
+  
+  # Visualize
+  b = ggplot(data = a) +
+    geom_ribbon(aes_string(x = "param", ymin = "lb", ymax = "ub", group = "param2", fill = "param2"), alpha = 0.3) +
+    geom_line(aes_string(x = "param", y = "med", color = "param2")) +
+    geom_point(aes_string(x = "param", y = "med", color = "param2")) +
+    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
+    scale_fill_discrete(name = legend_lab) +
+    scale_color_discrete(name = legend_lab) +
+    coord_cartesian(ylim = c(0,1)) +
+    labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") +
+    theme_bw() +
+    theme(legend.position = "top")
+  
+  
+  return(b)
+}
+
+# Visualize with boxplots
+plot_tune2_boxplot = function(data, input, yvar){
+  
+  # Make the x axis and legend labels
+  xlab = gen_label(var = input$var_prim)
+  ylab = switch(EXPR = yvar, 
+                "P_det" = "Detection Probability", 
+                "Paccept" = "Probability of acceptance")
+  legend_lab = gen_label(var = input$var_sec)
+  
+  # Summarise the data
+  
+  a = ggplot(data = data, aes_string(y = yvar)) +
+    geom_boxplot(aes(x = as.factor(param), group = interaction(param, param2), fill = param2)) +
+    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
+    coord_cartesian(ylim = c(0,1)) +
+    scale_fill_discrete(name = legend_lab) +
+    labs(x = xlab, y = ylab) +
+    theme_bw()+
+    theme(legend.position = "top")
+  return(a)
+}

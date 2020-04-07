@@ -25,6 +25,8 @@ source(file = "Sampling_iteration.R")
 source(file = "Sampling_tuning_3d.R")
 source(file = "Sampling_analysis.R")
 source(file = "R/Sampling_shiny_helpers.R")
+source(file = "R/Sampling_shiny_tuning.R")
+source(file = "R/Sampling_shiny_visualization.R")
 
 shinyServer(function(input, output, session) {
   
