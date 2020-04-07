@@ -24,7 +24,7 @@ source(file = "Sampling_outcome.R")
 source(file = "Sampling_iteration.R")
 source(file = "Sampling_tuning_3d.R")
 source(file = "Sampling_analysis.R")
-source(file = "R/Sampling_shiny_helpers.R")
+source(file = "R/Sampling_shiny_loading.R")
 source(file = "R/Sampling_shiny_tuning.R")
 source(file = "R/Sampling_shiny_visualization.R")
 
@@ -162,8 +162,8 @@ shinyServer(function(input, output, session) {
           ),
           p("Q10. What are the microbiological criteria?"),
           splitLayout(
-            numericInput(inputId = "m", label = "m", value = 0, min = 0),
-            numericInput(inputId = "M", label = "M", value = 0, min = 0)
+            numericInput(inputId = "m_vs", label = "m", value = 0, min = 0),
+            numericInput(inputId = "M_vs", label = "M", value = 0, min = 0)
           ),
           p("Q11. Which sampling strategy would you use?"),
           radioButtons(inputId = "method_sp_vs", label = NULL, choices = list("SRS" = "srs", "STRS" = "strs", "k-step SS" = "ss"), selected = character(0), inline = TRUE)
@@ -348,11 +348,12 @@ shinyServer(function(input, output, session) {
   }, ignoreInit = TRUE)
   
   # Visualize for one iteration
-  observeEvent(eventExpr = {input$vis}, handlerExpr = {
+  observeEvent(eventExpr = {c(input$vis, input$vis_vs)}, handlerExpr = {
     
-    vis_once(input = input, output = output, ArgList = list_load$ArgList_default)
+    vis_once(input = input, output = output, 
+             ArgList = list_load$ArgList_default, chosen_mode = list_load$chosen_mode)
     
-  })
+  }, ignoreInit = TRUE)
   
   # Multiple iterations
   observeEvent(eventExpr = {input$iteration}, handlerExpr = {
