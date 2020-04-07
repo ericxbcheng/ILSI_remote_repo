@@ -28,7 +28,7 @@ source(file = "R/Sampling_shiny_helpers.R")
 
 shinyServer(function(input, output, session) {
   
-  # Tuning conditional panels
+  # Tuning for the manual mode
   output$ui_tuning = renderUI(expr = {
     if(input$n_vars == 0){
       NULL
@@ -223,22 +223,132 @@ shinyServer(function(input, output, session) {
                            )
         )
       })
+    } else if (input$method_sp_vs == "ss"){
+      
+      output$ui_method_sp = renderUI(expr = {
+        verticalLayout(
+          p("Q11A. Along which direction do you want to stratify the field?"),
+          selectInput(inputId = "by_vs",
+                      label = NULL,
+                      choices = list("Row" = "row", "Column" = "column"),
+                      multiple = FALSE),
+          p("Q11B. How many strata do you want along this direction?"),
+          numericInput(inputId = "n_strata_vs", label = NULL, value = NULL, min = 1)
+        )
+      })
+    } else {
+      stop("Unknown sampling method")
     }
   })
   
-  # Load the parameter once
-  list_load = list()
-  observeEvent(eventExpr = {input$load}, handlerExpr = {
-    
-    list_load <<- load_once(input = input, output = output)
-    output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default, input = input))
-
+  # Assay
+  observeEvent(eventExpr = {input$method_sp_vs}, handlerExpr = {
+    output$ui_assay = renderUI(expr = {
+      verticalLayout(
+        p("Q12. What's the individual sample mass (g)?"),
+        numericInput(inputId = "m_sp_vs", label = NULL, value = 25, min = 0),
+        p("Q13. Which detection method would you use?"),
+        radioButtons(inputId = "method_det_vs",
+                    label = NULL,
+                    choices = list("Plating" = "plating", "Enrichment" = "enrichment"),
+                    selected = character(0), 
+                    inline = TRUE)
+      )
+    })
   })
+  
+  # Iteration
+  observeEvent(eventExpr = {input$method_det_vs}, handlerExpr = {
+    output$ui_iter = renderUI(expr = {
+      verticalLayout(
+        h3(),
+        h2("Iteration section"),
+        p("Q14. How many times do you want to iterate the model?"),
+        numericInput(inputId = "n_iter_total_vs", label = NULL, value = 25, min = 1, step = 1),
+        p("Q15. How many parameters do you want to tune over?"),
+        radioButtons(inputId = "n_vars_vs", label = NULL, choices = list(0,1,2), selected = character(0), inline = TRUE)
+      )
+    })
+  })
+  
+  # Tuning and buttons for the smart mode
+  observeEvent(eventExpr = {input$n_vars_vs}, handlerExpr = {
+    output$ui_tuning_vs = renderUI(expr = {
+      if(input$n_vars_vs == 0){
+        NULL
+        
+      } else if(input$n_vars_vs == 1){
+        verticalLayout(
+          p("Q15A. Which parameter do you want to tune?"),
+          selectInput(inputId = "var_prim_vs",
+                      label = NULL,
+                      choices = list("Number of contamination points" = "n_contam_vs",
+                                     "Number of sample points" = "n_sp_vs",
+                                     "Individual sample mass (g)" = "m_sp_vs")),
+          p("Q15B. What values do you want to tune over? (separated by a comma)"),
+          textInput(inputId = "val_prim_vs", label = NULL, value = "1,2,3")
+        )
+        
+      } else if(input$n_vars_vs == 2) {
+        verticalLayout(
+          p("Q15A. Which primary parameter do you want to tune?"),
+          selectInput(inputId = "var_prim_vs",
+                      label = NULL,
+                      choices = list("Number of contamination points" = "n_contam_vs",
+                                     "Number of sample points" = "n_sp_vs",
+                                     "Individual sample mass (g)" = "m_sp_vs")),
+          p("Q15B. What values do you want to tune the primary parameter over? (separated by a comma)"),
+          textInput(inputId = "val_prim_vs", label = NULL, value = "1,2,3"),
+          p("Q15C. Which secondary parameter do you want to tune?"),
+          selectInput(inputId = "var_sec_vs",
+                      label = NULL,
+                      choices = list("Sampling strategy" = "method_sp_vs")),
+          p("Q15D. What values do you want to tune the secondary parameter over? (separated by a comma)"),
+          textInput(inputId = "val_sec_vs", label = NULL, value = "srs, strs, ss")
+        )
+      } else {
+        stop("Unknown number of tuning paramters")
+      }
+    })
+  })
+  
+  # UI for loading (smart version)
+  observeEvent(eventExpr = {input$n_vars_vs}, handlerExpr = {
+    output$ui_load = renderUI(expr = {
+      verticalLayout(
+        actionButton(inputId = "load_vs", label = "Load parameters"),
+        h2()
+      )
+    })
+  })
+  
+  # UI for visualization and iteration (smart version)
+  observeEvent(eventExpr = {input$load_vs}, handlerExpr = {
+    output$ui_vis_iter = renderUI(expr = {
+      verticalLayout(
+        splitLayout(
+          actionButton(inputId = "vis_vs", label = "Visualize"),
+          actionButton(inputId = "iteration_vs", label = "Iterate")
+        )
+      )
+    })
+  })
+  
+  # Load the parameter once (for both smart and manual version)
+  list_load = list()
+  observeEvent(eventExpr = {c(input$load, input$load_vs)}, handlerExpr = {
+
+    list_load <<- load_once(input = input, output = output)
+    output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default, 
+                                                           input = input, 
+                                                           chosen_mode = list_load$chosen_mode))
+
+  }, ignoreInit = TRUE)
   
   # Visualize for one iteration
   observeEvent(eventExpr = {input$vis}, handlerExpr = {
     
-    vis_once(input = input, output = output, spread = list_load$spread, ArgList = list_load$ArgList_default)
+    vis_once(input = input, output = output, ArgList = list_load$ArgList_default)
     
   })
   
