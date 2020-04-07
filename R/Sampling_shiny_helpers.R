@@ -3,7 +3,7 @@ load_once = function(input, output){
   
   if(input$sidebarMenu == "2D"){
     # Manual mode: 2D
-    
+    chosen_mode = "2D"
     spread = "continuous"
     
     if(input$by == "2d"){
@@ -21,10 +21,14 @@ load_once = function(input, output){
     
   } else if(input$sidebarMenu == "3D"){
     # Manual mode: 3D
+    chosen_mode = "3D"
     spread = "discrete"
     
   } else if (input$sidebarMenu == "v_smart"){
-    # Smart mode: 2D
+    
+    # Smart mode
+    chosen_mode = "v_smart"
+    
     if(input$spread_vs == "continuous"){
       
       # STRS or k-step SS
@@ -54,7 +58,7 @@ load_once = function(input, output){
   } else {
     stop("Unknown manual mode")
   }
-  return(list(ArgList_default = ArgList_default))
+  return(list(ArgList_default = ArgList_default, chosen_mode = chosen_mode))
 }
 
 # A function for visualizing one iteration
@@ -111,7 +115,7 @@ explain_var = function(var){
          "method_det" = "Detection method",
          "n_seed" = "Number of contamination patterns",
          "n_iter" = "Number of sampling patterns per contamination pattern",
-         "n_total_iter_vs" = "Total number of iterations",
+         "n_iter_total_vs" = "Total number of iterations",
          "var_prim" = "Primary tuning parameter",
          "var_sec" = "Secondary tuning parameter",
          stop("Unknown variable name"))
@@ -134,44 +138,27 @@ get_tuning_info = function(n_vars, var_prim, var_sec, val_prim, val_sec){
 }
 
 # A function that presents the list of arguments in a nice table
-make_var_table = function(Args, input){
-  browser()
+make_var_table = function(Args, input, chosen_mode){
+  
   # Remove unnecessary arguments
   a = unlist(Args)
   bool = names(a) %in% c("lims.xlim1", "lims.ylim1", "lims.zlim1")
   b = a[!bool]
   
   # Get the iteration information
-  if(input$sidebarMenu != "v_smart"){
-    c = c(b, "n_seed" = input$n_seed, "n_iter" = input$n_iter)
+  if(chosen_mode != "v_smart"){
+    temp = c(b, "n_seed" = input$n_seed, "n_iter" = input$n_iter)
     d = get_tuning_info(n_vars = input$n_vars, var_prim = input$var_prim, 
                         var_sec = input$var_sec, val_prim = input$val_prim, val_sec = input$val_sec)
-    
-  } else if (input$sidebarMenu == "v_smart"){
-    c = c(b, "n_iter_total_vs" = input$n_iter_total_vs)
+    } else if (chosen_mode == "v_smart"){
+    temp = c(b, "n_iter_total_vs" = input$n_iter_total_vs)
     d = get_tuning_info(n_vars = input$n_vars_vs, var_prim = input$var_prim_vs, 
                         var_sec = input$var_sec_vs, val_prim = input$val_prim_vs, val_sec = input$val_sec_vs)
-  
-  
-  # if(input$n_vars == 0){
-  #   
-  #   d = c
-  #   
-  # } else if (input$n_vars == 1){
-  #   
-  #   d = c(c, "var_prim" = paste(input$var_prim, input$val_prim, sep = ":"))
-  #   
-  # } else if (input$n_vars == 2) {
-  #   
-  #   d = c(c, 
-  #         "var_prim" = paste(input$var_prim, input$val_prim, sep = ": "), 
-  #         "var_sec" = paste(input$var_sec, input$val_sec, sep = ": "))
-    
-  } else {
+    } else {
     stop("Unknown number of tuning variables")
   }
   
-  e = c(c, d)
+  e = c(temp, d)
   
   # Interpret the variables
   var_meanings = map_chr(.x = names(e), .f = explain_var)

@@ -339,7 +339,9 @@ shinyServer(function(input, output, session) {
   observeEvent(eventExpr = {c(input$load, input$load_vs)}, handlerExpr = {
 
     list_load <<- load_once(input = input, output = output)
-    output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default, input = input))
+    output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default, 
+                                                           input = input, 
+                                                           chosen_mode = list_load$chosen_mode))
 
   }, ignoreInit = TRUE)
   
