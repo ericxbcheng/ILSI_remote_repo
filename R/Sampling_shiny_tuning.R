@@ -88,3 +88,82 @@ metrics_cont_sec = function(data, input, vals_prim, vals_sec){
   
   return(c)
 }
+
+f_ui_tuning_vs = function(input, ...){
+  if(input$n_vars_vs == 0){
+    NULL
+    
+  } else if(input$n_vars_vs == 1){
+    verticalLayout(
+      p("Q15A. Which parameter do you want to tune?"),
+      selectInput(inputId = "var_prim_vs",
+                  label = NULL,
+                  choices = list("Number of contamination points" = "n_contam_vs",
+                                 "Number of sample points" = "n_sp_vs",
+                                 "Individual sample mass (g)" = "m_sp_vs")),
+      p("Q15B. What values do you want to tune over? (separated by a comma)"),
+      textInput(inputId = "val_prim_vs", label = NULL, value = "1,2,3")
+    )
+    
+  } else if(input$n_vars_vs == 2) {
+    verticalLayout(
+      p("Q15A. Which primary parameter do you want to tune?"),
+      selectInput(inputId = "var_prim_vs",
+                  label = NULL,
+                  choices = list("Number of contamination points" = "n_contam_vs",
+                                 "Number of sample points" = "n_sp_vs",
+                                 "Individual sample mass (g)" = "m_sp_vs")),
+      p("Q15B. What values do you want to tune the primary parameter over? (separated by a comma)"),
+      textInput(inputId = "val_prim_vs", label = NULL, value = "1,2,3"),
+      p("Q15C. Which secondary parameter do you want to tune?"),
+      selectInput(inputId = "var_sec_vs",
+                  label = NULL,
+                  choices = list("Sampling strategy" = "method_sp_vs")),
+      p("Q15D. What values do you want to tune the secondary parameter over? (separated by a comma)"),
+      textInput(inputId = "val_sec_vs", label = NULL, value = "srs, strs, ss")
+    )
+  } else {
+    stop("Unknown number of tuning paramters")
+  }
+}
+
+f_event_iteration_2d = function(input, output, Args, chosen_mode){
+  
+  if(chosen_mode != "v_smart"){
+    n_vars = input$n_vars
+  } else if (chosen_mode == "v_smart"){
+    n_vars = input$n_vars_vs
+  } else {
+    stop("Unknown chosen mode")
+  }
+  
+  if(n_vars == 0){
+    
+    # When there is no tuning parameter
+    data_raw = iterate_tune0(input = input, Args = Args)
+    data_cleaned <<- metrics_cont_0(data = data_raw)
+    output$plot_iterate = renderPlot(expr = {plot_tune0(data = data_cleaned)})
+    
+  } else if (n_vars == 1){
+    
+    # When there is 1 tuning parameter
+    data_raw = iterate_tune1(input = input, Args = Args)
+    data_cleaned <<- metrics_cont_n(data = data_raw)
+    output$plot_iterate = renderPlot(expr = {plot_tune1(data = data_cleaned, input = input)})
+    
+  } else if (n_vars == 2) {
+    
+    data_raw = iterate_tune2(input = input, Args = Args)
+    data_cleaned <<- metrics_cont_sec(data = data_raw[["sim_data"]], 
+                                      input = input, 
+                                      vals_prim = data_raw[["vals_prim"]], 
+                                      vals_sec = data_raw[["vals_sec"]])
+    
+    observeEvent(eventExpr = {input$yvar}, handlerExpr = {
+      output$plot_iterate = renderPlot(expr = {plot_tune2_boxplot(data = data_cleaned, input = input, yvar = input$yvar)})
+    })
+    
+  } else {
+    message("Under construction")
+  }
+}
