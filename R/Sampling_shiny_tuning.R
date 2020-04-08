@@ -88,3 +88,41 @@ metrics_cont_sec = function(data, input, vals_prim, vals_sec){
   
   return(c)
 }
+
+f_ui_tuning_vs = function(input, ...){
+  if(input$n_vars_vs == 0){
+    NULL
+    
+  } else if(input$n_vars_vs == 1){
+    verticalLayout(
+      p("Q15A. Which parameter do you want to tune?"),
+      selectInput(inputId = "var_prim_vs",
+                  label = NULL,
+                  choices = list("Number of contamination points" = "n_contam_vs",
+                                 "Number of sample points" = "n_sp_vs",
+                                 "Individual sample mass (g)" = "m_sp_vs")),
+      p("Q15B. What values do you want to tune over? (separated by a comma)"),
+      textInput(inputId = "val_prim_vs", label = NULL, value = "1,2,3")
+    )
+    
+  } else if(input$n_vars_vs == 2) {
+    verticalLayout(
+      p("Q15A. Which primary parameter do you want to tune?"),
+      selectInput(inputId = "var_prim_vs",
+                  label = NULL,
+                  choices = list("Number of contamination points" = "n_contam_vs",
+                                 "Number of sample points" = "n_sp_vs",
+                                 "Individual sample mass (g)" = "m_sp_vs")),
+      p("Q15B. What values do you want to tune the primary parameter over? (separated by a comma)"),
+      textInput(inputId = "val_prim_vs", label = NULL, value = "1,2,3"),
+      p("Q15C. Which secondary parameter do you want to tune?"),
+      selectInput(inputId = "var_sec_vs",
+                  label = NULL,
+                  choices = list("Sampling strategy" = "method_sp_vs")),
+      p("Q15D. What values do you want to tune the secondary parameter over? (separated by a comma)"),
+      textInput(inputId = "val_sec_vs", label = NULL, value = "srs, strs, ss")
+    )
+  } else {
+    stop("Unknown number of tuning paramters")
+  }
+}

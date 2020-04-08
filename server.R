@@ -27,6 +27,10 @@ source(file = "Sampling_analysis.R")
 source(file = "R/Sampling_shiny_loading.R")
 source(file = "R/Sampling_shiny_tuning.R")
 source(file = "R/Sampling_shiny_visualization.R")
+source(file = "R/Sampling_shiny_contam.R")
+source(file = "R/Sampling_shiny_plan.R")
+source(file = "R/Sampling_shiny_assay.R")
+source(file = "R/Sampling_shiny_iteration.R")
 
 shinyServer(function(input, output, session) {
   
@@ -78,240 +82,52 @@ shinyServer(function(input, output, session) {
   ##### Smart version
   # Dimensions
   observeEvent(eventExpr = {input$spread_vs}, handlerExpr = {
-    output$ui_dims = renderUI(expr = {
-      
-      if(input$spread_vs == "continuous"){
-        verticalLayout(
-          p("Q2. What are the dimensions of the field?"),
-          splitLayout(
-            numericInput(inputId = "x_lim_vs", label = "Length (m)", value = NULL, min = 1),
-            numericInput(inputId = "y_lim_vs", label = "Width (m)", value = NULL, min = 1)
-          ),
-          p("Q3. How would you describe the geometry of the hazards?"),
-          radioButtons(inputId = "geom_vs", 
-                      label = NULL, 
-                      choices = list("Point-source" = "point", "Area-based" = "area"),
-                      selected = character(0), 
-                      inline = TRUE)
-          )
-      } else {
-        ph
-      }
-    })
+    output$ui_dims = renderUI(expr = {f_ui_dims(input = input)})
   })
   
   # Geom
   observeEvent(eventExpr = {input$geom_vs}, handlerExpr = {
-    
-    if(input$geom_vs == "point"){
-      output$ui_geom = renderUI(expr = {
-        verticalLayout(
-          p("Q3A. Number of contamination points?"),
-          numericInput(inputId = "n_contam_vs", label = NULL, value = NULL, min = 1, step = 1),
-          p("Q3B. Radius of contamination area(m)?"),
-          numericInput(inputId = "spread_radius_vs", label = NULL, value = NULL, min = 0)
-        )
-      })
-    } else {
-      output$ui_geom = NULL
-    }
+    output$ui_geom = renderUI(expr = {f_ui_geom(input = input)})
   })
   
   # Contamination
   observeEvent(eventExpr = {input$geom_vs}, handlerExpr = {
-    
-    if(input$geom_vs %in% c("point", "area")){
-      output$ui_contam = renderUI(expr = {
-        verticalLayout(
-          p("Q4. Mean contamination level (log CFU/g)"),
-          numericInput(inputId = "cont_level_mu_vs", label = NULL, value = NULL),
-          p("Q5. Standard deviation of contamination level (log CFU/g)"),
-          numericInput(inputId = "cont_level_sd_vs", label = NULL, value = NULL),
-          p("Q6. Background level (CFU/g)"),
-          numericInput(inputId = "bg_level_vs", label = NULL, value = 0.00001, min = 0),
-          p("Q7. Decay function"),
-          radioButtons(inputId = "fun_vs",
-                      label = NULL,
-                      choices = list("Exponential" = "exp", "Gaussian" = "norm", "Uniform" = "unif"), 
-                      selected = character(0), 
-                      inline = TRUE),
-          conditionalPanel(
-            condition = "input.fun_vs == 'exp' | input.fun_vs == 'norm'",
-            p("Q7A. How fast do you want the contamination to decay? (left: fast; right: slow)"),
-            sliderInput(inputId = "LOC_vs", label = NULL, value = 0.001, min = 0.0001, max = 0.01, ticks = TRUE)
-          )
-        )
-      })
-      
-    } else {
-      output$ui_contam = NULL
-    }
+    output$ui_contam = renderUI(expr = {f_ui_contam(input = input)})
   })
   
   # Sampling
   observeEvent(eventExpr = {input$geom_vs}, handlerExpr = {
-    
-    if(input$geom_vs %in% c("point", "area")){
-      output$ui_sp = renderUI(expr = {
-        verticalLayout(
-          p("Q8. Which sampling attribute case?"),
-          sliderInput(inputId = "case_vs", label = NULL, min = 1, value = 10, max = 15, step = 1, round = TRUE),
-          disabled(
-            p("Q9. How many samples do you want?"),
-            numericInput(inputId = "n_sp_vs", label = NULL, value = 5, min = 1, step = 1)
-          ),
-          p("Q10. What are the microbiological criteria?"),
-          splitLayout(
-            numericInput(inputId = "m_vs", label = "m", value = 0, min = 0),
-            numericInput(inputId = "M_vs", label = "M", value = 0, min = 0)
-          ),
-          p("Q11. Which sampling strategy would you use?"),
-          radioButtons(inputId = "method_sp_vs", label = NULL, choices = list("SRS" = "srs", "STRS" = "strs", "k-step SS" = "ss"), selected = character(0), inline = TRUE)
-        )
-      })
-    } else {
-      output$ui_sp = NULL
-    }
+    output$ui_sp = renderUI(expr = {f_ui_sp(input = input)})
   })
   
   # Associate case with n_sp
   observeEvent(eventExpr = {input$case_vs}, handlerExpr = {
     
-    n_sp_update = switch(EXPR = input$case_vs, 
-                         `1` = 5,
-                         `2` = 5,
-                         `3` = 5,
-                         `4` = 5,
-                         `5` = 5,
-                         `6` = 5,
-                         `7` = 5,
-                         `8` = 5,
-                         `9` = 10,
-                         `10` = 5,
-                         `11` = 10,
-                         `12` = 20,
-                         `13` = 15,
-                         `14` = 30,
-                         `15` = 60,
-                         stop("Unknown case", call. = FALSE)
-    )
+    # Match the n_sp with case
+    n_sp_update = case_sp_lookup(input = input)
     
+    # Update n_sp_vs
     updateNumericInput(session = session, inputId = "n_sp_vs", value = n_sp_update)
   })
   
   # Sampling strategy
   observeEvent(eventExpr = {input$method_sp_vs}, handlerExpr = {
-    
-    if(input$method_sp_vs == "srs"){
-      output$ui_method_sp = NULL
-    } else if (input$method_sp_vs == "strs"){
-      
-      output$ui_method_sp = renderUI(expr = {
-        verticalLayout(
-          p("Q11A. Along which direction do you want to stratify the field?"),
-          selectInput(inputId = "by_vs",
-                      label = NULL,
-                      choices = list("Row" = "row", "Column" = "column", "2D" = "2d"),
-                      multiple = FALSE),
-          p("Q11B. How many strata do you want along this direction?"),
-          conditionalPanel(condition = "input.by_vs != '2d'", 
-                           numericInput(inputId = "n_strata_vs", label = NULL, value = NULL, min = 1)
-                           ),
-          conditionalPanel(condition = "input.by_vs == '2d'",
-                           splitLayout(
-                             numericInput(inputId = "n_strata_row_vs", label = "Row strata", value = NULL, min = 1),
-                             numericInput(inputId = "n_strata_col_vs", label = "Column strata", value = NULL, min = 1)
-                             )
-                           )
-        )
-      })
-    } else if (input$method_sp_vs == "ss"){
-      
-      output$ui_method_sp = renderUI(expr = {
-        verticalLayout(
-          p("Q11A. Along which direction do you want to stratify the field?"),
-          selectInput(inputId = "by_vs",
-                      label = NULL,
-                      choices = list("Row" = "row", "Column" = "column"),
-                      multiple = FALSE),
-          p("Q11B. How many strata do you want along this direction?"),
-          numericInput(inputId = "n_strata_vs", label = NULL, value = NULL, min = 1)
-        )
-      })
-    } else {
-      stop("Unknown sampling method")
-    }
+    output$ui_method_sp = renderUI(expr = {f_ui_method_sp(input = input)})
   })
   
   # Assay
   observeEvent(eventExpr = {input$method_sp_vs}, handlerExpr = {
-    output$ui_assay = renderUI(expr = {
-      verticalLayout(
-        p("Q12. What's the individual sample mass (g)?"),
-        numericInput(inputId = "m_sp_vs", label = NULL, value = 25, min = 0),
-        p("Q13. Which detection method would you use?"),
-        radioButtons(inputId = "method_det_vs",
-                    label = NULL,
-                    choices = list("Plating" = "plating", "Enrichment" = "enrichment"),
-                    selected = character(0), 
-                    inline = TRUE)
-      )
-    })
+    output$ui_assay = renderUI(expr = {f_ui_assay(input = input)})
   })
   
   # Iteration
   observeEvent(eventExpr = {input$method_det_vs}, handlerExpr = {
-    output$ui_iter = renderUI(expr = {
-      verticalLayout(
-        h3(),
-        h2("Iteration section"),
-        p("Q14. How many times do you want to iterate the model?"),
-        numericInput(inputId = "n_iter_total_vs", label = NULL, value = 25, min = 1, step = 1),
-        p("Q15. How many parameters do you want to tune over?"),
-        radioButtons(inputId = "n_vars_vs", label = NULL, choices = list(0,1,2), selected = character(0), inline = TRUE)
-      )
-    })
+    output$ui_iter = renderUI(expr = {f_ui_iter(input = input)})
   })
   
   # Tuning and buttons for the smart mode
   observeEvent(eventExpr = {input$n_vars_vs}, handlerExpr = {
-    output$ui_tuning_vs = renderUI(expr = {
-      if(input$n_vars_vs == 0){
-        NULL
-        
-      } else if(input$n_vars_vs == 1){
-        verticalLayout(
-          p("Q15A. Which parameter do you want to tune?"),
-          selectInput(inputId = "var_prim_vs",
-                      label = NULL,
-                      choices = list("Number of contamination points" = "n_contam_vs",
-                                     "Number of sample points" = "n_sp_vs",
-                                     "Individual sample mass (g)" = "m_sp_vs")),
-          p("Q15B. What values do you want to tune over? (separated by a comma)"),
-          textInput(inputId = "val_prim_vs", label = NULL, value = "1,2,3")
-        )
-        
-      } else if(input$n_vars_vs == 2) {
-        verticalLayout(
-          p("Q15A. Which primary parameter do you want to tune?"),
-          selectInput(inputId = "var_prim_vs",
-                      label = NULL,
-                      choices = list("Number of contamination points" = "n_contam_vs",
-                                     "Number of sample points" = "n_sp_vs",
-                                     "Individual sample mass (g)" = "m_sp_vs")),
-          p("Q15B. What values do you want to tune the primary parameter over? (separated by a comma)"),
-          textInput(inputId = "val_prim_vs", label = NULL, value = "1,2,3"),
-          p("Q15C. Which secondary parameter do you want to tune?"),
-          selectInput(inputId = "var_sec_vs",
-                      label = NULL,
-                      choices = list("Sampling strategy" = "method_sp_vs")),
-          p("Q15D. What values do you want to tune the secondary parameter over? (separated by a comma)"),
-          textInput(inputId = "val_sec_vs", label = NULL, value = "srs, strs, ss")
-        )
-      } else {
-        stop("Unknown number of tuning paramters")
-      }
-    })
+    output$ui_tuning_vs = renderUI(expr = {f_ui_tuning_vs(input = input)})
   })
   
   # UI for loading (smart version)
@@ -322,7 +138,7 @@ shinyServer(function(input, output, session) {
         h2()
       )
     })
-  })
+  }, ignoreInit = TRUE)
   
   # UI for visualization and iteration (smart version)
   observeEvent(eventExpr = {input$load_vs}, handlerExpr = {
@@ -334,7 +150,7 @@ shinyServer(function(input, output, session) {
         )
       )
     })
-  })
+  }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
   # Load the parameter once (for both smart and manual version)
   list_load = list()
@@ -345,15 +161,17 @@ shinyServer(function(input, output, session) {
                                                            input = input, 
                                                            chosen_mode = list_load$chosen_mode))
 
-  }, ignoreInit = TRUE)
+  }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
   # Visualize for one iteration
   observeEvent(eventExpr = {c(input$vis, input$vis_vs)}, handlerExpr = {
-    
+    ######
+    # if(input$vis > 0 | input$vis_vs > 0)
+    ######
     vis_once(input = input, output = output, 
              ArgList = list_load$ArgList_default, chosen_mode = list_load$chosen_mode)
     
-  }, ignoreInit = TRUE)
+  }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
   # Multiple iterations
   observeEvent(eventExpr = {input$iteration}, handlerExpr = {
@@ -387,7 +205,7 @@ shinyServer(function(input, output, session) {
     } else {
       message("Under construction")
     }
-  })
+  }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
   # Download
   output$downloadData = downloadHandler(
