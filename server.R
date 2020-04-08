@@ -146,65 +146,61 @@ shinyServer(function(input, output, session) {
       verticalLayout(
         splitLayout(
           actionButton(inputId = "vis_vs", label = "Visualize"),
-          actionButton(inputId = "iteration_vs", label = "Iterate")
+          actionButton(inputId = "iterate_vs", label = "Iterate")
         )
       )
     })
   }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
-  # Load the parameter once (for both smart and manual version)
+  # Load the parameter once (manual version)
   list_load = list()
-  observeEvent(eventExpr = {c(input$load, input$load_vs)}, handlerExpr = {
+  observeEvent(eventExpr = {input$load}, handlerExpr = {
 
-    list_load <<- load_once(input = input, output = output)
-    output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default, 
-                                                           input = input, 
-                                                           chosen_mode = list_load$chosen_mode))
+      list_load <<- load_once(input = input, output = output)
+      output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default, 
+                                                             input = input, 
+                                                             chosen_mode = list_load$chosen_mode))
+  }, ignoreInit = TRUE, ignoreNULL = TRUE)
+  
+  # Load the parameter once (smart version)
+  observeEvent(eventExpr = {input$load_vs}, handlerExpr = {
+
+      list_load <<- load_once(input = input, output = output)
+      output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default,
+                                                             input = input,
+                                                             chosen_mode = list_load$chosen_mode))
+  }, ignoreInit = TRUE, ignoreNULL = TRUE)
+  
+  # Visualize for one iteration (manual mode)
+  observeEvent(eventExpr = {input$vis}, handlerExpr = {
+
+      vis_once(input = input, output = output, 
+               ArgList = list_load$ArgList_default, chosen_mode = list_load$chosen_mode)
 
   }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
-  # Visualize for one iteration
-  observeEvent(eventExpr = {c(input$vis, input$vis_vs)}, handlerExpr = {
-    ######
-    # if(input$vis > 0 | input$vis_vs > 0)
-    ######
+  # Visualize for one iteration (smart mode)
+  observeEvent(eventExpr = {input$vis_vs}, handlerExpr = {
+    
     vis_once(input = input, output = output, 
              ArgList = list_load$ArgList_default, chosen_mode = list_load$chosen_mode)
+
+  }, ignoreInit = TRUE, ignoreNULL = TRUE)
+  
+  # Multiple iterations (manual mode)
+  observeEvent(eventExpr = {input$iterate}, handlerExpr = {
+    
+    f_event_iteration_2d(input = input, output = output, 
+                         Args = list_load$ArgList_default, chosen_mode = list_load$chosen_mode)
     
   }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
-  # Multiple iterations
-  observeEvent(eventExpr = {input$iteration}, handlerExpr = {
+  # Multiple iterations (smart mode)
+  observeEvent(eventExpr = {input$iterate_vs}, handlerExpr = {
     
-    if(input$n_vars == 0){
-      
-      # When there is no tuning parameter
-      data_raw = iterate_tune0(input = input, Args = list_load$ArgList_default)
-      data_cleaned <<- metrics_cont_0(data = data_raw)
-      output$plot_iterate = renderPlot(expr = {plot_tune0(data = data_cleaned)})
-      
-    } else if (input$n_vars == 1){
-      
-      # When there is 1 tuning parameter
-      data_raw = iterate_tune1(input = input, Args = list_load$ArgList_default)
-      data_cleaned <<- metrics_cont_n(data = data_raw)
-      output$plot_iterate = renderPlot(expr = {plot_tune1(data = data_cleaned, input = input)})
-      
-    } else if (input$n_vars == 2) {
-      
-      data_raw = iterate_tune2(input = input, Args = list_load$ArgList_default)
-      data_cleaned <<- metrics_cont_sec(data = data_raw[["sim_data"]], 
-                                        input = input, 
-                                        vals_prim = data_raw[["vals_prim"]], 
-                                        vals_sec = data_raw[["vals_sec"]])
-      
-      observeEvent(eventExpr = {input$yvar}, handlerExpr = {
-        output$plot_iterate = renderPlot(expr = {plot_tune2_boxplot(data = data_cleaned, input = input, yvar = input$yvar)})
-      })
-      
-    } else {
-      message("Under construction")
-    }
+    f_event_iteration_2d(input = input, output = output, 
+                         Args = list_load$ArgList_default, chosen_mode = list_load$chosen_mode)
+    
   }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
   # Download

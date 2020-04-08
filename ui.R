@@ -95,7 +95,7 @@ v_manual_2D = fluidRow(
         condition = "input.load > 0",
         splitLayout(
           actionButton(inputId = "vis", label = "Visualize"),
-          actionButton(inputId = "iteration", label = "Iterate")
+          actionButton(inputId = "iterate", label = "Iterate")
         )
       )
   ),
