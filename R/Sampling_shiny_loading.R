@@ -32,7 +32,7 @@ load_once = function(input, output){
     if(input$spread_vs == "continuous"){
       
       # STRS or k-step SS
-      if(input$method_sp != "srs"){
+      if(input$method_sp_vs != "srs"){
         if(input$by_vs == "2d"){
           n_strata = c(input$n_strata_row_vs, input$n_strata_col_vs)
         } else {

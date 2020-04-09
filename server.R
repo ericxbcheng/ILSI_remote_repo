@@ -138,7 +138,7 @@ shinyServer(function(input, output, session) {
         h2()
       )
     })
-  }, ignoreInit = TRUE)
+  }, ignoreInit = TRUE, ignoreNULL = TRUE, once = TRUE)
   
   # UI for visualization and iteration (smart version)
   observeEvent(eventExpr = {input$load_vs}, handlerExpr = {
