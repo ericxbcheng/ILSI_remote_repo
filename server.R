@@ -85,19 +85,18 @@ shinyServer(function(input, output, session) {
     output$ui_dims = renderUI(expr = {f_ui_dims(input = input)})
   })
   
-  # Geom
+  # Geom + contamination + sampling
   observeEvent(eventExpr = {input$geom_vs}, handlerExpr = {
+    
+    # Geom
     output$ui_geom = renderUI(expr = {f_ui_geom(input = input)})
-  })
-  
-  # Contamination
-  observeEvent(eventExpr = {input$geom_vs}, handlerExpr = {
+    
+    # Contamination
     output$ui_contam = renderUI(expr = {f_ui_contam(input = input)})
-  })
-  
-  # Sampling
-  observeEvent(eventExpr = {input$geom_vs}, handlerExpr = {
+    
+    # Sampling
     output$ui_sp = renderUI(expr = {f_ui_sp(input = input)})
+    
   })
   
   # Associate case with n_sp
@@ -112,11 +111,11 @@ shinyServer(function(input, output, session) {
   
   # Sampling strategy
   observeEvent(eventExpr = {input$method_sp_vs}, handlerExpr = {
+    
+    # Sampling strategy
     output$ui_method_sp = renderUI(expr = {f_ui_method_sp(input = input)})
-  })
-  
-  # Assay
-  observeEvent(eventExpr = {input$method_sp_vs}, handlerExpr = {
+    
+    # Assay
     output$ui_assay = renderUI(expr = {f_ui_assay(input = input)})
   })
   
@@ -125,20 +124,20 @@ shinyServer(function(input, output, session) {
     output$ui_iter = renderUI(expr = {f_ui_iter(input = input)})
   })
   
-  # Tuning and buttons for the smart mode
+  # tuning and loading
   observeEvent(eventExpr = {input$n_vars_vs}, handlerExpr = {
+    
+    # Tuning and buttons for the smart mode
     output$ui_tuning_vs = renderUI(expr = {f_ui_tuning_vs(input = input)})
-  })
-  
-  # UI for loading (smart version)
-  observeEvent(eventExpr = {input$n_vars_vs}, handlerExpr = {
+    
+    # UI for loading (smart version)
     output$ui_load = renderUI(expr = {
       verticalLayout(
         actionButton(inputId = "load_vs", label = "Load parameters"),
         h2()
       )
     })
-  }, ignoreInit = TRUE, ignoreNULL = TRUE, once = TRUE)
+  }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
   # UI for visualization and iteration (smart version)
   observeEvent(eventExpr = {input$load_vs}, handlerExpr = {
