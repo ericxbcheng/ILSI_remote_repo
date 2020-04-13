@@ -16,6 +16,32 @@ parse_char_vec = function(string){
   return(str_trim(a))
 }
 
+# The P_det/Paccept visualization switch (only for 2 tuning parameters)
+f_yvar = function(input, chosen_mode){
+  
+  # Select the right n_vars input parameter
+  if(chosen_mode != "v_smart"){
+    n_vars = input$n_vars
+   
+  } else if(chosen_mode == "v_smart"){
+    n_vars = input$n_vars_vs
+    
+  } else {
+    stop("Unknown chosen mode")
+  }
+  
+  # Create a radio button for either plotting P_det or Paccept when n_vars == 2
+  if(n_vars == 2){
+    radioButtons(inputId = "yvar", 
+                 label = NULL, 
+                 choices = list("Detection probability" = "P_det", 
+                                "Acceptance probability" = "Paccept"),
+                 inline = TRUE)
+  } else {
+    NULL
+  }
+}
+
 # Iterate the model without any tuning parameters
 iterate_tune0 = function(input, Args, chosen_mode){
   
@@ -137,6 +163,23 @@ metrics_cont_sec = function(data, input, vals_prim, vals_sec, chosen_mode){
   return(c)
 }
 
+# Reactively present choices
+f_var_prim = function(geom){
+  
+  choices = list("Number of contamination points" = "n_contam",
+                 "Number of sample points" = "n_sp",
+                 "Individual sample mass (g)" = "m_sp")
+  
+  if(geom == "point"){
+    return(choices)
+  } else if (geom == "area"){
+    return(choices[-1])
+  } else {
+    stop("Unknown geometry. Choose 'point' or 'area'.")
+  }
+}
+
+# UI for tuning (smart mode)
 f_ui_tuning_vs = function(input, ...){
   if(input$n_vars_vs == 0){
     NULL
@@ -146,9 +189,7 @@ f_ui_tuning_vs = function(input, ...){
       p("Q15A. Which parameter do you want to tune?"),
       selectInput(inputId = "var_prim_vs",
                   label = NULL,
-                  choices = list("Number of contamination points" = "n_contam",
-                                 "Number of sample points" = "n_sp",
-                                 "Individual sample mass (g)" = "m_sp")),
+                  choices = f_var_prim(geom = input$geom_vs)),
       p("Q15B. What values do you want to tune over? (separated by a comma)"),
       textInput(inputId = "val_prim_vs", label = NULL, value = "1,2,3")
     )
@@ -158,15 +199,22 @@ f_ui_tuning_vs = function(input, ...){
       p("Q15A. Which primary parameter do you want to tune?"),
       selectInput(inputId = "var_prim_vs",
                   label = NULL,
-                  choices = list("Number of contamination points" = "n_contam",
-                                 "Number of sample points" = "n_sp",
-                                 "Individual sample mass (g)" = "m_sp")),
+                  choices = f_var_prim(geom = input$geom_vs)),
       p("Q15B. What values do you want to tune the primary parameter over? (separated by a comma)"),
       textInput(inputId = "val_prim_vs", label = NULL, value = "1,2,3"),
       p("Q15C. Which secondary parameter do you want to tune?"),
       selectInput(inputId = "var_sec_vs",
                   label = NULL,
                   choices = list("Sampling strategy" = "method_sp")),
+      wellPanel(
+        p("Q15C-1. Override: stratification direction"),
+        selectInput(inputId = "by_vs_tune",
+                    label = NULL,
+                    choices = list("Vertical" = "row", "Horizontal" = "column"),
+                    multiple = FALSE),
+        p("Q15C-2. Override: number of strata (must be a factor of number of samples)"),
+        numericInput(inputId = "n_strata_vs_tune", label = NULL, value = NULL, min = 1)
+      ),
       p("Q15D. What values do you want to tune the secondary parameter over? (separated by a comma)"),
       textInput(inputId = "val_sec_vs", label = NULL, value = "srs, strs, ss")
     )

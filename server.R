@@ -66,18 +66,6 @@ shinyServer(function(input, output, session) {
       stop("Unknown number of tuning paramters")
     }
   })
-  
-  # The P_det/Paccept visualization switch (only for 2 tuning parameters)
-  output$yvar = renderUI(expr = {
-    
-    if(input$n_vars == 2){
-      radioButtons(inputId = "yvar", 
-                   label = NULL, 
-                   choices = list("Detection probability" = "P_det", 
-                                  "Acceptance probability" = "Paccept"),
-                   inline = TRUE)
-    }
-  })
 
   ##### Smart version
   # Dimensions
@@ -155,19 +143,31 @@ shinyServer(function(input, output, session) {
   list_load = list()
   observeEvent(eventExpr = {input$load}, handlerExpr = {
 
-      list_load <<- load_once(input = input, output = output)
-      output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default, 
-                                                             input = input, 
-                                                             chosen_mode = list_load$chosen_mode))
+    # Load the parameters once  
+    list_load <<- load_once(input = input, output = output)
+      
+    # The P_det/Paccept visualization switch (only for 2 tuning parameters)
+    output$yvar = renderUI(expr = {f_yvar(input = input, chosen_mode = list_load$chosen_mode)})
+    
+    # The chosen parameters table
+    output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default, 
+                                                           input = input, 
+                                                           chosen_mode = list_load$chosen_mode))
   }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
   # Load the parameter once (smart version)
   observeEvent(eventExpr = {input$load_vs}, handlerExpr = {
-
-      list_load <<- load_once(input = input, output = output)
-      output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default,
-                                                             input = input,
-                                                             chosen_mode = list_load$chosen_mode))
+      
+    # Load the parameters once
+    list_load <<- load_once(input = input, output = output)
+    
+    # The P_det/Paccept visualization switch (only for 2 tuning parameters)
+    output$yvar = renderUI(expr = {f_yvar(input = input, chosen_mode = list_load$chosen_mode)})
+    
+    # The chosen parameters table
+    output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default,
+                                                           input = input,
+                                                           chosen_mode = list_load$chosen_mode))
   }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
   # Visualize for one iteration (manual mode)
