@@ -16,38 +16,103 @@ parse_char_vec = function(string){
   return(str_trim(a))
 }
 
+# The P_det/Paccept visualization switch (only for 2 tuning parameters)
+f_yvar = function(input, chosen_mode){
+  
+  # Select the right n_vars input parameter
+  if(chosen_mode != "v_smart"){
+    n_vars = input$n_vars
+   
+  } else if(chosen_mode == "v_smart"){
+    n_vars = input$n_vars_vs
+    
+  } else {
+    stop("Unknown chosen mode")
+  }
+  
+  # Create a radio button for either plotting P_det or Paccept when n_vars == 2
+  if(n_vars == 2){
+    radioButtons(inputId = "yvar", 
+                 label = NULL, 
+                 choices = list("Detection probability" = "P_det", 
+                                "Acceptance probability" = "Paccept"),
+                 inline = TRUE)
+  } else {
+    NULL
+  }
+}
+
 # Iterate the model without any tuning parameters
-iterate_tune0 = function(input, Args){
+iterate_tune0 = function(input, Args, chosen_mode){
   
-  return(sim_iterate2(n_seed = input$n_seed, n_iter = input$n_iter, Args = Args))
+  if(chosen_mode != "v_smart"){
+    n_seed = input$n_seed
+    n_iter = input$n_iter
+    
+  } else if (chosen_mode == "v_smart"){
+    n_seed = n_iter = round(sqrt(input$n_iter_total_vs))
+    
+  } else {
+    stop("Unknown chosen mode")
+  }
   
+  return(sim_iterate2(n_seed = n_seed, n_iter = n_iter, Args = Args))
 }
 
 # Iterate the model with one tuning parameter
-iterate_tune1 = function(input, Args){
+iterate_tune1 = function(input, Args, chosen_mode){
   
-  vals = parse_num_vec(string = input$val_prim)
+  if(chosen_mode != "v_smart"){
+    n_seed = input$n_seed
+    n_iter = input$n_iter
+    var_prim = input$var_prim
+    vals = parse_num_vec(string = input$val_prim)
+    
+  } else if (chosen_mode == "v_smart"){
+    n_seed = n_iter = round(sqrt(input$n_iter_total_vs))
+    var_prim = input$var_prim_vs
+    vals = parse_num_vec(string = input$val_prim_vs)
+    
+  } else {
+    stop("Unknown chosen mode")
+  }
   
-  return(map(.x = vals, .f = tune_param, Args = Args, n_seed = input$n_seed, n_iter = input$n_iter, param = input$var_prim))
+  return(map(.x = vals, .f = tune_param, Args = Args, n_seed = n_seed, n_iter = n_iter, param = var_prim))
   
 }
 
 # Secondary tuning parameter iterations
-iterate_tune2 = function(input, Args){
+iterate_tune2 = function(input, Args, chosen_mode){
   
   # Parse tuning values for primary and secondary parameters
-  vals_prim = parse_num_vec(string = input$val_prim)
-  vals_sec = parse_char_vec(string = input$val_sec)
+  if(chosen_mode != "v_smart"){
+    n_seed = input$n_seed
+    n_iter = input$n_iter
+    var_prim = input$var_prim
+    var_sec = input$var_sec
+    vals_prim = parse_num_vec(string = input$val_prim)
+    vals_sec = parse_char_vec(string = input$val_sec)
+    
+  } else if (chosen_mode == "v_smart"){
+    n_seed = n_iter = round(sqrt(input$n_iter_total_vs))
+    var_prim = input$var_prim_vs
+    var_sec = input$var_sec_vs
+    vals_prim = parse_num_vec(string = input$val_prim_vs)
+    vals_sec = parse_char_vec(string = input$val_sec_vs)
+    
+  } else {
+    stop("Unknown chosen mode")
+  }
   
   # Create a list of argument lists, each argument list corresponding to one secondary tuning value
-  Args_sec = map(.x = vals_sec, .f = update_arg, arg_list = Args, name = input$var_sec)
+  Args_sec = map(.x = vals_sec, .f = update_arg, arg_list = Args, name = var_sec)
   
   # For each argument list in Args_sec, do iterate_tune1()
   sim_data = list()
   for(i in 1:length(vals_sec)){
     
     sim_data[[i]] = map(.x = vals_prim, .f = tune_param, 
-                        Args = Args_sec[[i]], n_seed = input$n_seed, n_iter = input$n_iter,param = input$var_prim)
+                        Args = Args_sec[[i]], n_seed = n_seed, n_iter = n_iter,param = var_prim)
     
   }
   return(list(sim_data = sim_data, vals_prim = vals_prim, vals_sec = vals_sec))
@@ -71,8 +136,17 @@ metrics_cont_0 = function(data){
 }
 
 # Data cleaning function for secondary tuning scenarios
-metrics_cont_sec = function(data, input, vals_prim, vals_sec){
+metrics_cont_sec = function(data, input, vals_prim, vals_sec, chosen_mode){
   
+  # Determine n_seed
+  if(chosen_mode != "v_smart"){
+    n_seed = input$n_seed
+  } else if(chosen_mode == "v_smart"){
+    n_seed = round(sqrt(input$n_iter_total_vs))
+  } else {
+    stop("Unknown chosen mode")
+  }
+
   # Data should contain 2 layers. 
   # The outer layer contains data for different secondary tuning. 
   # The inner layer contains data for different primary tuning under each value of the secondary tuning.
@@ -80,7 +154,7 @@ metrics_cont_sec = function(data, input, vals_prim, vals_sec){
     bind_rows()
   
   # Add a column to indicate secondary tuning values
-  b = rep(x = vals_sec, each = input$n_seed * length(vals_prim))
+  b = rep(x = vals_sec, each = n_seed * length(vals_prim))
   
   # Combine by columns
   c = cbind.data.frame(a, b, stringsAsFactors = FALSE)
@@ -89,6 +163,23 @@ metrics_cont_sec = function(data, input, vals_prim, vals_sec){
   return(c)
 }
 
+# Reactively present choices
+f_var_prim = function(geom){
+  
+  choices = list("Number of contamination points" = "n_contam",
+                 "Number of sample points" = "n_sp",
+                 "Individual sample mass (g)" = "m_sp")
+  
+  if(geom == "point"){
+    return(choices)
+  } else if (geom == "area"){
+    return(choices[-1])
+  } else {
+    stop("Unknown geometry. Choose 'point' or 'area'.")
+  }
+}
+
+# UI for tuning (smart mode)
 f_ui_tuning_vs = function(input, ...){
   if(input$n_vars_vs == 0){
     NULL
@@ -98,9 +189,7 @@ f_ui_tuning_vs = function(input, ...){
       p("Q15A. Which parameter do you want to tune?"),
       selectInput(inputId = "var_prim_vs",
                   label = NULL,
-                  choices = list("Number of contamination points" = "n_contam_vs",
-                                 "Number of sample points" = "n_sp_vs",
-                                 "Individual sample mass (g)" = "m_sp_vs")),
+                  choices = f_var_prim(geom = input$geom_vs)),
       p("Q15B. What values do you want to tune over? (separated by a comma)"),
       textInput(inputId = "val_prim_vs", label = NULL, value = "1,2,3")
     )
@@ -110,15 +199,22 @@ f_ui_tuning_vs = function(input, ...){
       p("Q15A. Which primary parameter do you want to tune?"),
       selectInput(inputId = "var_prim_vs",
                   label = NULL,
-                  choices = list("Number of contamination points" = "n_contam_vs",
-                                 "Number of sample points" = "n_sp_vs",
-                                 "Individual sample mass (g)" = "m_sp_vs")),
+                  choices = f_var_prim(geom = input$geom_vs)),
       p("Q15B. What values do you want to tune the primary parameter over? (separated by a comma)"),
       textInput(inputId = "val_prim_vs", label = NULL, value = "1,2,3"),
       p("Q15C. Which secondary parameter do you want to tune?"),
       selectInput(inputId = "var_sec_vs",
                   label = NULL,
-                  choices = list("Sampling strategy" = "method_sp_vs")),
+                  choices = list("Sampling strategy" = "method_sp")),
+      wellPanel(
+        p("Q15C-1. Override: stratification direction"),
+        selectInput(inputId = "by_vs_tune",
+                    label = NULL,
+                    choices = list("Vertical" = "row", "Horizontal" = "column"),
+                    multiple = FALSE),
+        p("Q15C-2. Override: number of strata (must be a factor of number of samples)"),
+        numericInput(inputId = "n_strata_vs_tune", label = NULL, value = NULL, min = 1)
+      ),
       p("Q15D. What values do you want to tune the secondary parameter over? (separated by a comma)"),
       textInput(inputId = "val_sec_vs", label = NULL, value = "srs, strs, ss")
     )
@@ -140,27 +236,32 @@ f_event_iteration_2d = function(input, output, Args, chosen_mode){
   if(n_vars == 0){
     
     # When there is no tuning parameter
-    data_raw = iterate_tune0(input = input, Args = Args)
+    data_raw = iterate_tune0(input = input, Args = Args, chosen_mode = chosen_mode)
     data_cleaned <<- metrics_cont_0(data = data_raw)
     output$plot_iterate = renderPlot(expr = {plot_tune0(data = data_cleaned)})
     
   } else if (n_vars == 1){
     
     # When there is 1 tuning parameter
-    data_raw = iterate_tune1(input = input, Args = Args)
+    data_raw = iterate_tune1(input = input, Args = Args, chosen_mode = chosen_mode)
     data_cleaned <<- metrics_cont_n(data = data_raw)
-    output$plot_iterate = renderPlot(expr = {plot_tune1(data = data_cleaned, input = input)})
+    output$plot_iterate = renderPlot(expr = {plot_tune1(data = data_cleaned, 
+                                                        input = input, 
+                                                        chosen_mode = chosen_mode)})
     
   } else if (n_vars == 2) {
     
-    data_raw = iterate_tune2(input = input, Args = Args)
+    data_raw = iterate_tune2(input = input, Args = Args, chosen_mode = chosen_mode)
     data_cleaned <<- metrics_cont_sec(data = data_raw[["sim_data"]], 
                                       input = input, 
                                       vals_prim = data_raw[["vals_prim"]], 
-                                      vals_sec = data_raw[["vals_sec"]])
+                                      vals_sec = data_raw[["vals_sec"]], chosen_mode = chosen_mode)
     
     observeEvent(eventExpr = {input$yvar}, handlerExpr = {
-      output$plot_iterate = renderPlot(expr = {plot_tune2_boxplot(data = data_cleaned, input = input, yvar = input$yvar)})
+      output$plot_iterate = renderPlot(expr = {plot_tune2_boxplot(data = data_cleaned, 
+                                                                  input = input, 
+                                                                  yvar = input$yvar, 
+                                                                  chosen_mode = chosen_mode)})
     })
     
   } else {

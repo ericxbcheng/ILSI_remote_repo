@@ -1,53 +1,87 @@
+# Load parameters once for 2D
+load_once_manual_2D = function(input){
+  
+  if(input$by == "2d"){
+    n_strata = c(input$n_strata_row, input$n_strata_col)
+  } else {
+    n_strata = input$n_strata
+  }
+  
+  ArgList_default = list(n_contam = input$n_contam, lims = list(xlim = c(0, input$x_lim), ylim = c(0, input$y_lim)),
+                         spread = "continuous", spread_radius = input$spread_radius,
+                         cont_level = c(input$cont_level_mu, input$cont_level_sd), method_sp = input$method_sp,
+                         n_sp = input$n_sp, n_strata = n_strata, by = input$by, LOC = input$LOC,
+                         fun = input$fun, case = input$case, m = input$m, M = input$M, m_sp = input$m_sp,
+                         method_det = input$method_det, bg_level = input$bg_level, geom = input$geom)
+  return(ArgList_default)
+}
+
+# Load parameters once for 3D 
+load_once_manual_3D = function(input){
+  
+  spread = "discrete"
+  
+  return(NULL)
+}
+
+# Make n_strata based on 'method_sp' and 'by'
+make_n_strata = function(input){
+  if(input$method_sp_vs != "srs"){
+    if(input$by_vs == "2d"){
+      n_strata = c(input$n_strata_row_vs, input$n_strata_col_vs)
+    } else {
+      n_strata = input$n_strata_vs
+    }
+  } else {
+    n_strata = NA
+  }
+  return(n_strata)
+}
+
+# Load parameters once for 2D smart mode
+load_once_smart_2D = function(input){
+  
+  # 2 tuning variables: override 'by' and 'n_strata'
+  if(input$n_vars_vs != 2){
+    by = input$by_vs
+    n_strata = make_n_strata(input = input)
+    
+  } else if(input$n_vars_vs == 2){
+    by = input$by_vs_tune
+    n_strata = input$n_strata_vs_tune
+    
+  } else {
+    stop("Unknown number of tuning variables")
+  }
+  
+  ArgList_default = list(n_contam = input$n_contam_vs, lims = list(xlim = c(0, input$x_lim_vs), ylim = c(0, input$y_lim_vs)),
+                         spread = input$spread_vs, spread_radius = input$spread_radius_vs,
+                         cont_level = c(input$cont_level_mu_vs, input$cont_level_sd_vs), method_sp = input$method_sp_vs,
+                         n_sp = input$n_sp_vs, n_strata = n_strata, by = by, LOC = input$LOC_vs,
+                         fun = input$fun_vs, case = input$case_vs, m = input$m_vs, M = input$M_vs, m_sp = input$m_sp_vs,
+                         method_det = input$method_det_vs, bg_level = input$bg_level_vs, geom = input$geom_vs)
+  return(ArgList_default)
+}
+
 # A function for loading the input parameters into a list
 load_once = function(input, output){
   
   if(input$sidebarMenu == "2D"){
-    # Manual mode: 2D
+    
     chosen_mode = "2D"
-    spread = "continuous"
-    
-    if(input$by == "2d"){
-      n_strata = c(input$n_strata_row, input$n_strata_col)
-    } else {
-      n_strata = input$n_strata
-    }
-    
-    ArgList_default = list(n_contam = input$n_contam, lims = list(xlim = c(0, input$x_lim), ylim = c(0, input$y_lim)),
-                           spread = spread, spread_radius = input$spread_radius,
-                           cont_level = c(input$cont_level_mu, input$cont_level_sd), method_sp = input$method_sp,
-                           n_sp = input$n_sp, n_strata = n_strata, by = input$by, LOC = input$LOC,
-                           fun = input$fun, case = input$case, m = input$m, M = input$M, m_sp = input$m_sp,
-                           method_det = input$method_det, bg_level = input$bg_level, geom = input$geom)
+    ArgList_default = load_once_manual_2D(input = input)
     
   } else if(input$sidebarMenu == "3D"){
-    # Manual mode: 3D
+    
     chosen_mode = "3D"
-    spread = "discrete"
+    ArgList_default = load_once_manual_3D(input = input)
     
   } else if (input$sidebarMenu == "v_smart"){
-    
-    # Smart mode
+
     chosen_mode = "v_smart"
-    
     if(input$spread_vs == "continuous"){
       
-      # STRS or k-step SS
-      if(input$method_sp != "srs"){
-        if(input$by_vs == "2d"){
-          n_strata = c(input$n_strata_row_vs, input$n_strata_col_vs)
-        } else {
-          n_strata = input$n_strata_vs
-        }
-      } else {
-        n_strata = NA
-      }
-      
-      ArgList_default = list(n_contam = input$n_contam_vs, lims = list(xlim = c(0, input$x_lim_vs), ylim = c(0, input$y_lim_vs)),
-                             spread = input$spread_vs, spread_radius = input$spread_radius_vs,
-                             cont_level = c(input$cont_level_mu_vs, input$cont_level_sd_vs), method_sp = input$method_sp_vs,
-                             n_sp = input$n_sp_vs, n_strata = n_strata, by = input$by_vs, LOC = input$LOC_vs,
-                             fun = input$fun_vs, case = input$case_vs, m = input$m_vs, M = input$M_vs, m_sp = input$m_sp_vs,
-                             method_det = input$method_det_vs, bg_level = input$bg_level_vs, geom = input$geom_vs)
+      ArgList_default = load_once_smart_2D(input = input)
       
     } else if (input$spread_vs == "discrete"){
       ph
@@ -56,7 +90,7 @@ load_once = function(input, output){
     }
     
   } else {
-    stop("Unknown manual mode")
+    stop("Unknown mode. Choose 2D, 3D, or smart version.")
   }
   return(list(ArgList_default = ArgList_default, chosen_mode = chosen_mode))
 }

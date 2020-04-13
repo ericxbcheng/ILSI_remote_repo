@@ -64,13 +64,11 @@ f_ui_method_sp = function(input,...){
     )
   } else if (input$method_sp_vs == "ss"){
     verticalLayout(
-      p("Q11A. Along which direction do you want to stratify the field?"),
+      p("Q11A. Along which direction do you want to take a sample every k steps?"),
       selectInput(inputId = "by_vs",
                   label = NULL,
-                  choices = list("Row" = "row", "Column" = "column"),
-                  multiple = FALSE),
-      p("Q11B. How many strata do you want along this direction?"),
-      numericInput(inputId = "n_strata_vs", label = NULL, value = NULL, min = 1)
+                  choices = list("Vertical" = "row", "Horizontal" = "column"),
+                  multiple = FALSE)
     )
   } else {
     stop("Unknown sampling method")

@@ -66,18 +66,6 @@ shinyServer(function(input, output, session) {
       stop("Unknown number of tuning paramters")
     }
   })
-  
-  # The P_det/Paccept visualization switch (only for 2 tuning parameters)
-  output$yvar = renderUI(expr = {
-    
-    if(input$n_vars == 2){
-      radioButtons(inputId = "yvar", 
-                   label = NULL, 
-                   choices = list("Detection probability" = "P_det", 
-                                  "Acceptance probability" = "Paccept"),
-                   inline = TRUE)
-    }
-  })
 
   ##### Smart version
   # Dimensions
@@ -85,19 +73,18 @@ shinyServer(function(input, output, session) {
     output$ui_dims = renderUI(expr = {f_ui_dims(input = input)})
   })
   
-  # Geom
+  # Geom + contamination + sampling
   observeEvent(eventExpr = {input$geom_vs}, handlerExpr = {
+    
+    # Geom
     output$ui_geom = renderUI(expr = {f_ui_geom(input = input)})
-  })
-  
-  # Contamination
-  observeEvent(eventExpr = {input$geom_vs}, handlerExpr = {
+    
+    # Contamination
     output$ui_contam = renderUI(expr = {f_ui_contam(input = input)})
-  })
-  
-  # Sampling
-  observeEvent(eventExpr = {input$geom_vs}, handlerExpr = {
+    
+    # Sampling
     output$ui_sp = renderUI(expr = {f_ui_sp(input = input)})
+    
   })
   
   # Associate case with n_sp
@@ -112,11 +99,11 @@ shinyServer(function(input, output, session) {
   
   # Sampling strategy
   observeEvent(eventExpr = {input$method_sp_vs}, handlerExpr = {
+    
+    # Sampling strategy
     output$ui_method_sp = renderUI(expr = {f_ui_method_sp(input = input)})
-  })
-  
-  # Assay
-  observeEvent(eventExpr = {input$method_sp_vs}, handlerExpr = {
+    
+    # Assay
     output$ui_assay = renderUI(expr = {f_ui_assay(input = input)})
   })
   
@@ -125,20 +112,20 @@ shinyServer(function(input, output, session) {
     output$ui_iter = renderUI(expr = {f_ui_iter(input = input)})
   })
   
-  # Tuning and buttons for the smart mode
+  # tuning and loading
   observeEvent(eventExpr = {input$n_vars_vs}, handlerExpr = {
+    
+    # Tuning and buttons for the smart mode
     output$ui_tuning_vs = renderUI(expr = {f_ui_tuning_vs(input = input)})
-  })
-  
-  # UI for loading (smart version)
-  observeEvent(eventExpr = {input$n_vars_vs}, handlerExpr = {
+    
+    # UI for loading (smart version)
     output$ui_load = renderUI(expr = {
       verticalLayout(
         actionButton(inputId = "load_vs", label = "Load parameters"),
         h2()
       )
     })
-  }, ignoreInit = TRUE)
+  }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
   # UI for visualization and iteration (smart version)
   observeEvent(eventExpr = {input$load_vs}, handlerExpr = {
@@ -156,19 +143,31 @@ shinyServer(function(input, output, session) {
   list_load = list()
   observeEvent(eventExpr = {input$load}, handlerExpr = {
 
-      list_load <<- load_once(input = input, output = output)
-      output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default, 
-                                                             input = input, 
-                                                             chosen_mode = list_load$chosen_mode))
+    # Load the parameters once  
+    list_load <<- load_once(input = input, output = output)
+      
+    # The P_det/Paccept visualization switch (only for 2 tuning parameters)
+    output$yvar = renderUI(expr = {f_yvar(input = input, chosen_mode = list_load$chosen_mode)})
+    
+    # The chosen parameters table
+    output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default, 
+                                                           input = input, 
+                                                           chosen_mode = list_load$chosen_mode))
   }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
   # Load the parameter once (smart version)
   observeEvent(eventExpr = {input$load_vs}, handlerExpr = {
-
-      list_load <<- load_once(input = input, output = output)
-      output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default,
-                                                             input = input,
-                                                             chosen_mode = list_load$chosen_mode))
+      
+    # Load the parameters once
+    list_load <<- load_once(input = input, output = output)
+    
+    # The P_det/Paccept visualization switch (only for 2 tuning parameters)
+    output$yvar = renderUI(expr = {f_yvar(input = input, chosen_mode = list_load$chosen_mode)})
+    
+    # The chosen parameters table
+    output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default,
+                                                           input = input,
+                                                           chosen_mode = list_load$chosen_mode))
   }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
   # Visualize for one iteration (manual mode)

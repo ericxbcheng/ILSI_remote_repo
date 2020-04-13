@@ -78,9 +78,15 @@ plot_tune0 = function(data){
 }
 
 # Plot when there is one tuning parameter
-plot_tune1 = function(data, input){
+plot_tune1 = function(data, input, chosen_mode){
   
-  xlab = gen_label(var = input$var_prim)
+  if(chosen_mode != "v_smart"){
+    xlab = gen_label(var = input$var_prim)
+  } else if(chosen_mode == "v_smart"){
+    xlab = gen_label(var = input$var_prim_vs)
+  } else {
+    stop("Unknown chosen mode")
+  }
   
   # Summarise the data
   a = data %>%
@@ -104,11 +110,20 @@ plot_tune1 = function(data, input){
 }
 
 # Plot when there is one tuning parameter
-plot_tune2_ribbon = function(data, input){
+plot_tune2_ribbon = function(data, input, chosen_mode){
   
   # Make the x axis and legend labels
-  xlab = gen_label(var = input$var_prim)
-  legend_lab = gen_label(var = input$var_sec)
+  if(chosen_mode != "v_smart"){
+    xlab = gen_label(var = input$var_prim)
+    legend_lab = gen_label(var = input$var_sec)
+    
+  } else if(chosen_mode == "v_smart"){
+    xlab = gen_label(var = input$var_prim_vs)
+    legend_lab = gen_label(var = input$var_sec_vs)
+    
+  } else {
+    stop("Unknown chosen mode")
+  }
   
   # Summarise the data
   a = data %>%
@@ -132,22 +147,30 @@ plot_tune2_ribbon = function(data, input){
     theme_bw() +
     theme(legend.position = "top")
   
-  
   return(b)
 }
 
 # Visualize with boxplots
-plot_tune2_boxplot = function(data, input, yvar){
+plot_tune2_boxplot = function(data, input, yvar, chosen_mode){
   
   # Make the x axis and legend labels
-  xlab = gen_label(var = input$var_prim)
+  if(chosen_mode != "v_smart"){
+    xlab = gen_label(var = input$var_prim)
+    legend_lab = gen_label(var = input$var_sec)
+    
+  } else if(chosen_mode == "v_smart"){
+    xlab = gen_label(var = input$var_prim_vs)
+    legend_lab = gen_label(var = input$var_sec_vs)
+    
+  } else {
+    stop("Unknown chosen mode")
+  }
+  
   ylab = switch(EXPR = yvar, 
                 "P_det" = "Detection Probability", 
                 "Paccept" = "Probability of acceptance")
-  legend_lab = gen_label(var = input$var_sec)
   
   # Summarise the data
-  
   a = ggplot(data = data, aes_string(y = yvar)) +
     geom_boxplot(aes(x = as.factor(param), group = interaction(param, param2), fill = param2)) +
     scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
