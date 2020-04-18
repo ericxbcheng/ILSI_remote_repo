@@ -31,12 +31,23 @@ sidebar = dashboardSidebar(
   )
 )
 
+# Manual version for 3D
+v_manual_3D = fluidRow(
+
+  box(
+    title = "3D Input Parameters"
+  ),
+  box(
+    title = "Visualization for one iteration"
+  )
+)
+
+# Place holder
+ph = p("Under development")
+
 # Manual version for 2D
-# v_manual_2D = uiOutput(outputId = "v_manual_2D")
-
-
 v_manual_2D = fluidRow(
-
+  
   box(title = "2D Input Parameters", 
       splitLayout(
         numericInput(inputId = "x_lim", label = "Length (m)", value = 10, min = 1),
@@ -99,26 +110,12 @@ v_manual_2D = fluidRow(
         )
       )
   ),
-
+  
   box(title = "Visualization for one iteration",
       plotOutput(outputId = "overlay_draw"),
       plotOutput(outputId = "contam_level_draw")
   )
 )
-
-# Manual version for 3D
-v_manual_3D = fluidRow(
-
-  box(
-    title = "3D Input Parameters"
-  ),
-  box(
-    title = "Visualization for one iteration"
-  )
-)
-
-# Place holder
-ph = p("Under development")
 
 # Smart version 
 v_smart = fluidPage(
@@ -131,16 +128,20 @@ v_smart = fluidPage(
                      inline = TRUE,
                      choiceNames = list("Produce in a field", "Grains in a bin"),
                      choiceValues = list("continuous", "discrete")),
-        uiOutput(outputId = "ui_dims"),
-        uiOutput(outputId = "ui_geom"),
-        uiOutput(outputId = "ui_contam"),
-        uiOutput(outputId = "ui_sp"),
-        uiOutput(outputId = "ui_method_sp"),
-        uiOutput(outputId = "ui_assay"),
-        uiOutput(outputId = "ui_iter"),
-        uiOutput(outputId = "ui_tuning_vs"),
-        uiOutput(outputId = "ui_load"),
-        uiOutput(outputId = "ui_vis_iter")),
+        conditionalPanel(condition = "input.spread_vs == 'continuous'", 
+                         uiOutput(outputId = "ui_dims"),
+                         uiOutput(outputId = "ui_geom"),
+                         uiOutput(outputId = "ui_contam"),
+                         uiOutput(outputId = "ui_sp"),
+                         uiOutput(outputId = "ui_method_sp"),
+                         uiOutput(outputId = "ui_assay"),
+                         uiOutput(outputId = "ui_iter"),
+                         uiOutput(outputId = "ui_tuning_vs"),
+                         uiOutput(outputId = "ui_load"),
+                         uiOutput(outputId = "ui_vis_iter")),
+        conditionalPanel(condition = "input.spread_vs == 'discrete'",
+                         ph)
+        ),
     
     box(title = "Visualization for one iteration", 
         plotOutput(outputId = "overlay_draw_vs"),
