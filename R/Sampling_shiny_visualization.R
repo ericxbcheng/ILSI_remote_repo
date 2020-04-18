@@ -52,6 +52,33 @@ vis_once_3d = function(output, ArgList, chosen_mode){
   NA
 }
 
+# Visualization for multiple iterations and tuning
+vis_n = function(data, input, output, chosen_mode){
+  if(data$n_var == 0){
+    output$plot_iterate = renderPlot(expr = {
+      plot_tune0(data = data$data_cleaned)
+    })
+    
+  } else if (data$n_vars == 1){
+    output$plot_iterate = renderPlot(expr = {
+      plot_tune1(data = data$data_cleaned, input = input, chosen_mode = chosen_mode)
+    })
+    
+  } else if (data$n_vars == 2){
+    # Select either the boxplot or ribbon plot
+    observeEvent(eventExpr = {input$yvar}, handlerExpr = {
+      
+      output$plot_iterate = renderPlot(expr = {
+        plot_tune2_boxplot(data = data$data_cleaned, input = input,
+                           yvar = input$yvar, chosen_mode = chosen_mode)
+      })
+    })
+    
+  } else {
+    stop("Unknown number of tuning vars")
+  }
+}
+
 # Generate labels according to variables
 gen_label = function(var){
   

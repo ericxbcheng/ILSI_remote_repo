@@ -189,16 +189,22 @@ shinyServer(function(input, output, session) {
   # Multiple iterations (manual mode)
   observeEvent(eventExpr = {input$iterate}, handlerExpr = {
     
-    f_event_iteration_2d(input = input, output = output, 
-                         Args = list_load$ArgList_default, chosen_mode = list_load$chosen_mode)
+    result_iter = f_iterate_tune_2d(input = input, output = output, 
+                                    Args = list_load$ArgList_default, 
+                                    chosen_mode = list_load$chosen_mode)
     
+    vis_n(data = result_iter, input = input, output = output, chosen_mode = list_load$chosen_mode)
+
   }, ignoreInit = TRUE, ignoreNULL = TRUE)
   
   # Multiple iterations (smart mode)
   observeEvent(eventExpr = {input$iterate_vs}, handlerExpr = {
     
-    f_event_iteration_2d(input = input, output = output, 
-                         Args = list_load$ArgList_default, chosen_mode = list_load$chosen_mode)
+    result_iter = f_iterate_tune_2d(input = input, output = output, 
+                                    Args = list_load$ArgList_default, 
+                                    chosen_mode = list_load$chosen_mode)
+    
+    vis_n(data = result_iter, input = input, output = output, chosen_mode = list_load$chosen_mode)
     
   }, ignoreInit = TRUE, ignoreNULL = TRUE)
   

@@ -223,7 +223,8 @@ f_ui_tuning_vs = function(input, ...){
   }
 }
 
-f_event_iteration_2d = function(input, output, Args, chosen_mode){
+# Iterate and tuning for 2D mode (smart + manual)
+f_iterate_tune_2d = function(input, output, Args, chosen_mode){
   
   if(chosen_mode != "v_smart"){
     n_vars = input$n_vars
@@ -237,34 +238,26 @@ f_event_iteration_2d = function(input, output, Args, chosen_mode){
     
     # When there is no tuning parameter
     data_raw = iterate_tune0(input = input, Args = Args, chosen_mode = chosen_mode)
-    data_cleaned <<- metrics_cont_0(data = data_raw)
-    output$plot_iterate = renderPlot(expr = {plot_tune0(data = data_cleaned)})
+    data_cleaned = metrics_cont_0(data = data_raw)
+    return(list(data_cleaned = data_cleaned, n_vars = n_vars))
     
   } else if (n_vars == 1){
     
     # When there is 1 tuning parameter
     data_raw = iterate_tune1(input = input, Args = Args, chosen_mode = chosen_mode)
-    data_cleaned <<- metrics_cont_n(data = data_raw)
-    output$plot_iterate = renderPlot(expr = {plot_tune1(data = data_cleaned, 
-                                                        input = input, 
-                                                        chosen_mode = chosen_mode)})
+    data_cleaned = metrics_cont_n(data = data_raw)
+    return(list(data_cleaned = data_cleaned, n_vars = n_vars))
     
   } else if (n_vars == 2) {
     
     data_raw = iterate_tune2(input = input, Args = Args, chosen_mode = chosen_mode)
-    data_cleaned <<- metrics_cont_sec(data = data_raw[["sim_data"]], 
-                                      input = input, 
-                                      vals_prim = data_raw[["vals_prim"]], 
-                                      vals_sec = data_raw[["vals_sec"]], chosen_mode = chosen_mode)
-    
-    observeEvent(eventExpr = {input$yvar}, handlerExpr = {
-      output$plot_iterate = renderPlot(expr = {plot_tune2_boxplot(data = data_cleaned, 
-                                                                  input = input, 
-                                                                  yvar = input$yvar, 
-                                                                  chosen_mode = chosen_mode)})
-    })
+    data_cleaned = metrics_cont_sec(data = data_raw[["sim_data"]], 
+                                    input = input, 
+                                    vals_prim = data_raw[["vals_prim"]], 
+                                    vals_sec = data_raw[["vals_sec"]], chosen_mode = chosen_mode)
+    return(list(data_cleaned = data_cleaned, n_vars = n_vars))
     
   } else {
-    message("Under construction")
+    message("Unknown number of tuning variables")
   }
 }
