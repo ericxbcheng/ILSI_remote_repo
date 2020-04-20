@@ -35,7 +35,100 @@ sidebar = dashboardSidebar(
 v_manual_3D = fluidRow(
 
   box(
-    title = "3D Input Parameters"
+    title = "3D Input Parameters",
+    splitLayout(
+      numericInput(inputId = "x_lim_3d", label = "Length (m)", value = 3, min = 1),
+      numericInput(inputId = "y_lim_3d", label = "Width (m)", value = 2, min = 1),
+      numericInput(inputId = "z_lim_3d", label = "Height (m)", value = 1.5, min = 1)
+    ),
+    splitLayout(
+      selectInput(inputId = "tox", label = "Mycotoxin", choices = list("Aflatoxin" = "AF")),
+      numericInput(inputId = "c_hat", label = "Overall mycotoxin level (ppb)", value = 10, min = 0.001)
+    ),
+    selectInput(inputId = "dis_level_type", 
+                label = "Mycotoxin distribution in contaminated grains", 
+                choices = list("Uniform" = "constant", "Gamma" = "Gamma"), 
+                multiple = FALSE),
+    conditionalPanel(condition = "input.dis_level_type == 'constant'",
+                     numericInput(inputId = "dis_level_const_arg", 
+                                  label = "Mycotoxin level in contaminated grains(ppb)", 
+                                  value = 40000, min = 0.001)),
+    conditionalPanel(condition = "input.dis_level_type == 'Gamma'",
+                     splitLayout(
+                       numericInput(inputId = "dis_level_gm_mode", 
+                                    label = "Mode (Most frequent level)(ppb)", value = 40000),
+                       numericInput(inputId = "dis_level_gm_lb", 
+                                    label = "Lower bound (ppb)", 
+                                    value = 20, 
+                                    min = 0.001)
+                       )
+                     ),
+    numericInput(inputId = "n_affected", label = "Number of grains in a cluster", value = 0, min = 0, step = 1),
+    conditionalPanel(condition = "input.n_affected > 0",
+                     wellPanel(
+                       p(strong("Cluster covariance matrix")),
+                       splitLayout(
+                         numericInput(inputId = "vcov_11", label = "Length", value = 0.0004, min = 0),
+                         numericInput(inputId = "vcov_12", label = "Width", value = 0, min = 0),
+                         numericInput(inputId = "vcov_13", label = "Height", value = 0, min = 0)
+                       ),
+                       splitLayout(
+                         numericInput(inputId = "vcov_21", label = NULL, value = 0, min = 0),
+                         numericInput(inputId = "vcov_22", label = NULL, value = 0.0004, min = 0),
+                         numericInput(inputId = "vcov_23", label = NULL, value = 0, min = 0)
+                       ),
+                       splitLayout(
+                         numericInput(inputId = "vcov_31", label = NULL, value = 0, min = 0),
+                         numericInput(inputId = "vcov_32", label = NULL, value = 0, min = 0),
+                         numericInput(inputId = "vcov_33", label = NULL, value = 0.0004, min = 0)
+                       )
+                     )),
+    selectInput(inputId = "method_sp_3d", label = "Sampling strategy", choices = list("SRS" = "srs", "STRS" = "strs", "SS" = "ss")),
+    wellPanel(
+      numericInput(inputId = "n_sp_3d", label = "Number of probes", value = 5, min = 1),
+      selectInput(inputId = "by_3d",
+                  label = "Stratify by",
+                  choices = list("Row" = "row", "Column" = "column", "2D" = "2d"),
+                  selected = NA,
+                  multiple = FALSE),
+      numericInput(inputId = "n_strata_3d", label = "Number of strata", value = 5, min = 1),
+      numericInput(inputId = "n_strata_row_3d", label = "Number of row strata (2D only)", value = NULL, min = 1),
+      numericInput(inputId = "n_strata_col_3d", label = "Number of column strata (2D only)", value = NULL, min = 1),
+      selectInput(inputId = "container", label = "Grain container", 
+                  choices = list("Truck" = "truck", "Barge" = "barge", "Hopper car" = "hopper")),
+      conditionalPanel(condition = "input.container == 'hopper'",
+                       selectInput(inputId = "compartment", label = "Number of compartments", choices = list(2, 3)),
+                       selectInput(inputId = "hopper_type", label = "Hopper car type", 
+                                   choices = list("Open-top" = "open_top", "Trough" = "trough")))
+      
+    ),
+    numericInput(inputId = "d", label = "Probe diameter (m)", value = 0.04, min = 0.01, max = 1, step = 0.01),
+    splitLayout(
+      numericInput(inputId = "m_kbar", label = "Single kernel mass (g)", value = 0.3, min = 0.001),
+      numericInput(inputId = "rho", label = "Density (g/cm^3)", value = 1.28, min = 0.001)
+    ),
+    sliderInput(inputId = "homogeneity", label = "% Grinding", value = 0.6, min = 0, max = 1, step = 0.1),
+    splitLayout(
+      selectInput(inputId = "method_det_3d", label = "Detection method", choices = list("ELISA" = "ELISA aflatoxin")),
+      numericInput(inputId = "Mc", label = "Mc (ppb)", value = 20, min = 0.001)
+    ),
+    h3(),
+    h2("Iteration section"),
+    splitLayout(
+      numericInput(inputId = "n_seed_3d", label = "Number of contamination patterns", value = 1, min = 1, step = 1),
+      numericInput(inputId = "n_iter_3d", label = "Number of sampling patterns per contamination pattern", value = 1, min = 1, step = 1)
+    ),
+    selectInput(inputId = "n_vars_3d", label = "Number of tuning parameters", choices = list(0,1,2), multiple = FALSE),
+    uiOutput(outputId = "ui_tuning_3d"),
+    actionButton(inputId = "load_3d", label = "Load parameters"),
+    h2(),
+    conditionalPanel(
+      condition = "input.load_3d > 0",
+      splitLayout(
+        actionButton(inputId = "vis_3d", label = "Visualize"),
+        actionButton(inputId = "iterate_3d", label = "Iterate")
+      )
+    )
   ),
   box(
     title = "Visualization for one iteration"
