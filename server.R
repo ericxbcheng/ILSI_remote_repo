@@ -34,11 +34,11 @@ source(file = "R/Sampling_shiny_iteration.R")
 
 shinyServer(function(input, output, session) {
   
-  # Manual version
-  source(file = "R/Server_manual.R", local = TRUE)
+  # Manual version 2D
+  source(file = "R/Server_manual_2d.R", local = TRUE)
 
-  # Smart version
-  source(file = "R/Server_smart.R", local = TRUE)
+  # Smart version 2D
+  source(file = "R/Server_smart_2d.R", local = TRUE)
   
   # Download
   output$downloadData = downloadHandler(
