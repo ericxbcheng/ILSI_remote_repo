@@ -73,13 +73,13 @@ v_manual_3D = fluidRow(
                          numericInput(inputId = "vcov_13", label = "Height", value = 0, min = 0)
                        ),
                        splitLayout(
-                         numericInput(inputId = "vcov_21", label = NULL, value = 0, min = 0),
+                         p(""),
                          numericInput(inputId = "vcov_22", label = NULL, value = 0.0004, min = 0),
                          numericInput(inputId = "vcov_23", label = NULL, value = 0, min = 0)
                        ),
                        splitLayout(
-                         numericInput(inputId = "vcov_31", label = NULL, value = 0, min = 0),
-                         numericInput(inputId = "vcov_32", label = NULL, value = 0, min = 0),
+                         p(""),
+                         p(""),
                          numericInput(inputId = "vcov_33", label = NULL, value = 0.0004, min = 0)
                        )
                      )),
@@ -98,7 +98,7 @@ v_manual_3D = fluidRow(
                   choices = list("Truck" = "truck", "Barge" = "barge", "Hopper car" = "hopper")),
       conditionalPanel(condition = "input.container == 'hopper'",
                        selectInput(inputId = "compartment", label = "Number of compartments", choices = list(2, 3)),
-                       selectInput(inputId = "hopper_type", label = "Hopper car type", 
+                       selectInput(inputId = "type", label = "Hopper car type", 
                                    choices = list("Open-top" = "open_top", "Trough" = "trough")))
       
     ),

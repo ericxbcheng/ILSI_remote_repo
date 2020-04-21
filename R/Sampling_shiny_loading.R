@@ -17,11 +17,63 @@ load_once_manual_2D = function(input){
 }
 
 # Load parameters once for 3D 
-load_once_manual_3D = function(input){
+load_once_manual_3D = function(input, conc_neg){
   
-  spread = "discrete"
+  # dis_level: constant VS Gamma
+  if(input$dis_level_type == "constant"){
+    dis_level = list(type = "constant", args = input$dis_level_const_arg)
+  } else if (input$dis_level_type == "Gamma"){
+    dis_level = list(type = "Gamma", args = list("mode"= input$dis_level_gm_mode, "lb" = input$dis_level_gm_lb))
+  } else {
+    stop("Unknown discrete level type. Choose 'constant' or 'Gamma'.")
+  }
   
-  return(NULL)
+  # n_affected: = 0 VS > 0
+  if(input$n_affected > 0){
+    covar_mat = make_covar_mat(spread = "discrete", varx = input$vcov_11, vary = input$vcov_22, varz = input$vcov_33, 
+                               covxy = input$vcov_12, covxz = input$vcov_13, covyz = input$vcov_23)
+  } else {
+    covar_mat = NULL
+  }
+  
+  # n_sp, container
+  if(input$method_sp_3d %in% c("srs", "strs")){
+    n_sp = input$n_sp_3d
+    container = compartment = type = NULL
+    
+  } else {
+    n_sp = NaN
+    container = input$container
+    
+    if(container == "hopper"){
+      compartment = input$compartment
+      type = input$type
+      
+    } else {
+      compartment = type = NULL
+    }
+  }
+  
+  # by = "2d" or "row/column"
+  if(input$by_3d == "2d"){
+    n_strata = c(input$n_strata_row_3d, input$n_strata_col_3d)
+  } else {
+    n_strata = input$n_strata_3d
+  }
+  
+  ArgList_default = list(c_hat = input$c_hat, lims = list(xlim = c(0, input$x_lim_3d), 
+                                                          ylim = c(0, input$y_lim_3d), 
+                                                          zlim = c(0, input$z_lim_3d)), 
+                         spread = "discrete", covar_mat = covar_mat, n_affected = n_affected, 
+                         dis_level = dis_level, method_sp = input$method_sp_3d, 
+                         sp_radius = input$d/2, n_sp = n_sp, n_strata = n_strata, 
+                         by = input$by_3d, L = input$z_lim_3d, rho = input$rho, 
+                         m_kbar = input$m_kbar, conc_neg = conc_neg, tox = input$tox, 
+                         Mc = input$Mc, method_det = input$method_det_3d, verbose = FALSE, 
+                         homogeneity = input$homogeneity, container = container, 
+                         compartment = compartment, type = type)
+  
+  return(ArgList_default)
 }
 
 # Make n_strata based on 'method_sp' and 'by'
