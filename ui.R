@@ -94,7 +94,7 @@ v_manual_3D = fluidRow(
       numericInput(inputId = "n_strata_3d", label = "Number of strata", value = 5, min = 1),
       numericInput(inputId = "n_strata_row_3d", label = "Number of row strata (2D only)", value = NULL, min = 1),
       numericInput(inputId = "n_strata_col_3d", label = "Number of column strata (2D only)", value = NULL, min = 1),
-      selectInput(inputId = "container", label = "Grain container", 
+      selectInput(inputId = "container", label = "Grain container (SS Only)", 
                   choices = list("Truck" = "truck", "Barge" = "barge", "Hopper car" = "hopper")),
       conditionalPanel(condition = "input.container == 'hopper'",
                        selectInput(inputId = "compartment", label = "Number of compartments", choices = list(2, 3)),
