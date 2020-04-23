@@ -43,7 +43,7 @@ v_manual_3D = fluidRow(
     ),
     splitLayout(
       selectInput(inputId = "tox", label = "Mycotoxin", choices = list("Aflatoxin" = "AF")),
-      numericInput(inputId = "c_hat", label = "Overall mycotoxin level (ppb)", value = 10, min = 0.001)
+      numericInput(inputId = "c_hat", label = "Overall mycotoxin level (ppb)", value = 1, min = 0.001)
     ),
     selectInput(inputId = "dis_level_type", 
                 label = "Mycotoxin distribution in contaminated grains", 

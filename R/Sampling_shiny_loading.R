@@ -16,9 +16,8 @@ load_once_manual_2D = function(input){
   return(ArgList_default)
 }
 
-# Load parameters once for 3D 
-load_once_manual_3D = function(input, conc_neg){
-  
+#Helper: create the dis_level list
+make_dis_level = function(input){
   # dis_level: constant VS Gamma
   if(input$dis_level_type == "constant"){
     dis_level = list(type = "constant", args = input$dis_level_const_arg)
@@ -27,6 +26,14 @@ load_once_manual_3D = function(input, conc_neg){
   } else {
     stop("Unknown discrete level type. Choose 'constant' or 'Gamma'.")
   }
+  return(dis_level)
+}
+
+# Load parameters once for 3D 
+load_once_manual_3D = function(input, conc_neg){
+  
+  # Create the discrete contamination level
+  dis_level = make_dis_level(input = input)
   
   # n_affected: = 0 VS > 0
   if(input$n_affected > 0){

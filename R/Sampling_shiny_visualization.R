@@ -48,7 +48,7 @@ vis_once_2d = function(output, ArgList, chosen_mode){
 
 # Visualizing once for 3D model
 vis_once_3d = function(output, ArgList, chosen_mode){
-  browser()
+  
   # Remove unnecessary arguments
   ArgList_vis = ArgList
   ArgList_vis[c("Mc", "method_det", "verbose")] = NULL
@@ -60,7 +60,7 @@ vis_once_3d = function(output, ArgList, chosen_mode){
   # Plot the overview
   fig_overlay_top = overlay_draw(method_sp = ArgList_vis$method_sp, 
                                  data = one_iteration[["contam_sp_xy"]]$combined , 
-                                 spread = ArgList_vs$spread, xlim = ArgList_vis$lims$xlim, 
+                                 spread = ArgList_vis$spread, xlim = ArgList_vis$lims$xlim, 
                                  ylim = ArgList_vis$lims$ylim, n_strata = ArgList_vis$n_strata, 
                                  by = ArgList_vis$by)
   
