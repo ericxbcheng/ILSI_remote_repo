@@ -36,6 +36,9 @@ shinyServer(function(input, output, session) {
   
   # Manual version 2D
   source(file = "R/Server_manual_2d.R", local = TRUE)
+  
+  # Manual version 3D
+  source(file = "R/Server_manual_3d.R", local = TRUE)
 
   # Smart version 2D
   source(file = "R/Server_smart_2d.R", local = TRUE)

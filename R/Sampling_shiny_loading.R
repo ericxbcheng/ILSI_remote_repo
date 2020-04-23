@@ -17,11 +17,63 @@ load_once_manual_2D = function(input){
 }
 
 # Load parameters once for 3D 
-load_once_manual_3D = function(input){
+load_once_manual_3D = function(input, conc_neg){
   
-  spread = "discrete"
+  # dis_level: constant VS Gamma
+  if(input$dis_level_type == "constant"){
+    dis_level = list(type = "constant", args = input$dis_level_const_arg)
+  } else if (input$dis_level_type == "Gamma"){
+    dis_level = list(type = "Gamma", args = list("mode"= input$dis_level_gm_mode, "lb" = input$dis_level_gm_lb))
+  } else {
+    stop("Unknown discrete level type. Choose 'constant' or 'Gamma'.")
+  }
   
-  return(NULL)
+  # n_affected: = 0 VS > 0
+  if(input$n_affected > 0){
+    covar_mat = make_covar_mat(spread = "discrete", varx = input$vcov_11, vary = input$vcov_22, varz = input$vcov_33, 
+                               covxy = input$vcov_12, covxz = input$vcov_13, covyz = input$vcov_23)
+  } else {
+    covar_mat = NULL
+  }
+  
+  # n_sp, container
+  if(input$method_sp_3d %in% c("srs", "strs")){
+    n_sp = input$n_sp_3d
+    container = compartment = type = NULL
+    
+  } else {
+    n_sp = NaN
+    container = input$container
+    
+    if(container == "hopper"){
+      compartment = input$compartment
+      type = input$type
+      
+    } else {
+      compartment = type = NULL
+    }
+  }
+  
+  # by = "2d" or "row/column"
+  if(input$by_3d == "2d"){
+    n_strata = c(input$n_strata_row_3d, input$n_strata_col_3d)
+  } else {
+    n_strata = input$n_strata_3d
+  }
+  
+  ArgList_default = list(c_hat = input$c_hat, lims = list(xlim = c(0, input$x_lim_3d), 
+                                                          ylim = c(0, input$y_lim_3d), 
+                                                          zlim = c(0, input$z_lim_3d)), 
+                         spread = "discrete", covar_mat = covar_mat, n_affected = input$n_affected, 
+                         dis_level = dis_level, method_sp = input$method_sp_3d, 
+                         sp_radius = input$d/2, n_sp = n_sp, n_strata = n_strata, 
+                         by = input$by_3d, L = input$z_lim_3d, rho = input$rho, 
+                         m_kbar = input$m_kbar, conc_neg = conc_neg, tox = input$tox, 
+                         Mc = input$Mc, method_det = input$method_det_3d, verbose = FALSE, 
+                         homogeneity = input$homogeneity, container = container, 
+                         compartment = compartment, type = type)
+  
+  return(ArgList_default)
 }
 
 # Make n_strata based on 'method_sp' and 'by'
@@ -64,7 +116,7 @@ load_once_smart_2D = function(input){
 }
 
 # A function for loading the input parameters into a list
-load_once = function(input, output){
+load_once = function(input, output, conc_neg){
   
   if(input$sidebarMenu == "2D"){
     
@@ -74,7 +126,7 @@ load_once = function(input, output){
   } else if(input$sidebarMenu == "3D"){
     
     chosen_mode = "3D"
-    ArgList_default = load_once_manual_3D(input = input)
+    ArgList_default = load_once_manual_3D(input = input, conc_neg = conc_neg)
     
   } else if (input$sidebarMenu == "v_smart"){
 
@@ -99,13 +151,30 @@ load_once = function(input, output){
 explain_var = function(var){
   switch(EXPR = var, 
          "n_contam" = "Number of contamination points",
+         "c_hat" = "Overall mycotoxin level (ppb)",
          "lims.xlim2" = "Length (m)",
          "lims.ylim2" = "Width (m)",
          "lims.zlim2" = "Height (m)",
          "spread" = "Geometry of product",
          "spread_radius" = "Radius of a contaminated zone (m)",
+         "n_affected" = "Number of grains in a cluster",
          "cont_level1" = "Mean contamination level (log CFU/g)",
          "cont_level2" = "Standard deviation of contamination level (log CFU/g)",
+         "dis_level.type" = "Mycotoxin distribution in contaminated grains",
+         "dis_level.args" = "Mycotoxin level in contaminated grains(ppb)",
+         "dis_level.args.mode" = "Mode (Most frequent level)(ppb)",
+         "dis_level.args.lb" = "Lower bound (ppb)",
+         "sp_radius" = "Probe radius (m)",
+         "L" = "Probe length (m)",
+         "rho" = "Density (g/cm^3)",
+         "m_kbar" = "Single kernel mass (g)",
+         "covar_mat" = "Cluster covariance matrix",
+         "tox" = "Mycotoxin",
+         "Mc" = "Mc (ppb)",
+         "homogeneity" = "% Grinding",
+         "container" = "Grain container",
+         "type" = "Hopper car type",
+         "compartment" = "Number of compartments",
          "method_sp" = "Sampling strategy",
          "n_sp" = "Number of sample points",
          "n_strata" = "Number of strata",
@@ -148,16 +217,31 @@ get_tuning_info = function(n_vars, var_prim, var_sec, val_prim, val_sec){
 # A function that presents the list of arguments in a nice table
 make_var_table = function(Args, input, chosen_mode){
   
-  # Remove unnecessary arguments
+  ### Remove unnecessary arguments
+  # Remove conc_neg
+  if(!is.null(Args$conc_neg)){
+    Args$conc_neg = NULL
+  }
+  
+  # Unlist covar_mat
+  if(!is.null(Args$covar_mat)){
+    Args$covar_mat = paste0(unlist(Args$covar_mat), collapse = ",")
+  }
+  
   a = unlist(Args)
-  bool = names(a) %in% c("lims.xlim1", "lims.ylim1", "lims.zlim1")
+  bool = names(a) %in% c("lims.xlim1", "lims.ylim1", "lims.zlim1", "verbose")
   b = a[!bool]
   
   # Get the iteration information
-  if(chosen_mode != "v_smart"){
+  if(chosen_mode == "2D"){
     temp = c(b, "n_seed" = input$n_seed, "n_iter" = input$n_iter)
     d = get_tuning_info(n_vars = input$n_vars, var_prim = input$var_prim, 
                         var_sec = input$var_sec, val_prim = input$val_prim, val_sec = input$val_sec)
+    } else if (chosen_mode == "3D"){
+    temp = c(b, "n_seed" = input$n_seed, "n_iter" = input$n_iter)
+    d = get_tuning_info(n_vars = input$n_vars_3d, var_prim = input$var_prim_3d, 
+                        var_sec = input$var_sec_3d, val_prim = input$val_prim_3d, val_sec = input$val_sec_3d)  
+      
     } else if (chosen_mode == "v_smart"){
     temp = c(b, "n_iter_total_vs" = input$n_iter_total_vs)
     d = get_tuning_info(n_vars = input$n_vars_vs, var_prim = input$var_prim_vs, 
