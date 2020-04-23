@@ -5,8 +5,7 @@ vis_once = function(input, output, ArgList, chosen_mode){
     vis_once_2d(output = output, ArgList = ArgList, chosen_mode = chosen_mode)
     
   } else if (ArgList$spread == "discrete"){
-    message("Under development")
-    # vis_once_3d(output = output, ArgList = ArgList, chosen_mode = chosen_mode)
+    vis_once_3d(output = output, ArgList = ArgList, chosen_mode = chosen_mode)
     
   } else {
     stop("Unknown spread type")
@@ -49,7 +48,36 @@ vis_once_2d = function(output, ArgList, chosen_mode){
 
 # Visualizing once for 3D model
 vis_once_3d = function(output, ArgList, chosen_mode){
-  NA
+  browser()
+  # Remove unnecessary arguments
+  ArgList_vis = ArgList
+  ArgList_vis[c("Mc", "method_det", "verbose")] = NULL
+  ArgList_vis$seed = NaN
+  
+  # Produce intermediate outputs
+  one_iteration = do.call(what = sim_intmed, args = ArgList_vis)
+  
+  # Plot the overview
+  fig_overlay_top = overlay_draw(method_sp = ArgList_vis$method_sp, 
+                                 data = one_iteration[["contam_sp_xy"]]$combined , 
+                                 spread = ArgList_vs$spread, xlim = ArgList_vis$lims$xlim, 
+                                 ylim = ArgList_vis$lims$ylim, n_strata = ArgList_vis$n_strata, 
+                                 by = ArgList_vis$by)
+  
+  # Plot the sideview 
+  fig_overlay_side = overlay_draw_probe(data = one_iteration[["contam_sp_xy"]]$combined, 
+                                        lims = ArgList_vis$lims, L = ArgList_vis$L)
+  
+  # Choose between manual and smart mode
+  if(chosen_mode != "v_smart"){
+    output$overlay_top = renderPlot(expr = {fig_overlay_top})
+    output$overlay_side = renderPlot(expr = {fig_overlay_side})
+    
+  } else {
+    output$overlay_top_vs = renderPlot(expr = {fig_overlay_top})
+    output$contam_side_vs = renderPlot(expr = {fig_overlay_side})
+  }
+  
 }
 
 # Visualization for multiple iterations and tuning

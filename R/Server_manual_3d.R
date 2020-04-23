@@ -54,8 +54,8 @@ observeEvent(eventExpr = {input$load_3d}, handlerExpr = {
 # Visualize for one iteration (manual mode)
 observeEvent(eventExpr = {input$vis_3d}, handlerExpr = {
   
-  # vis_once(input = input, output = output, 
-  #          ArgList = list_load$ArgList_default, chosen_mode = list_load$chosen_mode)
+  vis_once(input = input, output = output,
+           ArgList = list_load$ArgList_default, chosen_mode = list_load$chosen_mode)
   
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
 

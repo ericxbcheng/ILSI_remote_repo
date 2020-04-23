@@ -131,7 +131,9 @@ v_manual_3D = fluidRow(
     )
   ),
   box(
-    title = "Visualization for one iteration"
+    title = "Visualization for one iteration",
+    plotOutput(outputId = "overlay_top"),
+    plotOutput(outputId = "overlay_side")
   )
 )
 
