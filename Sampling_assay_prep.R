@@ -271,7 +271,7 @@ calc_true_contam = function(df_contam, rho, lims, m_kbar, conc_neg){
 
 # Create a function that calculates contamination levels for each sample point and combine "contam_xy" and "sp_xy"
 gen_sim_data_new = function(df_contam, df_sp, dist, spread, spread_radius, LOC, bg_level,
-                            fun, L, rho, m_kbar, sp_radius, conc_neg, geom){
+                            fun, L, rho, m_kbar, sp_radius, conc_neg, geom, method_sp){
   
   stopifnot(spread %in% c("continuous", "discrete"))
 
