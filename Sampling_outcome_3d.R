@@ -18,7 +18,8 @@ sim_intmed_dis = function(c_hat, lims, spread, covar_mat, n_affected, dis_level,
   
   # Generate combined dataset
   contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, df_sp = sp_xy, dist = dist_contam_sp, 
-                                  spread = spread, sp_radius = sp_radius, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg)
+                                  spread = spread, sp_radius = sp_radius, L = L, rho = rho, 
+                                  m_kbar = m_kbar, conc_neg = conc_neg, method_sp = method_sp)
   
   # Create work portion and test portion
   sample_dis = get_sample_dis(data = contam_sp_xy$raw, m_kbar = m_kbar, tox = tox, homogeneity = homogeneity)
