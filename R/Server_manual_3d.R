@@ -35,6 +35,19 @@ observeEvent(eventExpr = {input$Mc}, handlerExpr = {
   conc_neg <<- rpert(n = 10^6, min = 0, mode = 0.7, max = input$Mc - 0.01, shape = 80)
 })
 
+# Update the maximum boundary of n_affected
+observeEvent(eventExpr = {input$c_hat}, handlerExpr = {
+  
+  lims = list(xlim = c(0, input$x_lim_3d), ylim = c(0, input$y_lim_3d), zlim = c(0, input$z_lim_3d))
+  dis_level = make_dis_level(input = input)
+  
+  # n_contam_total = n_spot + n_spot * n_affected
+  n_contam_total = calc_n_contam(c_hat = input$c_hat, lims = lims, rho = input$rho, m_kbar = input$m_kbar, dis_level = dis_level, conc_neg = conc_neg)
+  n_affected_max = max(0, n_contam_total - 1)
+  
+  updateNumericInput(session = session, inputId = "n_affected", max = n_affected_max)
+})
+
 # Load the parameter once (manual version 3D)
 list_load = list()
 observeEvent(eventExpr = {input$load_3d}, handlerExpr = {
@@ -54,8 +67,8 @@ observeEvent(eventExpr = {input$load_3d}, handlerExpr = {
 # Visualize for one iteration (manual mode)
 observeEvent(eventExpr = {input$vis_3d}, handlerExpr = {
   
-  # vis_once(input = input, output = output, 
-  #          ArgList = list_load$ArgList_default, chosen_mode = list_load$chosen_mode)
+  vis_once(input = input, output = output,
+           ArgList = list_load$ArgList_default, chosen_mode = list_load$chosen_mode)
   
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
