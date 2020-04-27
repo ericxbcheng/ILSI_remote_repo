@@ -246,7 +246,10 @@ sp_xy = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims,
                      radius = sp_radius, n_sp = n_sp, n_strata = n_strata, by = by)
 dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy, spread = spread, 
                            method_sp = method_sp)
-contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, df_sp = sp_xy, dist = dist_contam_sp, spread = spread, L = L, rho = rho, m_kbar = m_kbar, sp_radius = sp_radius, conc_neg = conc_neg)
+contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, df_sp = sp_xy, dist = dist_contam_sp, 
+                                spread = spread, L = L, rho = rho, m_kbar = m_kbar, 
+                                sp_radius = sp_radius, conc_neg = conc_neg, 
+                                method_sp = method_sp, lims = lims)
 sample_dis = get_sample_dis(data = contam_sp_xy$raw, m_kbar = m_kbar, tox = tox, homogeneity = homogeneity)
 decision = lot_decision_new(data = sample_dis$test, Mc = Mc, spread = spread, method_det = method_det)
 words(x = decision)

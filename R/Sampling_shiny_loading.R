@@ -245,7 +245,7 @@ make_var_table = function(Args, input, chosen_mode){
     d = get_tuning_info(n_vars = input$n_vars, var_prim = input$var_prim, 
                         var_sec = input$var_sec, val_prim = input$val_prim, val_sec = input$val_sec)
     } else if (chosen_mode == "3D"){
-    temp = c(b, "n_seed" = input$n_seed, "n_iter" = input$n_iter)
+    temp = c(b, "n_seed" = input$n_seed_3d, "n_iter" = input$n_iter_3d)
     d = get_tuning_info(n_vars = input$n_vars_3d, var_prim = input$var_prim_3d, 
                         var_sec = input$var_sec_3d, val_prim = input$val_prim_3d, val_sec = input$val_sec_3d)  
       

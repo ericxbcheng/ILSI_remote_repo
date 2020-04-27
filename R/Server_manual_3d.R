@@ -54,9 +54,6 @@ observeEvent(eventExpr = {input$load_3d}, handlerExpr = {
   
   # Load the parameters once  
   list_load <<- load_once(input = input, output = output, conc_neg = conc_neg)
-  
-  # # The P_det/Paccept visualization switch (only for 2 tuning parameters)
-  # output$yvar = renderUI(expr = {f_yvar(input = input, chosen_mode = list_load$chosen_mode)})
 
   # The chosen parameters table
   output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default,
@@ -75,9 +72,10 @@ observeEvent(eventExpr = {input$vis_3d}, handlerExpr = {
 # Multiple iterations (manual mode)
 observeEvent(eventExpr = {input$iterate_3d}, handlerExpr = {
   
-  # result_iter = f_iterate_tune_2d(input = input, output = output, 
-  #                                 Args = list_load$ArgList_default, 
-  #                                 chosen_mode = list_load$chosen_mode)
+  result_iter = f_iterate_tune_3d(input = input, output = output,
+                                  Args = list_load$ArgList_default,
+                                  chosen_mode = list_load$chosen_mode)
+  print(result_iter)
   # 
   # vis_n(data = result_iter, input = input, output = output, chosen_mode = list_load$chosen_mode)
   
