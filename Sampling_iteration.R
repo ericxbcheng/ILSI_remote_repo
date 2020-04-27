@@ -1,14 +1,16 @@
 # A function factory
 gen_sim_outcome_new = function(n_contam, c_hat, lims, spread, spread_radius, method_sp, n_sp, n_strata, 
                                by, LOC, fun, case, m, M, m_sp, method_det, covar_mat, n_affected, dis_level, cont_level, 
-                               sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, verbose = FALSE, bg_level, geom, seed, homogeneity){
+                               sp_radius, container, L, rho, m_kbar, conc_neg, tox, Mc, verbose = FALSE, 
+                               bg_level, geom, seed, homogeneity, compartment, type){
   function(...){
     sim_outcome_new(n_contam = n_contam, c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat,
                     n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, sp_radius = sp_radius,
                     container = container, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, 
                     tox = tox, Mc = Mc, m_sp = m_sp, method_det = method_det, verbose = verbose, spread_radius = spread_radius, 
                     n_sp = n_sp, n_strata = n_strata, by = by, LOC = LOC, fun = fun, case = case, m = m, 
-                    M = M, cont_level = cont_level, bg_level = bg_level, geom = geom, seed = seed, homogeneity = homogeneity)
+                    M = M, cont_level = cont_level, bg_level = bg_level, geom = geom, seed = seed, 
+                    homogeneity = homogeneity, compartment = compartment, type = type)
   }
 }
 
