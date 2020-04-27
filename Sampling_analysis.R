@@ -169,7 +169,7 @@ get_c_true_n = function(data){
   return(a)
 }
 
-metrics_dis_n = function(data, Mc){
+metrics_dis_n = function(data, Mc, metrics = FALSE){
   
   # Checkpoint
   if(!is.null(names(data))){
@@ -180,7 +180,9 @@ metrics_dis_n = function(data, Mc){
   a = calc_Paccept_n(data = data)
   
   # Get metrics
-  b = calc_metrics_n(data = data, Mc = Mc)
+  if(metrics == TRUE){
+    b = calc_metrics_n(data = data, Mc = Mc)
+  } 
   
   # Get parameter values
   c = map_dbl(.x = data, .f = function(x) x$param[[1]])
@@ -189,7 +191,11 @@ metrics_dis_n = function(data, Mc){
   d = get_c_true_n(data = data)
   
   # Form output
-  e = cbind(a, b, param = rep(x = c, each = nrow(a) / length(data)), c_true = d)
+  if(metrics == TRUE){
+    e = cbind(a, b, param = rep(x = c, each = nrow(a) / length(data)), c_true = d)
+  } else {
+    e = cbind(a, param = rep(x = c, each = nrow(a) / length(data)), c_true = d)
+  }
   
   return(e)
 }
