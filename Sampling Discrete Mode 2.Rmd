@@ -130,6 +130,19 @@ homogeneity = 0.6
 # container = "truck"
 # L = get_Lprobe(container = container, lims = lims)
 
+if(method_sp == "ss"){
+  container = "truck"
+  
+  if(container == "hopper"){
+    compartment = 2
+    type = "open_top"
+  } else {
+    compartment = type = NULL
+  }
+} else if (method_sp %in% c("srs", "strs")) {
+  container = type = compartment = NULL
+}
+
 # Assaying
 method_det = "ELISA aflatoxin"
 tox = "AF"
@@ -141,8 +154,10 @@ n_iter = 10
 # Wrap arguments into one single list
 ArgList_default = list(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat,
                        n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
-                       sp_radius = sp_radius, n_sp = n_sp, n_strata = n_strata, by = by, L = L, rho = rho, m_kbar = m_kbar, 
-                       conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, verbose = FALSE, homogeneity = homogeneity)
+                       sp_radius = sp_radius, n_sp = n_sp, n_strata = n_strata, by = by, L = L, 
+                       rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, tox = tox, Mc = Mc, 
+                       method_det = method_det, verbose = FALSE, homogeneity = homogeneity, 
+                       compartment = compartment, type = type, container = container)
 ```
 
 ###3. Set a parameter for tuning and a vector of values to tune over.
