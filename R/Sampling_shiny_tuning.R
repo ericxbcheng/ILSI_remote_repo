@@ -350,9 +350,9 @@ metrics_dis_sec = function(data, input, vals_prim, vals_sec, chosen_mode){
 f_iterate_tune_3d = function(input, output, Args, chosen_mode){
   
   if(chosen_mode != "v_smart"){
-    n_vars = input$n_vars
+    n_vars = input$n_vars_3d
   } else if (chosen_mode == "v_smart"){
-    n_vars = input$n_vars_vs
+    n_vars = input$n_vars_3d_vs
   } else {
     stop("Unknown chosen mode")
   }

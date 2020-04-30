@@ -43,23 +43,23 @@ load_once_manual_3D = function(input, conc_neg){
     covar_mat = NULL
   }
   
-  # n_sp, container
-  if(input$method_sp_3d %in% c("srs", "strs")){
-    n_sp = input$n_sp_3d
-    container = compartment = type = NULL
-    
-  } else {
-    n_sp = NaN
-    container = input$container
-    
-    if(container == "hopper"){
-      compartment = input$compartment
-      type = input$type
-      
-    } else {
-      compartment = type = NULL
-    }
-  }
+  # # n_sp, container
+  # if(input$method_sp_3d %in% c("srs", "strs")){
+  #   n_sp = input$n_sp_3d
+  #   container = compartment = type = NULL
+  #   
+  # } else {
+  #   n_sp = NaN
+  #   container = input$container
+  #   
+  #   if(container == "hopper"){
+  #     compartment = input$compartment
+  #     type = input$type
+  #     
+  #   } else {
+  #     compartment = type = NULL
+  #   }
+  # }
   
   # by = "2d" or "row/column"
   if(input$by_3d == "2d"){
@@ -73,12 +73,12 @@ load_once_manual_3D = function(input, conc_neg){
                                                           zlim = c(0, input$z_lim_3d)), 
                          spread = "discrete", covar_mat = covar_mat, n_affected = input$n_affected, 
                          dis_level = dis_level, method_sp = input$method_sp_3d, 
-                         sp_radius = input$d/2, n_sp = n_sp, n_strata = n_strata, 
+                         sp_radius = input$d/2, n_sp = input$n_sp, n_strata = n_strata, 
                          by = input$by_3d, L = input$z_lim_3d, rho = input$rho, 
                          m_kbar = input$m_kbar, conc_neg = conc_neg, tox = input$tox, 
                          Mc = input$Mc, method_det = input$method_det_3d, verbose = FALSE, 
-                         homogeneity = input$homogeneity, container = container, 
-                         compartment = compartment, type = type)
+                         homogeneity = input$homogeneity, container = input$container, 
+                         compartment = input$compartment, type = input$type)
   
   return(ArgList_default)
 }

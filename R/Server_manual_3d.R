@@ -75,8 +75,8 @@ observeEvent(eventExpr = {input$iterate_3d}, handlerExpr = {
   result_iter = f_iterate_tune_3d(input = input, output = output,
                                   Args = list_load$ArgList_default,
                                   chosen_mode = list_load$chosen_mode)
-  print(result_iter)
-  # 
-  # vis_n(data = result_iter, input = input, output = output, chosen_mode = list_load$chosen_mode)
+  # print(result_iter)
+
+  vis_n(data = result_iter, input = input, output = output, chosen_mode = list_load$chosen_mode)
   
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
