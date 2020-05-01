@@ -61,7 +61,7 @@ observeEvent(eventExpr = {input$iterate}, handlerExpr = {
   # Create a progress message
   showModal(ui = modalDialog("Iteration in progress", size = "s"))
   
-  result_iter = f_iterate_tune_2d(input = input, output = output, 
+  result_iter = f_iterate_tune(input = input, output = output, 
                                   Args = list_load$ArgList_default, 
                                   chosen_mode = list_load$chosen_mode)
   

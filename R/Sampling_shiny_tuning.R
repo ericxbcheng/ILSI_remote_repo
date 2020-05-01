@@ -136,6 +136,44 @@ iterate_tune2 = function(input, Args, chosen_mode){
   return(list(sim_data = sim_data, vals_prim = vals_prim, vals_sec = vals_sec))
 }
 
+# Iterate and tuning for both 2D and 3D
+f_iterate_tune = function(input, output, Args, chosen_mode){
+  
+  # Find the correct n_vars
+  if(chosen_mode == "2D"){
+    # 2D manual
+    n_vars = input$n_vars
+    return(f_iterate_tune_2d(input = input, output = output, Args = Args,
+                             n_vars = n_vars, chosen_mode = chosen_mode))
+    
+  } else if (chosen_mode == "3D"){
+    # 3D manual
+    n_vars = input$n_vars_3d
+    return(f_iterate_tune_3d(input = input, output = output, Args = Args,
+                             n_vars = n_vars, chosen_mode = chosen_mode))
+    
+  } else if (chosen_mode == "v_smart"){
+    
+    if(input$spread_vs == "continuous"){
+      # 2D smart
+      n_vars = input$n_vars_vs
+      return(f_iterate_tune_2d(input = input, output = output, Args = Args,
+                               n_vars = n_vars, chosen_mode = chosen_mode))
+      
+    } else if (input$spread_vs == "discrete"){
+      # 3D smart
+      n_vars = input$n_vars_3d_vs
+      return(f_iterate_tune_3d(input = input, output = output, Args = Args,
+                               n_vars = n_vars, chosen_mode = chosen_mode))
+      
+    } else {
+      stop("Unknown spread type.")
+    }
+  } else {
+    stop("Unknown chosen mode")
+  }
+}
+
 #################################### 2D #############################################
 
 # The P_det/Paccept visualization switch (only for 2 tuning parameters)
@@ -262,15 +300,7 @@ f_ui_tuning_vs = function(input, ...){
 }
 
 # Iterate and tuning for 2D mode (smart + manual)
-f_iterate_tune_2d = function(input, output, Args, chosen_mode){
-  
-  if(chosen_mode != "v_smart"){
-    n_vars = input$n_vars
-  } else if (chosen_mode == "v_smart"){
-    n_vars = input$n_vars_vs
-  } else {
-    stop("Unknown chosen mode")
-  }
+f_iterate_tune_2d = function(input, output, Args, n_vars, chosen_mode){
   
   if(n_vars == 0){
     
@@ -347,15 +377,7 @@ metrics_dis_sec = function(data, input, vals_prim, vals_sec, chosen_mode){
 }
 
 # Iterate and tuning for 3D mode (smart + manual)
-f_iterate_tune_3d = function(input, output, Args, chosen_mode){
-  
-  if(chosen_mode != "v_smart"){
-    n_vars = input$n_vars_3d
-  } else if (chosen_mode == "v_smart"){
-    n_vars = input$n_vars_3d_vs
-  } else {
-    stop("Unknown chosen mode")
-  }
+f_iterate_tune_3d = function(input, output, Args, n_vars, chosen_mode){
   
   if(n_vars == 0){
     
@@ -384,3 +406,4 @@ f_iterate_tune_3d = function(input, output, Args, chosen_mode){
     message("Unknown number of tuning variables")
   }
 }
+
