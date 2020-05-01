@@ -91,7 +91,7 @@ vis_n_tune2_2d = function(input, output, data, chosen_mode){
   })
 }
 
-# Visualize multiple iterations for 2D mode (smart + manual)
+# Visualize multiple iterations for 3D mode (smart + manual)
 vis_n_tune2_3d = function(input, output, data, chosen_mode){
   output$plot_iterate = renderPlot(expr = {
     plot_tune2_ribbon(data = data, input = input,
@@ -122,10 +122,10 @@ vis_n = function(data, input, output, chosen_mode){
       
     } else if (chosen_mode == "v_smart"){
       
-      if(input$spread == "continuous"){
+      if(input$spread_vs == "continuous"){
         vis_n_tune2_2d(input = input, output = output, data = data$data_cleaned, chosen_mode = chosen_mode)
         
-      } else if (input$spread == "discrete"){
+      } else if (input$spread_vs == "discrete"){
         vis_n_tune2_3d(input = input, output = output, data = data$data_cleaned, chosen_mode = chosen_mode)
         
       } else {
@@ -160,9 +160,9 @@ plot_tune1 = function(data, input, chosen_mode){
     xlab = explain_var(var = input$var_prim_3d)
   } else if(chosen_mode == "v_smart"){
     
-    if(input$spread == "continuous"){
+    if(input$spread_vs == "continuous"){
       xlab = explain_var(var = input$var_prim_vs)
-    } else if (input$spread == "discrete"){
+    } else if (input$spread_vs == "discrete"){
       xlab = explain_var(var = input$var_prim_3d_vs)
     } else {
       stop("Unknown spread type")
@@ -206,11 +206,11 @@ plot_tune2_ribbon = function(data, input, chosen_mode){
     
   } else if(chosen_mode == "v_smart"){
     
-    if(input$spread == "continuous"){
+    if(input$spread_vs == "continuous"){
       xlab = explain_var(var = input$var_prim_vs)
       legend_lab = explain_var(var = input$var_sec_vs)
       
-    } else if (input$spread == "discrete"){
+    } else if (input$spread_vs == "discrete"){
       xlab = explain_var(var = input$var_prim_3d_vs)
       legend_lab = explain_var(var = input$var_sec_3d_vs)
       
@@ -260,11 +260,11 @@ plot_tune2_boxplot = function(data, input, yvar, chosen_mode){
     
   } else if(chosen_mode == "v_smart"){
     
-    if(input$spread == "continuous"){
+    if(input$spread_vs == "continuous"){
       xlab = explain_var(var = input$var_prim_vs)
       legend_lab = explain_var(var = input$var_sec_vs)
       
-    } else if (input$spread == "discrete"){
+    } else if (input$spread_vs == "discrete"){
       xlab = explain_var(var = input$var_prim_3d_vs)
       legend_lab = explain_var(var = input$var_sec_3d_vs)
       
