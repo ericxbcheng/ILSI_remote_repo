@@ -9,21 +9,21 @@ output$ui_tuning_3d = renderUI(expr = {
                   choices = list("Overall mycotoxin level (ppb)" = "c_hat",
                                  "Number of probes" = "n_sp",
                                  "Number of grains in a cluster" = "n_affected")),
-      textInput(inputId = "val_prim_3d", label = "Tuning value(s) (separated by a comma)", value = "10,20,30")
+      textInput(inputId = "val_prim_3d", label = "Tuning value(s) (separated by a comma)", value = "5,10,20")
     )
     
   } else if(input$n_vars_3d == 2) {
     verticalLayout(
       selectInput(inputId = "var_prim_3d",
                   label = "Primary tuning parameter",
-                  choices = list("Overall mycotoxin level (ppb)" = "c_hat",
-                                 "Number of probes" = "n_sp",
-                                 "Number of grains in a cluster" = "n_affected")),
-      textInput(inputId = "val_prim_3d", label = "Tuning value(s)", value = "10,20,30"),
+                  choices = list("Overall mycotoxin level (ppb)" = "c_hat")),
+      textInput(inputId = "val_prim_3d", label = "Tuning value(s)", value = "5,10,20"),
       selectInput(inputId = "var_sec_3d",
                   label = "Secondary tuning parameter",
-                  choices = list("Sampling strategy" = "method_sp")),
-      textInput(inputId = "val_sec_3d", label = "Tuning value(s) (separated by a comma)", value = "srs, strs, ss")
+                  choices = list("Number of probes" = "n_sp",
+                                 "Number of grains in a cluster" = "n_affected",
+                                 "Sampling strategy" = "method_sp")),
+      textInput(inputId = "val_sec_3d", label = "Tuning value(s) (separated by a comma)", value = "5, 10, 100")
     )
   } else {
     stop("Unknown number of tuning paramters")
@@ -72,11 +72,18 @@ observeEvent(eventExpr = {input$vis_3d}, handlerExpr = {
 # Multiple iterations (manual mode)
 observeEvent(eventExpr = {input$iterate_3d}, handlerExpr = {
   
+  # Create a progress message
+  showModal(ui = modalDialog("Iteration in progress", size = "s"))
+  
+  # Tune the model
   result_iter = f_iterate_tune_3d(input = input, output = output,
                                   Args = list_load$ArgList_default,
                                   chosen_mode = list_load$chosen_mode)
-  print(result_iter)
-  # 
-  # vis_n(data = result_iter, input = input, output = output, chosen_mode = list_load$chosen_mode)
+  
+  # Visualize the tuning results
+  vis_n(data = result_iter, input = input, output = output, chosen_mode = list_load$chosen_mode)
+  
+  # Close the message
+  removeModal()
   
 }, ignoreInit = TRUE, ignoreNULL = TRUE)

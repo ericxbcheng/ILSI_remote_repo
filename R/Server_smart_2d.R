@@ -95,10 +95,16 @@ observeEvent(eventExpr = {input$vis_vs}, handlerExpr = {
 # Multiple iterations (smart mode)
 observeEvent(eventExpr = {input$iterate_vs}, handlerExpr = {
   
+  # Create a progress message
+  showModal(ui = modalDialog("Iteration in progress", size = "s"))
+  
   result_iter = f_iterate_tune_2d(input = input, output = output, 
                                   Args = list_load$ArgList_default, 
                                   chosen_mode = list_load$chosen_mode)
   
   vis_n(data = result_iter, input = input, output = output, chosen_mode = list_load$chosen_mode)
+  
+  # Close the message
+  removeModal()
   
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
