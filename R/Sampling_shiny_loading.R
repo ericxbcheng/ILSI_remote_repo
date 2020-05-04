@@ -17,14 +17,34 @@ load_once_manual_2D = function(input){
 }
 
 #Helper: create the dis_level list
-make_dis_level = function(input){
-  # dis_level: constant VS Gamma
-  if(input$dis_level_type == "constant"){
-    dis_level = list(type = "constant", args = input$dis_level_const_arg)
-  } else if (input$dis_level_type == "Gamma"){
-    dis_level = list(type = "Gamma", args = list("mode"= input$dis_level_gm_mode, "lb" = input$dis_level_gm_lb))
+make_dis_level = function(input, chosen_mode){
+  
+  # manual or smart?
+  if(chosen_mode == "3D"){
+    type = input$dis_level_type
+    
+    # dis_level: constant VS Gamma
+    if(type == "constant"){
+      dis_level = list(type = "constant", args = input$dis_level_const_arg)
+    } else if (type == "Gamma"){
+      dis_level = list(type = "Gamma", args = list("mode"= input$dis_level_gm_mode, "lb" = input$dis_level_gm_lb))
+    } else {
+      stop("Unknown discrete level type. Choose 'constant' or 'Gamma'.")
+    }
+  } else if (chosen_mode == "v_smart"){
+    type = input$dis_level_type_vs
+    
+    # dis_level: constant VS Gamma
+    if(type == "constant"){
+      dis_level = list(type = "constant", args = input$dis_level_const_arg_vs)
+    } else if (type == "Gamma"){
+      dis_level = list(type = "Gamma", args = list("mode"= input$dis_level_gm_mode_vs, 
+                                                   "lb" = input$dis_level_gm_lb_vs))
+    } else {
+      stop("Unknown discrete level type. Choose 'constant' or 'Gamma'.")
+    }
   } else {
-    stop("Unknown discrete level type. Choose 'constant' or 'Gamma'.")
+    stop("Wrong chosen mode.")
   }
   return(dis_level)
 }

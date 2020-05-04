@@ -1,6 +1,10 @@
 # Dimensions
 observeEvent(eventExpr = {input$spread_vs}, handlerExpr = {
-  output$ui_dims = renderUI(expr = {f_ui_dims(input = input)})
+  if(input$spread_vs == "continuous"){
+    output$ui_dims = renderUI(expr = {f_ui_dims(input = input)})
+  } else {
+    NULL
+  }
 })
 
 # Geom + contamination + sampling
