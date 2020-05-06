@@ -42,14 +42,29 @@ observeEvent(eventExpr = {input$dis_level_type_vs}, handlerExpr = {
                                      dis_level = dis_level, conc_neg = conc_neg_vs)
       n_affected_max = max(0, n_contam_total - 1)
       
+      # Update the n_affected_vs according to the new c_hat_vs
       updateNumericInput(session = session, inputId = "n_affected_vs", max = n_affected_max)
       
     } else {
       NULL
     }
   })
-  
-  
 }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
+observeEvent(eventExpr = {input$n_affected_vs}, handlerExpr = {
+  
+  if(!is.na(input$n_affected_vs)){
+    # Probe diameter
+    output$ui_sp_3d = renderUI(expr = {f_ui_sp(input = input)})
+    
+  } else {
+    NULL
+  }
+})
 
+observeEvent(eventExpr = {input$method_sp_3d_vs}, handlerExpr = {
+  
+  # Sampling strategy
+  output$ui_method_sp_3d = renderUI(expr = {f_ui_method_sp(input = input)})
+  
+})
