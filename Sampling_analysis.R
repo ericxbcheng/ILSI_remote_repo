@@ -1,3 +1,5 @@
+# Test
+
 # Determine if we accept or reject a lot
 do_rej = function(decision){
   # Check point
