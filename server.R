@@ -43,6 +43,9 @@ shinyServer(function(input, output, session) {
   # Smart version 2D
   source(file = "R/Server_smart_2d.R", local = TRUE)
   
+  # Smart version 3D
+  source(file = "R/Server_smart_3d.R", local = TRUE)
+  
   # Download
   output$downloadData = downloadHandler(
     filename = "simulation.csv",
