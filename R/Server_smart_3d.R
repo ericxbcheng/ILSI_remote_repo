@@ -67,4 +67,21 @@ observeEvent(eventExpr = {input$method_sp_3d_vs}, handlerExpr = {
   # Sampling strategy
   output$ui_method_sp_3d = renderUI(expr = {f_ui_method_sp(input = input)})
   
+  # Grinding and assay
+  output$ui_assay_3d = renderUI(expr = {f_ui_assay(input = input)})
+  
+})
+
+observeEvent(eventExpr = {input$method_det_3d_vs}, handlerExpr = {
+  
+  # Iteration
+  output$ui_iter_3d = renderUI(expr = {f_ui_iter(input = input)})
+
+})
+
+observeEvent(eventExpr = {input$n_vars_3d_vs}, handlerExpr = {
+  
+  # Tuning UI
+  output$ui_tuning_3d_vs = renderUI(expr = {f_ui_tuning_vs(input = input)})
+  
 })
