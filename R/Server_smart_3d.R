@@ -104,3 +104,16 @@ observeEvent(eventExpr = {input$load_3d_vs}, handlerExpr = {
     )
   })
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
+
+# Load the parameter once (smart version 3D)
+list_load = list()
+observeEvent(eventExpr = {input$load_3d_vs}, handlerExpr = {
+  
+  # Load the parameters once  
+  list_load <<- load_once(input = input, output = output, conc_neg = conc_neg_vs)
+  
+  # The chosen parameters table
+  output$print_param = renderTable(expr = make_var_table(Args = list_load$ArgList_default,
+                                                         input = input,
+                                                         chosen_mode = list_load$chosen_mode))
+}, ignoreInit = TRUE, ignoreNULL = TRUE)
