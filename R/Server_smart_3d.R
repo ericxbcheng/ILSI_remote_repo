@@ -67,4 +67,40 @@ observeEvent(eventExpr = {input$method_sp_3d_vs}, handlerExpr = {
   # Sampling strategy
   output$ui_method_sp_3d = renderUI(expr = {f_ui_method_sp(input = input)})
   
+  # Grinding and assay
+  output$ui_assay_3d = renderUI(expr = {f_ui_assay(input = input)})
+  
 })
+
+observeEvent(eventExpr = {input$method_det_3d_vs}, handlerExpr = {
+  
+  # Iteration
+  output$ui_iter_3d = renderUI(expr = {f_ui_iter(input = input)})
+
+})
+
+observeEvent(eventExpr = {input$n_vars_3d_vs}, handlerExpr = {
+  
+  # Tuning UI
+  output$ui_tuning_3d_vs = renderUI(expr = {f_ui_tuning_vs(input = input)})
+  
+  # UI for loading (smart version)
+  output$ui_load_3d = renderUI(expr = {
+    verticalLayout(
+      actionButton(inputId = "load_3d_vs", label = "Load parameters"),
+      h2()
+    )
+  })
+}, ignoreNULL = TRUE, ignoreInit = TRUE)
+
+# UI for visualization and iteration (smart version)
+observeEvent(eventExpr = {input$load_3d_vs}, handlerExpr = {
+  output$ui_vis_iter_3d = renderUI(expr = {
+    verticalLayout(
+      splitLayout(
+        actionButton(inputId = "vis_3d_vs", label = "Visualize"),
+        actionButton(inputId = "iterate_3d_vs", label = "Iterate")
+      )
+    )
+  })
+}, ignoreInit = TRUE, ignoreNULL = TRUE)

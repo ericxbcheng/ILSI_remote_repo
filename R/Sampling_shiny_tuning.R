@@ -174,6 +174,20 @@ f_iterate_tune = function(input, output, Args, chosen_mode){
   }
 }
 
+# UI for tuning (smart mode)
+f_ui_tuning_vs = function(input, ...){
+  if(input$spread_vs == "continuous"){
+    f_ui_tuning_2d_vs(input = input)
+    
+  } else if(input$spread_vs == "discrete"){
+    f_ui_tuning_3d_vs(input = input)
+    
+  } else {
+    stop("Unknown spread type")
+  }
+}
+
+
 #################################### 2D #############################################
 
 # The P_det/Paccept visualization switch (only for 2 tuning parameters)
@@ -255,8 +269,7 @@ f_var_prim = function(geom){
   }
 }
 
-# UI for tuning (smart mode)
-f_ui_tuning_vs = function(input, ...){
+f_ui_tuning_2d_vs = function(input, ...){
   if(input$n_vars_vs == 0){
     NULL
     
@@ -331,6 +344,64 @@ f_iterate_tune_2d = function(input, output, Args, n_vars, chosen_mode){
 }
 
 ############################################## 3D ##########################################
+
+f_ui_tuning_3d_vs = function(input, ...){
+  if(input$n_vars_3d_vs == 0){
+    NULL
+    
+  } else if(input$n_vars_3d_vs == 1){
+    verticalLayout(
+      p("Q15A. Which parameter do you want to tune?"),
+      selectInput(inputId = "var_prim_3d_vs",
+                  label = NULL,
+                  choices = list("Overall mycotoxin level (ppb)" = "c_hat",
+                                 "Number of probes" = "n_sp",
+                                 "Number of grains in a cluster" = "n_affected")),
+      p("Q15B. What values do you want to tune over? (separated by a comma)"),
+      textInput(inputId = "val_prim_3d_vs", label = NULL, value = "1,10,20")
+    )
+    
+  } else if(input$n_vars_3d_vs == 2) {
+    verticalLayout(
+      p("Q15A. Which primary parameter do you want to tune?"),
+      selectInput(inputId = "var_prim_3d_vs",
+                  label = NULL,
+                  choices = list("Overall mycotoxin level (ppb)" = "c_hat")),
+      p("Q15B. What values do you want to tune the primary parameter over? (separated by a comma)"),
+      textInput(inputId = "val_prim_3d_vs", label = NULL, value = "1,10,20"),
+      p("Q15C. Which secondary parameter do you want to tune?"),
+      selectInput(inputId = "var_sec_3d_vs",
+                  label = NULL,
+                  choices = list("Number of probes" = "n_sp",
+                                 "Number of grains in a cluster" = "n_affected",
+                                 "Sampling strategy" = "method_sp")),
+      conditionalPanel(condition = "input.var_sec_3d_vs == 'method_sp'",
+                       wellPanel(
+                         p("Q15C-1. Override: stratification direction"),
+                         selectInput(inputId = "by_3d_vs_tune",
+                                     label = NULL,
+                                     choices = list("Vertical" = "row", "Horizontal" = "column"),
+                                     multiple = FALSE),
+                         p("Q15C-2. Override: number of strata (must be a factor of number of samples)"),
+                         numericInput(inputId = "n_strata_3d_vs_tune", label = NULL, value = NULL, min = 1),
+                         p("Q15C-3. Override: container"),
+                         selectInput(inputId = "container_vs_tune", label = NULL, 
+                                     choices = list("Truck" = "truck", "Barge" = "barge", "Hopper car" = "hopper")),
+                         conditionalPanel(condition = "input.container_vs_tune == 'hopper'",
+                                          splitLayout(
+                                            selectInput(inputId = "compartment_vs_tune", label = "Number of compartments", choices = list(2, 3)),
+                                            selectInput(inputId = "type_vs_tune", label = "Hopper car type", 
+                                                        choices = list("Open-top" = "open_top", "Trough" = "trough"))
+                                          ))
+                       )
+      ),
+      p("Q15D. What values do you want to tune the secondary parameter over? (separated by a comma)"),
+      textInput(inputId = "val_sec_3d_vs", label = NULL, value = "5, 10, 100")
+    )
+  } else {
+    stop("Unknown number of tuning paramters")
+  }
+}
 
 # A summary function for 0 tuning parameter
 metrics_dis_0 = function(data){

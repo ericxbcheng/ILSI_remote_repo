@@ -238,14 +238,14 @@ v_smart = fluidPage(
                          uiOutput(outputId = "ui_dims_3d"),
                          uiOutput(outputId = "ui_grain_3d"),
                          uiOutput(outputId = "ui_contam_3d"),
-                         uiOutput(outputId = "ui_n_affected_3d")),
+                         uiOutput(outputId = "ui_n_affected_3d"),
                          uiOutput(outputId = "ui_sp_3d"),
-                         uiOutput(outputId = "ui_method_sp_3d")
-                         # uiOutput(outputId = "ui_assay_3d"),
-                         # uiOutput(outputId = "ui_iter_3d"),
-                         # uiOutput(outputId = "ui_tuning_vs_3d"),
-                         # uiOutput(outputId = "ui_load_3d"),
-                         # uiOutput(outputId = "ui_vis_iter_3d"))
+                         uiOutput(outputId = "ui_method_sp_3d"),
+                         uiOutput(outputId = "ui_assay_3d"),
+                         uiOutput(outputId = "ui_iter_3d"),
+                         uiOutput(outputId = "ui_tuning_3d_vs"),
+                         uiOutput(outputId = "ui_load_3d"),
+                         uiOutput(outputId = "ui_vis_iter_3d"))
         ),
     
     box(title = "Visualization for one iteration", 
