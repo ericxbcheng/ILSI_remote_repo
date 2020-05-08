@@ -1,22 +1,4 @@
-# Load parameters once for 2D
-load_once_manual_2D = function(input){
-  
-  if(input$by == "2d"){
-    n_strata = c(input$n_strata_row, input$n_strata_col)
-  } else {
-    n_strata = input$n_strata
-  }
-  
-  ArgList_default = list(n_contam = input$n_contam, lims = list(xlim = c(0, input$x_lim), ylim = c(0, input$y_lim)),
-                         spread = "continuous", spread_radius = input$spread_radius,
-                         cont_level = c(input$cont_level_mu, input$cont_level_sd), method_sp = input$method_sp,
-                         n_sp = input$n_sp, n_strata = n_strata, by = input$by, LOC = input$LOC,
-                         fun = input$fun, case = input$case, m = input$m, M = input$M, m_sp = input$m_sp,
-                         method_det = input$method_det, bg_level = input$bg_level, geom = input$geom)
-  return(ArgList_default)
-}
-
-#Helper: create the dis_level list
+#Helper: create the dis_level list in the 3D mode
 make_dis_level = function(input, chosen_mode){
   
   # manual or smart?
@@ -49,97 +31,45 @@ make_dis_level = function(input, chosen_mode){
   return(dis_level)
 }
 
-# Load parameters once for 3D 
-load_once_manual_3D = function(input, conc_neg){
-  
-  # Create the discrete contamination level
-  dis_level = make_dis_level(input = input)
-  
-  # n_affected: = 0 VS > 0
-  if(input$n_affected > 0){
-    covar_mat = make_covar_mat(spread = "discrete", varx = input$vcov_11, vary = input$vcov_22, varz = input$vcov_33, 
-                               covxy = input$vcov_12, covxz = input$vcov_13, covyz = input$vcov_23)
-  } else {
-    covar_mat = NULL
-  }
-  
-  # # n_sp, container
-  # if(input$method_sp_3d %in% c("srs", "strs")){
-  #   n_sp = input$n_sp_3d
-  #   container = compartment = type = NULL
-  #   
-  # } else {
-  #   n_sp = NaN
-  #   container = input$container
-  #   
-  #   if(container == "hopper"){
-  #     compartment = input$compartment
-  #     type = input$type
-  #     
-  #   } else {
-  #     compartment = type = NULL
-  #   }
-  # }
-  
-  # by = "2d" or "row/column"
-  if(input$by_3d == "2d"){
-    n_strata = c(input$n_strata_row_3d, input$n_strata_col_3d)
-  } else {
-    n_strata = input$n_strata_3d
-  }
-  
-  ArgList_default = list(c_hat = input$c_hat, lims = list(xlim = c(0, input$x_lim_3d), 
-                                                          ylim = c(0, input$y_lim_3d), 
-                                                          zlim = c(0, input$z_lim_3d)), 
-                         spread = "discrete", covar_mat = covar_mat, n_affected = input$n_affected, 
-                         dis_level = dis_level, method_sp = input$method_sp_3d, 
-                         sp_radius = input$d/2, n_sp = input$n_sp, n_strata = n_strata, 
-                         by = input$by_3d, L = input$z_lim_3d, rho = input$rho, 
-                         m_kbar = input$m_kbar, conc_neg = conc_neg, tox = input$tox, 
-                         Mc = input$Mc, method_det = input$method_det_3d, verbose = FALSE, 
-                         homogeneity = input$homogeneity, container = input$container, 
-                         compartment = input$compartment, type = input$type)
-  
-  return(ArgList_default)
-}
-
-# Make n_strata based on 'method_sp' and 'by'
+# Make n_strata based on 'method_sp' and 'by' for smart versions (2D + 3D)
 make_n_strata = function(input){
-  if(input$method_sp_vs != "srs"){
-    if(input$by_vs == "2d"){
-      n_strata = c(input$n_strata_row_vs, input$n_strata_col_vs)
+
+  if(input$spread_vs == "continuous"){
+    
+    # SRS: n_strata = NA
+    # STRS: n_strata = row/col/c(row, col)
+    # SS: n_strata = row/col
+    
+    if(input$method_sp_vs != "srs"){
+      if(input$by_vs == "2d"){
+        n_strata = c(input$n_strata_row_vs, input$n_strata_col_vs)
+      } else {
+        n_strata = input$n_strata_vs
+      }
     } else {
-      n_strata = input$n_strata_vs
+      n_strata = NA
     }
+    
+  } else if (input$spread_vs == "discrete"){
+    
+    # SRS: n_strata = NA
+    # STRS: n_strata = row/col/c(row, col)
+    # SS: n_strata = NA
+    
+    if(input$method_sp_3d_vs == "strs"){
+      if(input$by_3d_vs == "2d"){
+        n_strata = c(input$n_strata_row_3d_vs, input$n_strata_col_3d_vs)
+      } else {
+        n_strata = input$n_strata_3d_vs
+      }
+    } else {
+      n_strata = NA
+    }
+   
   } else {
-    n_strata = NA
+    stop("Unknown spread type")
   }
   return(n_strata)
-}
-
-# Load parameters once for 2D smart mode
-load_once_smart_2D = function(input){
-  
-  # 2 tuning variables: override 'by' and 'n_strata'
-  if(input$n_vars_vs != 2){
-    by = input$by_vs
-    n_strata = make_n_strata(input = input)
-    
-  } else if(input$n_vars_vs == 2){
-    by = input$by_vs_tune
-    n_strata = input$n_strata_vs_tune
-    
-  } else {
-    stop("Unknown number of tuning variables")
-  }
-  
-  ArgList_default = list(n_contam = input$n_contam_vs, lims = list(xlim = c(0, input$x_lim_vs), ylim = c(0, input$y_lim_vs)),
-                         spread = input$spread_vs, spread_radius = input$spread_radius_vs,
-                         cont_level = c(input$cont_level_mu_vs, input$cont_level_sd_vs), method_sp = input$method_sp_vs,
-                         n_sp = input$n_sp_vs, n_strata = n_strata, by = by, LOC = input$LOC_vs,
-                         fun = input$fun_vs, case = input$case_vs, m = input$m_vs, M = input$M_vs, m_sp = input$m_sp_vs,
-                         method_det = input$method_det_vs, bg_level = input$bg_level_vs, geom = input$geom_vs)
-  return(ArgList_default)
 }
 
 # A function for loading the input parameters into a list
@@ -163,11 +93,12 @@ load_once = function(input, output, conc_neg){
       ArgList_default = load_once_smart_2D(input = input)
       
     } else if (input$spread_vs == "discrete"){
-      ph
+      
+      ArgList_default = load_once_smart_3D(input = input, conc_neg = conc_neg)
+      
     } else {
       stop("Unknown spread type")
     }
-    
   } else {
     stop("Unknown mode. Choose 2D, 3D, or smart version.")
   }
@@ -261,18 +192,30 @@ make_var_table = function(Args, input, chosen_mode){
   
   # Get the iteration information
   if(chosen_mode == "2D"){
-    temp = c(b, "n_seed" = input$n_seed, "n_iter" = input$n_iter)
-    d = get_tuning_info(n_vars = input$n_vars, var_prim = input$var_prim, 
-                        var_sec = input$var_sec, val_prim = input$val_prim, val_sec = input$val_sec)
+      temp = c(b, "n_seed" = input$n_seed, "n_iter" = input$n_iter)
+      d = get_tuning_info(n_vars = input$n_vars, var_prim = input$var_prim, 
+                          var_sec = input$var_sec, val_prim = input$val_prim, val_sec = input$val_sec)
     } else if (chosen_mode == "3D"){
-    temp = c(b, "n_seed" = input$n_seed_3d, "n_iter" = input$n_iter_3d)
-    d = get_tuning_info(n_vars = input$n_vars_3d, var_prim = input$var_prim_3d, 
-                        var_sec = input$var_sec_3d, val_prim = input$val_prim_3d, val_sec = input$val_sec_3d)  
+      temp = c(b, "n_seed" = input$n_seed_3d, "n_iter" = input$n_iter_3d)
+      d = get_tuning_info(n_vars = input$n_vars_3d, var_prim = input$var_prim_3d, 
+                          var_sec = input$var_sec_3d, val_prim = input$val_prim_3d, val_sec = input$val_sec_3d)  
       
     } else if (chosen_mode == "v_smart"){
-    temp = c(b, "n_iter_total_vs" = input$n_iter_total_vs)
-    d = get_tuning_info(n_vars = input$n_vars_vs, var_prim = input$var_prim_vs, 
-                        var_sec = input$var_sec_vs, val_prim = input$val_prim_vs, val_sec = input$val_sec_vs)
+      
+      if(input$spread_vs == "continuous"){
+        temp = c(b, "n_iter_total_vs" = input$n_iter_total_vs)
+        d = get_tuning_info(n_vars = input$n_vars_vs, var_prim = input$var_prim_vs, 
+                            var_sec = input$var_sec_vs, val_prim = input$val_prim_vs, val_sec = input$val_sec_vs)
+        
+      } else if (input$spread_vs == "discrete"){
+        temp = c(b, "n_iter_total_vs" = input$n_iter_total_3d_vs)
+        d = get_tuning_info(n_vars = input$n_vars_3d_vs, var_prim = input$var_prim_3d_vs, 
+                            var_sec = input$var_sec_3d_vs, val_prim = input$val_prim_3d_vs, 
+                            val_sec = input$val_sec_3d_vs)
+        
+      } else {
+        stop("Unknown spread type.")
+      }
     } else {
     stop("Unknown number of tuning variables")
   }
@@ -290,3 +233,160 @@ make_var_table = function(Args, input, chosen_mode){
 
 # Place holder
 ph = p("Under development")
+
+####################### 2D ###############################
+
+# Load parameters once for 2D manual version
+load_once_manual_2D = function(input){
+  
+  if(input$by == "2d"){
+    n_strata = c(input$n_strata_row, input$n_strata_col)
+  } else {
+    n_strata = input$n_strata
+  }
+  
+  ArgList_default = list(n_contam = input$n_contam, lims = list(xlim = c(0, input$x_lim), ylim = c(0, input$y_lim)),
+                         spread = "continuous", spread_radius = input$spread_radius,
+                         cont_level = c(input$cont_level_mu, input$cont_level_sd), method_sp = input$method_sp,
+                         n_sp = input$n_sp, n_strata = n_strata, by = input$by, LOC = input$LOC,
+                         fun = input$fun, case = input$case, m = input$m, M = input$M, m_sp = input$m_sp,
+                         method_det = input$method_det, bg_level = input$bg_level, geom = input$geom)
+  return(ArgList_default)
+}
+
+# Load parameters once for 2D smart mode
+load_once_smart_2D = function(input){
+  
+  # 2 tuning variables: override 'by' and 'n_strata'
+  if(input$n_vars_vs != 2){
+    by = input$by_vs
+    n_strata = make_n_strata(input = input)
+    
+  } else if(input$n_vars_vs == 2){
+    by = input$by_vs_tune
+    n_strata = input$n_strata_vs_tune
+    
+  } else {
+    stop("Unknown number of tuning variables")
+  }
+  
+  ArgList_default = list(n_contam = input$n_contam_vs, lims = list(xlim = c(0, input$x_lim_vs), ylim = c(0, input$y_lim_vs)),
+                         spread = input$spread_vs, spread_radius = input$spread_radius_vs,
+                         cont_level = c(input$cont_level_mu_vs, input$cont_level_sd_vs), method_sp = input$method_sp_vs,
+                         n_sp = input$n_sp_vs, n_strata = n_strata, by = by, LOC = input$LOC_vs,
+                         fun = input$fun_vs, case = input$case_vs, m = input$m_vs, M = input$M_vs, m_sp = input$m_sp_vs,
+                         method_det = input$method_det_vs, bg_level = input$bg_level_vs, geom = input$geom_vs)
+  return(ArgList_default)
+}
+
+####################### 3D ##############################
+
+# Load parameters once for 3D manual version
+load_once_manual_3D = function(input, conc_neg){
+  
+  # Create the discrete contamination level
+  dis_level = make_dis_level(input = input, chosen_mode = "3D")
+  
+  # n_affected: = 0 VS > 0
+  if(input$n_affected > 0){
+    covar_mat = make_covar_mat(spread = "discrete", varx = input$vcov_11, vary = input$vcov_22, varz = input$vcov_33, 
+                               covxy = input$vcov_12, covxz = input$vcov_13, covyz = input$vcov_23)
+  } else {
+    covar_mat = NULL
+  }
+  
+  # # n_sp, container
+  # if(input$method_sp_3d %in% c("srs", "strs")){
+  #   n_sp = input$n_sp_3d
+  #   container = compartment = type = NULL
+  #   
+  # } else {
+  #   n_sp = NaN
+  #   container = input$container
+  #   
+  #   if(container == "hopper"){
+  #     compartment = input$compartment
+  #     type = input$type
+  #     
+  #   } else {
+  #     compartment = type = NULL
+  #   }
+  # }
+  
+  # by = "2d" or "row/column"
+  if(input$by_3d == "2d"){
+    n_strata = c(input$n_strata_row_3d, input$n_strata_col_3d)
+  } else {
+    n_strata = input$n_strata_3d
+  }
+  
+  ArgList_default = list(c_hat = input$c_hat, lims = list(xlim = c(0, input$x_lim_3d), 
+                                                          ylim = c(0, input$y_lim_3d), 
+                                                          zlim = c(0, input$z_lim_3d)), 
+                         spread = "discrete", covar_mat = covar_mat, n_affected = input$n_affected, 
+                         dis_level = dis_level, method_sp = input$method_sp_3d, 
+                         sp_radius = input$d/2, n_sp = input$n_sp, n_strata = n_strata, 
+                         by = input$by_3d, L = input$z_lim_3d, rho = input$rho, 
+                         m_kbar = input$m_kbar, conc_neg = conc_neg, tox = input$tox, 
+                         Mc = input$Mc, method_det = input$method_det_3d, verbose = FALSE, 
+                         homogeneity = input$homogeneity, container = input$container, 
+                         compartment = input$compartment, type = input$type)
+  
+  return(ArgList_default)
+}
+
+# Load parameters once for 3D smart version
+load_once_smart_3D = function(input, conc_neg){
+  
+  # Create the discrete contamination level
+  dis_level = make_dis_level(input = input, chosen_mode = "v_smart")
+  
+  # n_affected: = 0 VS > 0
+  if(input$n_affected_vs > 0){
+    covar_mat = make_covar_mat(spread = "discrete", varx = input$vcov_11_vs, vary = input$vcov_22_vs, 
+                               varz = input$vcov_33_vs, covxy = input$vcov_12_vs, 
+                               covxz = input$vcov_13_vs, covyz = input$vcov_23_vs)
+  } else {
+    covar_mat = NULL
+  }
+  
+  #### Override: n_sp, by, n_strata, container
+  
+  # SRS: n_sp = ..., by = NA, container = compartment = type = NA
+  # STRS: n_sp = ..., by = ..., n_strata = ..., container = compartment = type = NA
+  # SS: n_sp = by = n_strata = NA, container = ..., compartment = ..., type = ...
+  # When n_vars_3d_vs == 2, we assume the default method_sp == "SRS"
+  
+  if(input$n_vars_3d_vs %in% c(0, 1)){
+    by = input$by_3d_vs
+    n_strata = make_n_strata(input = input)
+    container = input$container_vs
+    compartment = input$compartment_vs
+    type = input$type_vs
+    
+  } else if (input$n_vars_3d_vs == 2){
+    by = input$by_3d_vs_tune
+    n_strata = input$n_strata_3d_vs_tune
+    container = input$container_vs_tune
+    compartment = input$compartment_vs_tune
+    type = input$type_vs_tune
+    
+  } else {
+    stop("Unknown number of tuning variables")
+  }
+  
+  ArgList_default = list(c_hat = input$c_hat_vs, lims = list(xlim = c(0, input$x_lim_3d_vs), 
+                                                          ylim = c(0, input$y_lim_3d_vs), 
+                                                          zlim = c(0, input$z_lim_3d_vs)), 
+                         spread = "discrete", covar_mat = covar_mat, n_affected = input$n_affected_vs, 
+                         dis_level = dis_level, method_sp = input$method_sp_3d_vs, 
+                         sp_radius = input$d_vs/2, n_sp = input$n_sp_3d_vs, n_strata = n_strata, 
+                         by = by, L = input$z_lim_3d_vs, rho = input$rho_vs, 
+                         m_kbar = input$m_kbar_vs, conc_neg = conc_neg, tox = input$tox_vs, 
+                         Mc = input$Mc_vs, method_det = input$method_det_3d_vs, verbose = FALSE, 
+                         homogeneity = input$homogeneity_vs, container = container, 
+                         compartment = compartment, type = type)
+  
+  return(ArgList_default)
+}
+
