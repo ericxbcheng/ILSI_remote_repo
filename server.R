@@ -50,7 +50,7 @@ shinyServer(function(input, output, session) {
   output$downloadData = downloadHandler(
     filename = "simulation.csv",
     content = function(file){
-      write.csv(x = data_cleaned, file)
+      write.csv(x = result_iter, file)
     },
     contentType = "text/csv"
   )

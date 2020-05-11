@@ -91,8 +91,17 @@ observeEvent(eventExpr = {input$load_vs}, handlerExpr = {
 # Visualize for one iteration (smart mode)
 observeEvent(eventExpr = {input$vis_vs}, handlerExpr = {
   
+  # Create plots for visualization for one iteration
   vis_once(input = input, output = output, 
            ArgList = list_load$ArgList_default, chosen_mode = list_load$chosen_mode)
+  
+  # Project these visualizations to ui_vis_once
+  output$ui_vis_once = renderUI(expr = {
+    verticalLayout(
+      plotOutput(outputId = "overlay_draw_vs"),
+      plotOutput(outputId = "contam_level_draw_vs")
+    )
+  })
   
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
@@ -102,7 +111,7 @@ observeEvent(eventExpr = {input$iterate_vs}, handlerExpr = {
   # Create a progress message
   showModal(ui = modalDialog("Iteration in progress", size = "s"))
   
-  result_iter = f_iterate_tune(input = input, output = output, 
+  result_iter <<- f_iterate_tune(input = input, output = output, 
                                   Args = list_load$ArgList_default, 
                                   chosen_mode = list_load$chosen_mode)
   

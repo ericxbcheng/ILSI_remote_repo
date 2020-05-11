@@ -249,8 +249,7 @@ v_smart = fluidPage(
         ),
     
     box(title = "Visualization for one iteration", 
-        plotOutput(outputId = "overlay_draw_vs"),
-        plotOutput(outputId = "contam_level_draw_vs")
+        uiOutput(outputId = "ui_vis_once")
         )
     )
 )

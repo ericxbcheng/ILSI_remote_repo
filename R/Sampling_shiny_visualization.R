@@ -75,7 +75,7 @@ vis_once_3d = function(output, ArgList, chosen_mode){
     
   } else {
     output$overlay_top_vs = renderPlot(expr = {fig_overlay_top})
-    output$contam_side_vs = renderPlot(expr = {fig_overlay_side})
+    output$overlay_side_vs = renderPlot(expr = {fig_overlay_side})
   }
   
 }

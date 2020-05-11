@@ -117,3 +117,20 @@ observeEvent(eventExpr = {input$load_3d_vs}, handlerExpr = {
                                                          input = input,
                                                          chosen_mode = list_load$chosen_mode))
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
+
+# Visualize for one iteration (smart mode)
+observeEvent(eventExpr = {input$vis_3d_vs}, handlerExpr = {
+  
+  # Create visualization for one iteration
+  vis_once(input = input, output = output,
+           ArgList = list_load$ArgList_default, chosen_mode = list_load$chosen_mode)
+  
+  # Project these visualizations to ui_vis_once
+  output$ui_vis_once = renderUI(expr = {
+    verticalLayout(
+      plotOutput(outputId = "overlay_top_vs"),
+      plotOutput(outputId = "overlay_side_vs")
+    )
+  })
+  
+}, ignoreInit = TRUE, ignoreNULL = TRUE)
