@@ -27,23 +27,23 @@ update_arg = function(arg_list, name, value){
 # Iterate the model without any tuning parameters
 iterate_tune0 = function(input, Args, chosen_mode){
   
-  if(chosen_mode != "v_smart"){
-    
-    if(chosen_mode == "2D"){
-      n_seed = input$n_seed
-      n_iter = input$n_iter
+  if(chosen_mode == "2D"){
+    n_seed = input$n_seed
+    n_iter = input$n_iter
       
-    } else if (chosen_mode == "3D"){
-      n_seed = input$n_seed_3d
-      n_iter = input$n_iter_3d
+  } else if (chosen_mode == "3D"){
+    n_seed = input$n_seed_3d
+    n_iter = input$n_iter_3d
       
-    } else {
-      stop("Unknown chosen mode.")
-    }
-    
   } else if (chosen_mode == "v_smart"){
-    n_seed = n_iter = round(sqrt(input$n_iter_total_vs))
     
+    if(input$spread_vs == "continuous"){
+      n_seed = n_iter = round(sqrt(input$n_iter_total_vs))
+      
+    } else if (input$spread_vs == "discrete"){
+      n_seed = n_iter = round(sqrt(input$n_iter_total_3d_vs))
+      
+    }
   } else {
     stop("Unknown chosen mode")
   }
@@ -54,74 +54,78 @@ iterate_tune0 = function(input, Args, chosen_mode){
 # Iterate the model with one tuning parameter
 iterate_tune1 = function(input, Args, chosen_mode){
   
-  if(chosen_mode != "v_smart"){
-    
-    if(chosen_mode == "2D"){
-      n_seed = input$n_seed
-      n_iter = input$n_iter
-      var_prim = input$var_prim
-      vals = parse_num_vec(string = input$val_prim)
+  if(chosen_mode == "2D"){
+    n_seed = input$n_seed
+    n_iter = input$n_iter
+    var_prim = input$var_prim
+    vals = parse_num_vec(string = input$val_prim)
       
-    } else if (chosen_mode == "3D"){
-      n_seed = input$n_seed_3d
-      n_iter = input$n_iter_3d
-      var_prim = input$var_prim_3d
-      vals = parse_num_vec(string = input$val_prim_3d)
+  } else if (chosen_mode == "3D"){
+    n_seed = input$n_seed_3d
+    n_iter = input$n_iter_3d
+    var_prim = input$var_prim_3d
+    vals = parse_num_vec(string = input$val_prim_3d)
+      
+  } else if (chosen_mode == "v_smart"){
+    
+    if(input$spread_vs == "continuous"){
+      n_seed = n_iter = round(sqrt(input$n_iter_total_vs))
+      var_prim = input$var_prim_vs
+      vals = parse_num_vec(string = input$val_prim_vs)
+      
+    } else if (input$spread_vs == "discrete"){
+      n_seed = n_iter = round(sqrt(input$n_iter_total_3d_vs))
+      var_prim = input$var_prim_3d_vs
+      vals = parse_num_vec(string = input$val_prim_3d_vs)
       
     } else {
-      stop("Unknown chosen mode.")
+      stop("Unknown spread type.")
     }
-    
-  } else if (chosen_mode == "v_smart"){
-    n_seed = n_iter = round(sqrt(input$n_iter_total_vs))
-    var_prim = input$var_prim_vs
-    vals = parse_num_vec(string = input$val_prim_vs)
-    
-  } else {
-    stop("Unknown chosen mode")
-  }
   
   return(map(.x = vals, .f = tune_param, Args = Args, n_seed = n_seed, n_iter = n_iter, param = var_prim))
-  
+  }
 }
 
 # Secondary tuning parameter iterations
 iterate_tune2 = function(input, Args, chosen_mode){
   
   # Parse tuning values for primary and secondary parameters
-  if(chosen_mode != "v_smart"){
-    
-    if(chosen_mode == "2D"){
-      n_seed = input$n_seed
-      n_iter = input$n_iter
-      var_prim = input$var_prim
-      var_sec = input$var_sec
-      vals_prim = parse_num_vec(string = input$val_prim)
-      vals_sec = parse_char_vec(string = input$val_sec)
+  if(chosen_mode == "2D"){
+    n_seed = input$n_seed
+    n_iter = input$n_iter
+    var_prim = input$var_prim
+    var_sec = input$var_sec
+    vals_prim = parse_num_vec(string = input$val_prim)
+    vals_sec = parse_char_vec(string = input$val_sec)
       
-    } else if (chosen_mode == "3D"){
-      n_seed = input$n_seed_3d
-      n_iter = input$n_iter_3d
-      var_prim = input$var_prim_3d
-      var_sec = input$var_sec_3d
-      vals_prim = parse_num_vec(string = input$val_prim_3d)
-      vals_sec = parse_char_vec(string = input$val_sec_3d)
-      
-    } else {
-      stop("Unknown chosen mode.")
-    }
+  } else if (chosen_mode == "3D"){
+    n_seed = input$n_seed_3d
+    n_iter = input$n_iter_3d
+    var_prim = input$var_prim_3d
+    var_sec = input$var_sec_3d
+    vals_prim = parse_num_vec(string = input$val_prim_3d)
+    vals_sec = parse_char_vec(string = input$val_sec_3d)
     
   } else if (chosen_mode == "v_smart"){
-    n_seed = n_iter = round(sqrt(input$n_iter_total_vs))
-    var_prim = input$var_prim_vs
-    var_sec = input$var_sec_vs
-    vals_prim = parse_num_vec(string = input$val_prim_vs)
-    vals_sec = parse_char_vec(string = input$val_sec_vs)
-    
-  } else {
-    stop("Unknown chosen mode")
+    if(input$spread_vs == "continuous"){
+      n_seed = n_iter = round(sqrt(input$n_iter_total_vs))
+      var_prim = input$var_prim_vs
+      var_sec = input$var_sec_vs
+      vals_prim = parse_num_vec(string = input$val_prim_vs)
+      vals_sec = parse_char_vec(string = input$val_sec_vs)
+      
+    } else if (input$spread_vs == "discrete"){
+      n_seed = n_iter = round(sqrt(input$n_iter_total_3d_vs))
+      var_prim = input$var_prim_3d_vs
+      var_sec = input$var_sec_3d_vs
+      vals_prim = parse_num_vec(string = input$val_prim_3d_vs)
+      vals_sec = parse_char_vec(string = input$val_sec_3d_vs)
+      
+    } else {
+      stop("Unknown spread type")
+    }
   }
-  
+
   # Create a list of argument lists, each argument list corresponding to one secondary tuning value
   Args_sec = map(.x = vals_sec, .f = update_arg, arg_list = Args, name = var_sec)
   
@@ -423,12 +427,12 @@ metrics_dis_0 = function(data){
 metrics_dis_sec = function(data, input, vals_prim, vals_sec, chosen_mode){
   
   # Determine n_seed
-  if(chosen_mode != "v_smart"){
+  if(chosen_mode == "3D"){
     n_seed = input$n_seed
   } else if(chosen_mode == "v_smart"){
-    n_seed = round(sqrt(input$n_iter_total_vs))
+    n_seed = round(sqrt(input$n_iter_total_3d_vs))
   } else {
-    stop("Unknown chosen mode")
+    stop("Unknown or wrong chosen mode. Choose 3D manual or smart mode.")
   }
   
   # Data should contain 2 layers. 
