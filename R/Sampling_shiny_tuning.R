@@ -81,9 +81,8 @@ iterate_tune1 = function(input, Args, chosen_mode){
     } else {
       stop("Unknown spread type.")
     }
-  
-  return(map(.x = vals, .f = tune_param, Args = Args, n_seed = n_seed, n_iter = n_iter, param = var_prim))
   }
+  return(map(.x = vals, .f = tune_param, Args = Args, n_seed = n_seed, n_iter = n_iter, param = var_prim))
 }
 
 # Secondary tuning parameter iterations
