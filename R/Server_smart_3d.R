@@ -134,3 +134,22 @@ observeEvent(eventExpr = {input$vis_3d_vs}, handlerExpr = {
   })
   
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
+
+# Multiple iterations (smart mode)
+observeEvent(eventExpr = {input$iterate_3d_vs}, handlerExpr = {
+  
+  # Create a progress message
+  showModal(ui = modalDialog("Iteration in progress", size = "s"))
+  
+  # Tune the model
+  result_iter <<- f_iterate_tune(input = input, output = output,
+                                 Args = list_load$ArgList_default,
+                                 chosen_mode = list_load$chosen_mode)
+  
+  # Visualize the tuning results
+  vis_n(data = result_iter, input = input, output = output, chosen_mode = list_load$chosen_mode)
+  
+  # Close the message
+  removeModal()
+  
+}, ignoreInit = TRUE, ignoreNULL = TRUE)
