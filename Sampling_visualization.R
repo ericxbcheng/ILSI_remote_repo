@@ -428,7 +428,7 @@ plot_tune0 = function(data){
   
   ggplot(data = data) +
     geom_boxplot(aes(x = "NA", y = Paccept)) +
-    geom_point(aes(x = "NA",  y = mean(data$Paccept)), color = "red", pch = 4, size = 5) +
+    geom_point(aes(x = "NA",  y = mean(Paccept)), color = "red", pch = 4, size = 5) +
     labs(x = NULL, y = "Probability of acceptance") +
     scale_y_continuous(breaks = seq(0,1,0.1)) +
     coord_cartesian(ylim = c(0,1)) +
@@ -473,9 +473,9 @@ plot_tune2_ribbon = function(data, xlab, legend_lab){
   
   # Visualize
   b = ggplot(data = a) +
-    geom_ribbon(aes_string(x = "param", ymin = "lb", ymax = "ub", group = "param2", fill = "param2"), alpha = 0.3) +
-    geom_line(aes_string(x = "param", y = "med", color = "param2")) +
-    geom_point(aes_string(x = "param", y = "med", color = "param2")) +
+    geom_ribbon(aes(x = param, ymin = lb, ymax = ub, group = as.factor(param2), fill = as.factor(param2)), alpha = 0.3) +
+    geom_line(aes(x = param, y = med, color = as.factor(param2))) +
+    geom_point(aes(x = param, y = med, color = as.factor(param2))) +
     scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
     scale_fill_discrete(name = legend_lab) +
     scale_color_discrete(name = legend_lab) +
@@ -492,12 +492,12 @@ plot_tune2_boxplot = function(data, xlab, legend_lab, yvar){
   
   # Create a y-axis label
   ylab = switch(EXPR = yvar, 
-                "P_det" = "Detection Probability", 
+                "P_det" = "Probability of detection", 
                 "Paccept" = "Probability of acceptance")
   
   # Summarise the data
   a = ggplot(data = data, aes_string(y = yvar)) +
-    geom_boxplot(aes(x = as.factor(param), group = interaction(param, param2), fill = param2)) +
+    geom_boxplot(aes(x = as.factor(param), group = interaction(param, param2), fill = as.factor(param2))) +
     scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
     coord_cartesian(ylim = c(0,1)) +
     scale_fill_discrete(name = legend_lab) +

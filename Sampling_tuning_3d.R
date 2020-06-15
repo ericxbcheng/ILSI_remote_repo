@@ -1,5 +1,5 @@
 # This function makes a list of arguments from the default arguments
-make_tune_args = function(Args, param, val){
+update_arg = function(Args, param, val){
   
   # Checkpoint
   stopifnot(param %in% names(Args))
@@ -12,7 +12,7 @@ make_tune_args = function(Args, param, val){
 tune_param = function(Args, n_seed, n_iter, param, val, ...){
   
   # Get tuning parameters
-  a = make_tune_args(Args = Args, param = param, val = val)
+  a = update_arg(Args = Args, param = param, val = val)
   
   # 2 layers of iteration
   b = sim_iterate2(n_seed = n_seed, n_iter = n_iter, Args = a)
@@ -32,7 +32,7 @@ tune_param_n = function(vals, Args, n_seed, n_iter, var_prim){
 tune_param_sec = function(Args, var_prim, vals_prim, var_sec, vals_sec){
   
   # Create a list of argument lists, each argument list corresponding to one secondary tuning value
-  Args_sec = map(.x = vals_sec, .f = update_arg, arg_list = Args, name = var_sec)
+  Args_sec = map(.x = vals_sec, .f = update_arg, Args = Args, param = var_sec)
   
   # For each argument list in Args_sec, do iterate_tune1()
   sim_data = list()

@@ -16,13 +16,13 @@ parse_char_vec = function(string){
   return(str_trim(a))
 }
 
-# Function to update arguments
-update_arg = function(arg_list, name, value){
-  
-  a = arg_list
-  a[[name]] = value
-  return(a)
-}
+# # Function to update arguments
+# update_arg = function(arg_list, name, value){
+#   
+#   a = arg_list
+#   a[[name]] = value
+#   return(a)
+# }
 
 # Iterate the model without any tuning parameters
 iterate_tune0 = function(input, Args, chosen_mode){
@@ -126,7 +126,7 @@ iterate_tune2_gui = function(input, Args, chosen_mode){
   }
 
   # Create a list of argument lists, each argument list corresponding to one secondary tuning value
-  Args_sec = map(.x = vals_sec, .f = update_arg, arg_list = Args, name = var_sec)
+  Args_sec = map(.x = vals_sec, .f = update_arg, Args = Args, param = var_sec)
   
   # For each argument list in Args_sec, do iterate_tune1()
   sim_data = list()
