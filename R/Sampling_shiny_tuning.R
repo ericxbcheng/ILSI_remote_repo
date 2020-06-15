@@ -52,7 +52,7 @@ iterate_tune0 = function(input, Args, chosen_mode){
 }
 
 # Iterate the model with one tuning parameter
-iterate_tune1 = function(input, Args, chosen_mode){
+iterate_tune1_gui = function(input, Args, chosen_mode){
   
   if(chosen_mode == "2D"){
     n_seed = input$n_seed
@@ -86,7 +86,7 @@ iterate_tune1 = function(input, Args, chosen_mode){
 }
 
 # Secondary tuning parameter iterations
-iterate_tune2 = function(input, Args, chosen_mode){
+iterate_tune2_gui = function(input, Args, chosen_mode){
   
   # Parse tuning values for primary and secondary parameters
   if(chosen_mode == "2D"){
@@ -219,18 +219,18 @@ f_yvar = function(input, chosen_mode){
   }
 }
 
-# A summary function for 0 tuning parameter
-metrics_cont_0 = function(data){
-  
-  # Calculate the acceptance prob
-  a = calc_Prej_one(data) %>%
-    tibble(P_rej = ., seed = as.numeric(names(.)), Paccept = 1 - .)
-  return(a)
-}
+# # A summary function for 0 tuning parameter
+# metrics_cont_0 = function(data){
+#   
+#   # Calculate the acceptance prob
+#   a = calc_Prej_one(data) %>%
+#     tibble(P_rej = ., seed = as.numeric(names(.)), Paccept = 1 - .)
+#   return(a)
+# }
 
-# Data cleaning function for secondary tuning scenarios
-metrics_cont_sec = function(data, input, vals_prim, vals_sec, chosen_mode){
-  
+# # Data cleaning function for secondary tuning scenarios
+metrics_cont_sec_gui = function(data, input, vals_prim, vals_sec, chosen_mode){
+
   # Determine n_seed
   if(chosen_mode != "v_smart"){
     n_seed = input$n_seed
@@ -240,19 +240,19 @@ metrics_cont_sec = function(data, input, vals_prim, vals_sec, chosen_mode){
     stop("Unknown chosen mode")
   }
 
-  # Data should contain 2 layers. 
-  # The outer layer contains data for different secondary tuning. 
+  # Data should contain 2 layers.
+  # The outer layer contains data for different secondary tuning.
   # The inner layer contains data for different primary tuning under each value of the secondary tuning.
   a = map(.x = data, .f = metrics_cont_n) %>%
     bind_rows()
-  
+
   # Add a column to indicate secondary tuning values
   b = rep(x = vals_sec, each = n_seed * length(vals_prim))
-  
+
   # Combine by columns
   c = cbind.data.frame(a, b, stringsAsFactors = FALSE)
   colnames(c)[colnames(c) == "b"] = "param2"
-  
+
   return(c)
 }
 
@@ -406,25 +406,25 @@ f_ui_tuning_3d_vs = function(input, ...){
   }
 }
 
-# A summary function for 0 tuning parameter
-metrics_dis_0 = function(data){
-  
-  # Calculate the acceptance prob
-  a = calc_Prej_one(data) %>%
-    tibble(P_rej = ., seed = as.numeric(names(.)), Paccept = 1 - .)
-  
-  # Calculate true mycotoxin concentration
-  b = get_c_true_one(data)
-  
-  # Combine results
-  c = cbind.data.frame(a, c_true = b)
-    
-  return(c)
-}
+# # A summary function for 0 tuning parameter
+# metrics_dis_0 = function(data){
+#   
+#   # Calculate the acceptance prob
+#   a = calc_Prej_one(data) %>%
+#     tibble(P_rej = ., seed = as.numeric(names(.)), Paccept = 1 - .)
+#   
+#   # Calculate true mycotoxin concentration
+#   b = get_c_true_one(data)
+#   
+#   # Combine results
+#   c = cbind.data.frame(a, c_true = b)
+#     
+#   return(c)
+# }
 
-# Data cleaning function for secondary tuning scenarios
-metrics_dis_sec = function(data, input, vals_prim, vals_sec, chosen_mode){
-  
+# # Data cleaning function for secondary tuning scenarios
+metrics_dis_sec_gui = function(data, input, vals_prim, vals_sec, chosen_mode){
+
   # Determine n_seed
   if(chosen_mode == "3D"){
     n_seed = input$n_seed
@@ -433,20 +433,20 @@ metrics_dis_sec = function(data, input, vals_prim, vals_sec, chosen_mode){
   } else {
     stop("Unknown or wrong chosen mode. Choose 3D manual or smart mode.")
   }
-  
-  # Data should contain 2 layers. 
-  # The outer layer contains data for different secondary tuning. 
+
+  # Data should contain 2 layers.
+  # The outer layer contains data for different secondary tuning.
   # The inner layer contains data for different primary tuning under each value of the secondary tuning.
   a = map(.x = data, .f = metrics_dis_n) %>%
     bind_rows()
-  
+
   # Add a column to indicate secondary tuning values
   b = rep(x = vals_sec, each = n_seed * length(vals_prim))
-  
+
   # Combine by columns
   c = cbind.data.frame(a, b, stringsAsFactors = FALSE)
   colnames(c)[colnames(c) == "b"] = "param2"
-  
+
   return(c)
 }
 

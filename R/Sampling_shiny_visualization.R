@@ -139,27 +139,27 @@ vis_n = function(data, input, output, chosen_mode){
   }
 }
 
-# Plot when there is no tuning parameter
-plot_tune0 = function(data){
-  
-  ggplot(data = data) +
-    geom_boxplot(aes(x = "NA", y = Paccept)) +
-    geom_point(aes(x = "NA",  y = mean(data$Paccept)), color = "red", pch = 4, size = 5) +
-    labs(x = NULL, y = "Probability of acceptance") +
-    scale_y_continuous(breaks = seq(0,1,0.1)) +
-    coord_cartesian(ylim = c(0,1)) +
-    theme_bw()
-}
+# # Plot when there is no tuning parameter
+# plot_tune0 = function(data){
+#   
+#   ggplot(data = data) +
+#     geom_boxplot(aes(x = "NA", y = Paccept)) +
+#     geom_point(aes(x = "NA",  y = mean(data$Paccept)), color = "red", pch = 4, size = 5) +
+#     labs(x = NULL, y = "Probability of acceptance") +
+#     scale_y_continuous(breaks = seq(0,1,0.1)) +
+#     coord_cartesian(ylim = c(0,1)) +
+#     theme_bw()
+# }
 
-# Plot when there is one tuning parameter
-plot_tune1 = function(data, input, chosen_mode){
-  
+# # Plot when there is one tuning parameter
+plot_tune1_gui = function(data, input, chosen_mode){
+
   if(chosen_mode == "2D"){
     xlab = explain_var(var = input$var_prim)
   } else if (chosen_mode == "3D"){
     xlab = explain_var(var = input$var_prim_3d)
   } else if(chosen_mode == "v_smart"){
-    
+
     if(input$spread_vs == "continuous"){
       xlab = explain_var(var = input$var_prim_vs)
     } else if (input$spread_vs == "discrete"){
@@ -170,16 +170,16 @@ plot_tune1 = function(data, input, chosen_mode){
   } else {
     stop("Unknown chosen mode")
   }
-  
+
   # Summarise the data
   a = data %>%
     gather(data = ., key = "metric", value = "value", -c(seed, param)) %>%
     group_by(param, metric) %>%
-    summarise(lb = quantile(x = value, probs = 0.025), 
+    summarise(lb = quantile(x = value, probs = 0.025),
               med = median(x = value),
               ub = quantile(x = value, probs = 0.975)) %>%
     dplyr::filter(metric == "Paccept")
-  
+
   # Visualize
   b = ggplot(data = a) +
     geom_ribbon(aes_string(x = "param", ymin = "lb", ymax = "ub"), alpha = 0.3, color = "lightgrey") +
@@ -188,48 +188,48 @@ plot_tune1 = function(data, input, chosen_mode){
     scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
     coord_cartesian(ylim = c(0,1)) +
     labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") +
-    theme_bw() 
+    theme_bw()
   return(b)
 }
 
 # Plot when there is one tuning parameter
-plot_tune2_ribbon = function(data, input, chosen_mode){
-  
+plot_tune2_ribbon_gui = function(data, input, chosen_mode){
+
   # Make the x axis and legend labels
   if(chosen_mode == "2D"){
     xlab = explain_var(var = input$var_prim)
     legend_lab = explain_var(var = input$var_sec)
-    
+
   } else if (chosen_mode == "3D"){
     xlab = explain_var(var = input$var_prim_3d)
     legend_lab = explain_var(var = input$var_sec_3d)
-    
+
   } else if(chosen_mode == "v_smart"){
-    
+
     if(input$spread_vs == "continuous"){
       xlab = explain_var(var = input$var_prim_vs)
       legend_lab = explain_var(var = input$var_sec_vs)
-      
+
     } else if (input$spread_vs == "discrete"){
       xlab = explain_var(var = input$var_prim_3d_vs)
       legend_lab = explain_var(var = input$var_sec_3d_vs)
-      
+
     } else {
       stop("Unknown spread type")
     }
   } else {
     stop("Unknown chosen mode")
   }
-  
+
   # Summarise the data
   a = data %>%
     gather(data = ., key = "metric", value = "value", -c(seed, param, param2)) %>%
     group_by(param2, param, metric) %>%
-    summarise(lb = quantile(x = value, probs = 0.025), 
+    summarise(lb = quantile(x = value, probs = 0.025),
               med = median(x = value),
               ub = quantile(x = value, probs = 0.975)) %>%
     dplyr::filter(metric == "Paccept")
-  
+
   # Visualize
   b = ggplot(data = a) +
     geom_ribbon(aes_string(x = "param", ymin = "lb", ymax = "ub", group = "param2", fill = "param2"), alpha = 0.3) +
@@ -242,43 +242,43 @@ plot_tune2_ribbon = function(data, input, chosen_mode){
     labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") +
     theme_bw() +
     theme(legend.position = "top")
-  
+
   return(b)
 }
 
 # Visualize with boxplots
-plot_tune2_boxplot = function(data, input, yvar, chosen_mode){
-  
+plot_tune2_boxplot_gui = function(data, input, yvar, chosen_mode){
+
   # Make the x axis and legend labels
   if(chosen_mode == "2D"){
     xlab = explain_var(var = input$var_prim)
     legend_lab = explain_var(var = input$var_sec)
-    
+
   } else if (chosen_mode == "3D"){
     xlab = explain_var(var = input$var_prim_3d)
     legend_lab = explain_var(var = input$var_sec_3d)
-    
+
   } else if(chosen_mode == "v_smart"){
-    
+
     if(input$spread_vs == "continuous"){
       xlab = explain_var(var = input$var_prim_vs)
       legend_lab = explain_var(var = input$var_sec_vs)
-      
+
     } else if (input$spread_vs == "discrete"){
       xlab = explain_var(var = input$var_prim_3d_vs)
       legend_lab = explain_var(var = input$var_sec_3d_vs)
-      
+
     } else {
       stop("Unknown spread type")
     }
   } else {
     stop("Unknown chosen mode")
   }
-  
-  ylab = switch(EXPR = yvar, 
-                "P_det" = "Detection Probability", 
+
+  ylab = switch(EXPR = yvar,
+                "P_det" = "Detection Probability",
                 "Paccept" = "Probability of acceptance")
-  
+
   # Summarise the data
   a = ggplot(data = data, aes_string(y = yvar)) +
     geom_boxplot(aes(x = as.factor(param), group = interaction(param, param2), fill = param2)) +

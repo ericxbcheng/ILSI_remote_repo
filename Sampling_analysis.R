@@ -1,3 +1,5 @@
+########################## Generic ##########################
+
 # Determine if we accept or reject a lot
 do_rej = function(decision){
   # Check point
@@ -21,6 +23,22 @@ calc_Prej = function(decision){
   
   return(b)
 }
+
+# Clean up the probability of acceptance. "data" takes a list of n lists.
+calc_Paccept_n = function(data){
+  
+  # Checkpoint
+  if(!is.null(names(data))){
+    stop("Data should be a list of lists, not a single list.")
+  }
+  
+  map(.x = data, .f = calc_Prej_one) %>%
+    unlist() %>%
+    tibble(seed = as.integer(names(.)), P_rej = .) %>%
+    mutate(Paccept = 1 - P_rej)
+}
+
+######################## 2D #################################
 
 # Calculate the probability of detection (whether any of the contamination is detected)
 calc_Pdet = function(I_det){
@@ -60,23 +78,18 @@ calc_Pdet_n = function(data){
     tibble(seed = as.integer(names(.)), P_det = .)
 }
 
-# Clean up the probability of acceptance. "data" takes a list of n lists.
-calc_Paccept_n = function(data){
+# A summary function for 0 tuning parameter
+metrics_cont_0 = function(data){
   
-  # Checkpoint
-  if(!is.null(names(data))){
-    stop("Data should be a list of lists, not a single list.")
-  }
-  
-  map(.x = data, .f = calc_Prej_one) %>%
-    unlist() %>%
-    tibble(seed = as.integer(names(.)), P_rej = .) %>%
-    mutate(Paccept = 1 - P_rej)
+  # Calculate the acceptance prob
+  a = calc_Prej_one(data) %>%
+    tibble(P_rej = ., seed = as.numeric(names(.)), Paccept = 1 - .)
+  return(a)
 }
 
 # Calculate P(detection) and P(acceptance) in the continuous case for a list of n lists
 metrics_cont_n = function(data){
-
+  
   # Checkpoint
   if(!is.null(names(data))){
     stop("Data should be a list of lists, not a single list.")
@@ -96,6 +109,27 @@ metrics_cont_n = function(data){
   
   return(d)
 }
+
+# Data cleaning function for secondary tuning scenarios
+metrics_cont_sec = function(data, vals_prim, vals_sec, n_seed){
+
+  # Data should contain 2 layers. 
+  # The outer layer contains data for different secondary tuning. 
+  # The inner layer contains data for different primary tuning under each value of the secondary tuning.
+  a = map(.x = data, .f = metrics_cont_n) %>%
+    bind_rows()
+  
+  # Add a column to indicate secondary tuning values
+  b = rep(x = vals_sec, each = n_seed * length(vals_prim))
+  
+  # Combine by columns
+  c = cbind.data.frame(a, b, stringsAsFactors = FALSE)
+  colnames(c)[colnames(c) == "b"] = "param2"
+  
+  return(c)
+}
+
+######################### 3D #################################
 
 # Calculate sensitivity and specificity
 calc_metrics = function(c_true, decision, Mc){
@@ -169,6 +203,22 @@ get_c_true_n = function(data){
   return(a)
 }
 
+# A summary function for 0 tuning parameter
+metrics_dis_0 = function(data){
+  
+  # Calculate the acceptance prob
+  a = calc_Prej_one(data) %>%
+    tibble(P_rej = ., seed = as.numeric(names(.)), Paccept = 1 - .)
+  
+  # Calculate true mycotoxin concentration
+  b = get_c_true_one(data)
+  
+  # Combine results
+  c = cbind.data.frame(a, c_true = b)
+  
+  return(c)
+}
+
 metrics_dis_n = function(data, Mc, metrics = FALSE){
   
   # Checkpoint
@@ -198,4 +248,23 @@ metrics_dis_n = function(data, Mc, metrics = FALSE){
   }
   
   return(e)
+}
+
+# Data cleaning function for secondary tuning scenarios
+metrics_dis_sec = function(data, vals_prim, vals_sec, n_seed){
+  
+  # Data should contain 2 layers. 
+  # The outer layer contains data for different secondary tuning. 
+  # The inner layer contains data for different primary tuning under each value of the secondary tuning.
+  a = map(.x = data, .f = metrics_dis_n) %>%
+    bind_rows()
+  
+  # Add a column to indicate secondary tuning values
+  b = rep(x = vals_sec, each = n_seed * length(vals_prim))
+  
+  # Combine by columns
+  c = cbind.data.frame(a, b, stringsAsFactors = FALSE)
+  colnames(c)[colnames(c) == "b"] = "param2"
+  
+  return(c)
 }
