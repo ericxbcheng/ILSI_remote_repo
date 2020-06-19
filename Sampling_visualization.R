@@ -1,3 +1,5 @@
+######################## Contamination #########################################
+
 # Contamination plots
 contam_draw = function(data, spread, xlim, ylim){
   if (spread == "discrete") {
@@ -16,6 +18,20 @@ contam_draw = function(data, spread, xlim, ylim){
         aes(x0 = X, y0 = Y, r = r), fill = "coral", alpha = 0.1) +
       coord_fixed(ratio = 1, xlim = xlim, ylim = ylim) +
       theme_bw() 
+  }
+}
+
+## Wrap-up funciton for plotting contamination level
+contam_level_draw = function(dimension, method, spread_radius, LOC, df_contam, xlim, ylim, geom,bg_level,  ...){
+  if(dimension == "2d"){
+    contam_level_draw_2d(method = method, spread_radius = spread_radius, LOC = LOC)
+    
+  } else if (dimension == "3d"){
+    contam_level_draw_3d(method = method, df_contam = df_contam, spread_radius = spread_radius, 
+                         LOC = LOC, xlim = xlim, ylim = ylim, geom = geom, bg_level, ...)
+    
+  } else {
+    stop("we do not support this dimension. Please choose '2d' or '3d'.")
   }
 }
 
@@ -38,7 +54,7 @@ contam_level_draw_2d = function(method, spread_radius, LOC){
 
 ## Draw thw contamination level plot for continuous spread in a 3D space
 contam_level_draw_3d = function(method, df_contam, xlim, ylim, spread_radius, LOC, bg_level, geom, interactive = FALSE){
-
+  
   ### Extract the coordinates of contamination spots
   spot_coord = df_contam %>%
     dplyr::filter(label == "spot") %>%
@@ -73,21 +89,7 @@ contam_level_draw_3d = function(method, df_contam, xlim, ylim, spread_radius, LO
   }
 }
 
-## Wrap-up funciton
-contam_level_draw = function(dimension, method, spread_radius, LOC, df_contam, xlim, ylim, geom,bg_level,  ...){
-  if(dimension == "2d"){
-    contam_level_draw_2d(method = method, spread_radius = spread_radius, LOC = LOC)
-    
-  } else if (dimension == "3d"){
-    contam_level_draw_3d(method = method, df_contam = df_contam, spread_radius = spread_radius, 
-                         LOC = LOC, xlim = xlim, ylim = ylim, geom = geom, bg_level, ...)
-    
-  } else {
-    stop("we do not support this dimension. Please choose '2d' or '3d'.")
-  }
-}
-
-# Sampling plan plots
+############################### Sampling #################################################
 
 ## Simple random sampling
 sp_draw_srs = function(data, spread, xlim, ylim, sp_radius){
@@ -146,8 +148,7 @@ sp_draw = function(method_sp, data, spread, xlim, ylim, n_strata, by, ...){
   }
 }
 
-# Overlay plots
-
+##################################### Overlay plots ##################################
 ## Simple random sampling
 overlay_draw_srs = function(data, spread, xlim, ylim){
   if(spread == "discrete"){
@@ -230,6 +231,8 @@ overlay_draw_probe = function(data, lims, L){
     coord_fixed(ratio = 1, xlim = lims$xlim, ylim = lims$zlim) +
     theme_bw()
 }
+
+######################## Assay ########################################
 
 # Create a function that draws the contamination level of samples and shows the microbiological criteria in the continuous spread scenario
 assay_draw_cont_plating = function(df, M, m, method_det, case){
@@ -360,6 +363,8 @@ sample_dist = function(raw, work, test, Mc){
     theme_bw()
 }
 
+###################################### Tuning #########################################
+
 # Plot P(detection) and P(acceptance) for continuous case
 plot_metrics_cont = function(df, xlab){
   
@@ -414,4 +419,90 @@ plot_metrics_dis = function(df, xlab, verbose = FALSE){
     
     return(list(a,b))
   }
+}
+
+##################### Functions adapted from GUI #############################
+
+# Plot when there is no tuning parameter
+plot_tune0 = function(data){
+  
+  ggplot(data = data) +
+    geom_boxplot(aes(x = "NA", y = Paccept)) +
+    geom_point(aes(x = "NA",  y = mean(Paccept)), color = "red", pch = 4, size = 5) +
+    labs(x = NULL, y = "Probability of acceptance") +
+    scale_y_continuous(breaks = seq(0,1,0.1)) +
+    coord_cartesian(ylim = c(0,1)) +
+    theme_bw()
+}
+
+# Plot when there is one tuning parameter
+plot_tune1 = function(data, xlab){
+  
+  # Summarise the data
+  a = data %>%
+    gather(data = ., key = "metric", value = "value", -c(seed, param)) %>%
+    group_by(param, metric) %>%
+    summarise(lb = quantile(x = value, probs = 0.025), 
+              med = median(x = value),
+              ub = quantile(x = value, probs = 0.975)) %>%
+    dplyr::filter(metric == "Paccept")
+  
+  # Visualize
+  b = ggplot(data = a) +
+    geom_ribbon(aes_string(x = "param", ymin = "lb", ymax = "ub"), alpha = 0.3, color = "lightgrey") +
+    geom_line(aes_string(x = "param", y = "med")) +
+    geom_point(aes_string(x = "param", y = "med")) +
+    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
+    coord_cartesian(ylim = c(0,1)) +
+    labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") +
+    theme_bw() 
+  return(b)
+}
+
+# Plot when there is one tuning parameter
+plot_tune2_ribbon = function(data, xlab, legend_lab){
+  
+  # Summarise the data
+  a = data %>%
+    gather(data = ., key = "metric", value = "value", -c(seed, param, param2)) %>%
+    group_by(param2, param, metric) %>%
+    summarise(lb = quantile(x = value, probs = 0.025), 
+              med = median(x = value),
+              ub = quantile(x = value, probs = 0.975)) %>%
+    dplyr::filter(metric == "Paccept")
+  
+  # Visualize
+  b = ggplot(data = a) +
+    geom_ribbon(aes(x = param, ymin = lb, ymax = ub, group = as.factor(param2), fill = as.factor(param2)), alpha = 0.3) +
+    geom_line(aes(x = param, y = med, color = as.factor(param2))) +
+    geom_point(aes(x = param, y = med, color = as.factor(param2))) +
+    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
+    scale_fill_discrete(name = legend_lab) +
+    scale_color_discrete(name = legend_lab) +
+    coord_cartesian(ylim = c(0,1)) +
+    labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") +
+    theme_bw() +
+    theme(legend.position = "top")
+  
+  return(b)
+}
+
+# Visualize with boxplots
+plot_tune2_boxplot = function(data, xlab, legend_lab, yvar){
+  
+  # Create a y-axis label
+  ylab = switch(EXPR = yvar, 
+                "P_det" = "Probability of detection", 
+                "Paccept" = "Probability of acceptance")
+  
+  # Summarise the data
+  a = ggplot(data = data, aes_string(y = yvar)) +
+    geom_boxplot(aes(x = as.factor(param), group = interaction(param, param2), fill = as.factor(param2))) +
+    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
+    coord_cartesian(ylim = c(0,1)) +
+    scale_fill_discrete(name = legend_lab) +
+    labs(x = xlab, y = ylab) +
+    theme_bw()+
+    theme(legend.position = "top")
+  return(a)
 }

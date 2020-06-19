@@ -16,14 +16,6 @@ parse_char_vec = function(string){
   return(str_trim(a))
 }
 
-# Function to update arguments
-update_arg = function(arg_list, name, value){
-  
-  a = arg_list
-  a[[name]] = value
-  return(a)
-}
-
 # Iterate the model without any tuning parameters
 iterate_tune0 = function(input, Args, chosen_mode){
   
@@ -52,7 +44,7 @@ iterate_tune0 = function(input, Args, chosen_mode){
 }
 
 # Iterate the model with one tuning parameter
-iterate_tune1 = function(input, Args, chosen_mode){
+iterate_tune1_gui = function(input, Args, chosen_mode){
   
   if(chosen_mode == "2D"){
     n_seed = input$n_seed
@@ -82,11 +74,12 @@ iterate_tune1 = function(input, Args, chosen_mode){
       stop("Unknown spread type.")
     }
   }
-  return(map(.x = vals, .f = tune_param, Args = Args, n_seed = n_seed, n_iter = n_iter, param = var_prim))
+  
+  return(tune_param_n(vals = vals, Args = Args, n_seed = n_seed, n_iter = n_iter, var_prim = var_prim))
 }
 
 # Secondary tuning parameter iterations
-iterate_tune2 = function(input, Args, chosen_mode){
+iterate_tune2_gui = function(input, Args, chosen_mode){
   
   # Parse tuning values for primary and secondary parameters
   if(chosen_mode == "2D"){
@@ -125,17 +118,10 @@ iterate_tune2 = function(input, Args, chosen_mode){
     }
   }
 
-  # Create a list of argument lists, each argument list corresponding to one secondary tuning value
-  Args_sec = map(.x = vals_sec, .f = update_arg, arg_list = Args, name = var_sec)
+  # Conduct the 2-parameter tuning
+  sim_data = tune_param_sec(Args = Args, var_prim = var_prim, vals_prim = vals_prim, 
+                            var_sec = var_sec, vals_sec = vals_sec, n_seed = n_seed, n_iter = n_iter)
   
-  # For each argument list in Args_sec, do iterate_tune1()
-  sim_data = list()
-  for(i in 1:length(vals_sec)){
-    
-    sim_data[[i]] = map(.x = vals_prim, .f = tune_param, 
-                        Args = Args_sec[[i]], n_seed = n_seed, n_iter = n_iter,param = var_prim)
-    
-  }
   return(list(sim_data = sim_data, vals_prim = vals_prim, vals_sec = vals_sec))
 }
 
@@ -219,18 +205,9 @@ f_yvar = function(input, chosen_mode){
   }
 }
 
-# A summary function for 0 tuning parameter
-metrics_cont_0 = function(data){
-  
-  # Calculate the acceptance prob
-  a = calc_Prej_one(data) %>%
-    tibble(P_rej = ., seed = as.numeric(names(.)), Paccept = 1 - .)
-  return(a)
-}
+# # Data cleaning function for secondary tuning scenarios
+metrics_cont_sec_gui = function(data, input, vals_prim, vals_sec, chosen_mode){
 
-# Data cleaning function for secondary tuning scenarios
-metrics_cont_sec = function(data, input, vals_prim, vals_sec, chosen_mode){
-  
   # Determine n_seed
   if(chosen_mode != "v_smart"){
     n_seed = input$n_seed
@@ -239,21 +216,9 @@ metrics_cont_sec = function(data, input, vals_prim, vals_sec, chosen_mode){
   } else {
     stop("Unknown chosen mode")
   }
-
-  # Data should contain 2 layers. 
-  # The outer layer contains data for different secondary tuning. 
-  # The inner layer contains data for different primary tuning under each value of the secondary tuning.
-  a = map(.x = data, .f = metrics_cont_n) %>%
-    bind_rows()
   
-  # Add a column to indicate secondary tuning values
-  b = rep(x = vals_sec, each = n_seed * length(vals_prim))
-  
-  # Combine by columns
-  c = cbind.data.frame(a, b, stringsAsFactors = FALSE)
-  colnames(c)[colnames(c) == "b"] = "param2"
-  
-  return(c)
+  # Summarize the metrics
+  return(metrics_cont_sec(data = data, vals_prim = vals_prim, vals_sec = vals_sec, n_seed = n_seed))
 }
 
 # Reactively present choices
@@ -328,14 +293,14 @@ f_iterate_tune_2d = function(input, output, Args, n_vars, chosen_mode){
   } else if (n_vars == 1){
     
     # When there is 1 tuning parameter
-    data_raw = iterate_tune1(input = input, Args = Args, chosen_mode = chosen_mode)
+    data_raw = iterate_tune1_gui(input = input, Args = Args, chosen_mode = chosen_mode)
     data_cleaned = metrics_cont_n(data = data_raw)
     return(list(data_cleaned = data_cleaned, n_vars = n_vars))
     
   } else if (n_vars == 2) {
     
-    data_raw = iterate_tune2(input = input, Args = Args, chosen_mode = chosen_mode)
-    data_cleaned = metrics_cont_sec(data = data_raw[["sim_data"]], 
+    data_raw = iterate_tune2_gui(input = input, Args = Args, chosen_mode = chosen_mode)
+    data_cleaned = metrics_cont_sec_gui(data = data_raw[["sim_data"]], 
                                     input = input, 
                                     vals_prim = data_raw[["vals_prim"]], 
                                     vals_sec = data_raw[["vals_sec"]], chosen_mode = chosen_mode)
@@ -406,25 +371,9 @@ f_ui_tuning_3d_vs = function(input, ...){
   }
 }
 
-# A summary function for 0 tuning parameter
-metrics_dis_0 = function(data){
-  
-  # Calculate the acceptance prob
-  a = calc_Prej_one(data) %>%
-    tibble(P_rej = ., seed = as.numeric(names(.)), Paccept = 1 - .)
-  
-  # Calculate true mycotoxin concentration
-  b = get_c_true_one(data)
-  
-  # Combine results
-  c = cbind.data.frame(a, c_true = b)
-    
-  return(c)
-}
+# # Data cleaning function for secondary tuning scenarios
+metrics_dis_sec_gui = function(data, input, vals_prim, vals_sec, chosen_mode){
 
-# Data cleaning function for secondary tuning scenarios
-metrics_dis_sec = function(data, input, vals_prim, vals_sec, chosen_mode){
-  
   # Determine n_seed
   if(chosen_mode == "3D"){
     n_seed = input$n_seed
@@ -433,21 +382,9 @@ metrics_dis_sec = function(data, input, vals_prim, vals_sec, chosen_mode){
   } else {
     stop("Unknown or wrong chosen mode. Choose 3D manual or smart mode.")
   }
-  
-  # Data should contain 2 layers. 
-  # The outer layer contains data for different secondary tuning. 
-  # The inner layer contains data for different primary tuning under each value of the secondary tuning.
-  a = map(.x = data, .f = metrics_dis_n) %>%
-    bind_rows()
-  
-  # Add a column to indicate secondary tuning values
-  b = rep(x = vals_sec, each = n_seed * length(vals_prim))
-  
-  # Combine by columns
-  c = cbind.data.frame(a, b, stringsAsFactors = FALSE)
-  colnames(c)[colnames(c) == "b"] = "param2"
-  
-  return(c)
+
+  # Summarize the metrics
+  return(metrics_dis_sec(data = data, vals_prim = vals_prim, vals_sec = vals_sec, n_seed = n_seed))
 }
 
 # Iterate and tuning for 3D mode (smart + manual)
@@ -463,14 +400,14 @@ f_iterate_tune_3d = function(input, output, Args, n_vars, chosen_mode){
   } else if (n_vars == 1){
     
     # When there is 1 tuning parameter
-    data_raw = iterate_tune1(input = input, Args = Args, chosen_mode = chosen_mode)
+    data_raw = iterate_tune1_gui(input = input, Args = Args, chosen_mode = chosen_mode)
     data_cleaned = metrics_dis_n(data = data_raw, Mc = input$Mc, metrics = FALSE)
     return(list(data_cleaned = data_cleaned, n_vars = n_vars))
     
   } else if (n_vars == 2) {
     
-    data_raw = iterate_tune2(input = input, Args = Args, chosen_mode = chosen_mode)
-    data_cleaned = metrics_dis_sec(data = data_raw[["sim_data"]],
+    data_raw = iterate_tune2_gui(input = input, Args = Args, chosen_mode = chosen_mode)
+    data_cleaned = metrics_dis_sec_gui(data = data_raw[["sim_data"]],
                                    input = input, vals_prim = data_raw[["vals_prim"]],
                                    vals_sec = data_raw[["vals_sec"]],
                                    chosen_mode = chosen_mode)
