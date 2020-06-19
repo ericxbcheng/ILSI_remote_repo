@@ -84,8 +84,8 @@ vis_once_3d = function(output, ArgList, chosen_mode){
 vis_n_tune2_2d = function(input, output, data, chosen_mode){
   observeEvent(eventExpr = {input$yvar}, handlerExpr = {
     output$plot_iterate = renderPlot(expr = {
-      plot_tune2_boxplot(data = data, input = input,
-                         yvar = input$yvar, chosen_mode = chosen_mode)
+      plot_tune2_boxplot_gui(data = data, input = input,
+                             yvar = input$yvar, chosen_mode = chosen_mode)
       
     })
   })
@@ -94,8 +94,8 @@ vis_n_tune2_2d = function(input, output, data, chosen_mode){
 # Visualize multiple iterations for 3D mode (smart + manual)
 vis_n_tune2_3d = function(input, output, data, chosen_mode){
   output$plot_iterate = renderPlot(expr = {
-    plot_tune2_ribbon(data = data, input = input,
-                      chosen_mode = chosen_mode)
+    plot_tune2_ribbon_gui(data = data, input = input,
+                          chosen_mode = chosen_mode)
     
   })
 }
@@ -109,7 +109,7 @@ vis_n = function(data, input, output, chosen_mode){
     
   } else if (data$n_vars == 1){
     output$plot_iterate = renderPlot(expr = {
-      plot_tune1(data = data$data_cleaned, input = input, chosen_mode = chosen_mode)
+      plot_tune1_gui(data = data$data_cleaned, input = input, chosen_mode = chosen_mode)
     })
     
   } else if (data$n_vars == 2){
@@ -139,18 +139,6 @@ vis_n = function(data, input, output, chosen_mode){
   }
 }
 
-# # Plot when there is no tuning parameter
-# plot_tune0 = function(data){
-#   
-#   ggplot(data = data) +
-#     geom_boxplot(aes(x = "NA", y = Paccept)) +
-#     geom_point(aes(x = "NA",  y = mean(data$Paccept)), color = "red", pch = 4, size = 5) +
-#     labs(x = NULL, y = "Probability of acceptance") +
-#     scale_y_continuous(breaks = seq(0,1,0.1)) +
-#     coord_cartesian(ylim = c(0,1)) +
-#     theme_bw()
-# }
-
 # # Plot when there is one tuning parameter
 plot_tune1_gui = function(data, input, chosen_mode){
 
@@ -171,25 +159,8 @@ plot_tune1_gui = function(data, input, chosen_mode){
     stop("Unknown chosen mode")
   }
 
-  # Summarise the data
-  a = data %>%
-    gather(data = ., key = "metric", value = "value", -c(seed, param)) %>%
-    group_by(param, metric) %>%
-    summarise(lb = quantile(x = value, probs = 0.025),
-              med = median(x = value),
-              ub = quantile(x = value, probs = 0.975)) %>%
-    dplyr::filter(metric == "Paccept")
-
-  # Visualize
-  b = ggplot(data = a) +
-    geom_ribbon(aes_string(x = "param", ymin = "lb", ymax = "ub"), alpha = 0.3, color = "lightgrey") +
-    geom_line(aes_string(x = "param", y = "med")) +
-    geom_point(aes_string(x = "param", y = "med")) +
-    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
-    coord_cartesian(ylim = c(0,1)) +
-    labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") +
-    theme_bw()
-  return(b)
+  # Create a plot
+  return(plot_tune1(data = data, xlab = xlab))
 }
 
 # Plot when there is one tuning parameter
@@ -220,30 +191,9 @@ plot_tune2_ribbon_gui = function(data, input, chosen_mode){
   } else {
     stop("Unknown chosen mode")
   }
-
-  # Summarise the data
-  a = data %>%
-    gather(data = ., key = "metric", value = "value", -c(seed, param, param2)) %>%
-    group_by(param2, param, metric) %>%
-    summarise(lb = quantile(x = value, probs = 0.025),
-              med = median(x = value),
-              ub = quantile(x = value, probs = 0.975)) %>%
-    dplyr::filter(metric == "Paccept")
-
-  # Visualize
-  b = ggplot(data = a) +
-    geom_ribbon(aes_string(x = "param", ymin = "lb", ymax = "ub", group = "param2", fill = "param2"), alpha = 0.3) +
-    geom_line(aes_string(x = "param", y = "med", color = "param2")) +
-    geom_point(aes_string(x = "param", y = "med", color = "param2")) +
-    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
-    scale_fill_discrete(name = legend_lab) +
-    scale_color_discrete(name = legend_lab) +
-    coord_cartesian(ylim = c(0,1)) +
-    labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") +
-    theme_bw() +
-    theme(legend.position = "top")
-
-  return(b)
+  
+  # Create a ribbon plot
+  return(plot_tune2_ribbon(data = data, xlab = xlab, legend_lab = legend_lab))
 }
 
 # Visualize with boxplots
@@ -274,19 +224,7 @@ plot_tune2_boxplot_gui = function(data, input, yvar, chosen_mode){
   } else {
     stop("Unknown chosen mode")
   }
-
-  ylab = switch(EXPR = yvar,
-                "P_det" = "Detection Probability",
-                "Paccept" = "Probability of acceptance")
-
-  # Summarise the data
-  a = ggplot(data = data, aes_string(y = yvar)) +
-    geom_boxplot(aes(x = as.factor(param), group = interaction(param, param2), fill = param2)) +
-    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
-    coord_cartesian(ylim = c(0,1)) +
-    scale_fill_discrete(name = legend_lab) +
-    labs(x = xlab, y = ylab) +
-    theme_bw()+
-    theme(legend.position = "top")
-  return(a)
+  
+  # Create boxplots
+  return(plot_tune2_boxplot(data = data, xlab = xlab, legend_lab = legend_lab, yvar = yvar))
 }

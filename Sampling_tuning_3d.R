@@ -29,7 +29,7 @@ tune_param_n = function(vals, Args, n_seed, n_iter, var_prim){
 }
 
 # A function that tunes over a crossed combination of the primary and secondary tuning parameter
-tune_param_sec = function(Args, var_prim, vals_prim, var_sec, vals_sec){
+tune_param_sec = function(Args, var_prim, vals_prim, var_sec, n_seed, n_iter, vals_sec){
   
   # Create a list of argument lists, each argument list corresponding to one secondary tuning value
   Args_sec = map(.x = vals_sec, .f = update_arg, Args = Args, param = var_sec)
