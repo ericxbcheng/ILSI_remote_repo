@@ -295,24 +295,6 @@ load_once_manual_3D = function(input, conc_neg){
     covar_mat = NULL
   }
   
-  # # n_sp, container
-  # if(input$method_sp_3d %in% c("srs", "strs")){
-  #   n_sp = input$n_sp_3d
-  #   container = compartment = type = NULL
-  #   
-  # } else {
-  #   n_sp = NaN
-  #   container = input$container
-  #   
-  #   if(container == "hopper"){
-  #     compartment = input$compartment
-  #     type = input$type
-  #     
-  #   } else {
-  #     compartment = type = NULL
-  #   }
-  # }
-  
   # by = "2d" or "row/column"
   if(input$by_3d == "2d"){
     n_strata = c(input$n_strata_row_3d, input$n_strata_col_3d)
