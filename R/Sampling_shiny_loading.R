@@ -1,5 +1,5 @@
 #Helper: create the dis_level list in the 3D mode
-make_dis_level = function(input, chosen_mode){
+make_dis_level_gui = function(input, chosen_mode){
   
   # manual or smart?
   if(chosen_mode == "3D"){
@@ -7,9 +7,11 @@ make_dis_level = function(input, chosen_mode){
     
     # dis_level: constant VS Gamma
     if(type == "constant"){
-      dis_level = list(type = "constant", args = input$dis_level_const_arg)
+      dis_level = make_dis_level(type = type, args = input$dis_level_const_arg)
+      
     } else if (type == "Gamma"){
-      dis_level = list(type = "Gamma", args = list("mode"= input$dis_level_gm_mode, "lb" = input$dis_level_gm_lb))
+      dis_level = make_dis_level(type = type, args = c(input$dis_level_gm_mode, input$dis_level_gm_lb))
+
     } else {
       stop("Unknown discrete level type. Choose 'constant' or 'Gamma'.")
     }
@@ -18,10 +20,11 @@ make_dis_level = function(input, chosen_mode){
     
     # dis_level: constant VS Gamma
     if(type == "constant"){
-      dis_level = list(type = "constant", args = input$dis_level_const_arg_vs)
+      dis_level = make_dis_level(type = type, args = input$dis_level_const_arg_vs)
+      
     } else if (type == "Gamma"){
-      dis_level = list(type = "Gamma", args = list("mode"= input$dis_level_gm_mode_vs, 
-                                                   "lb" = input$dis_level_gm_lb_vs))
+      dis_level = make_dis_level(type = type, args = c(input$dis_level_gm_mode_vs, input$dis_level_gm_lb_vs))
+      
     } else {
       stop("Unknown discrete level type. Choose 'constant' or 'Gamma'.")
     }
@@ -285,7 +288,7 @@ load_once_smart_2D = function(input){
 load_once_manual_3D = function(input, conc_neg){
   
   # Create the discrete contamination level
-  dis_level = make_dis_level(input = input, chosen_mode = "3D")
+  dis_level = make_dis_level_gui(input = input, chosen_mode = "3D")
   
   # n_affected: = 0 VS > 0
   if(input$n_affected > 0){
@@ -294,24 +297,6 @@ load_once_manual_3D = function(input, conc_neg){
   } else {
     covar_mat = NULL
   }
-  
-  # # n_sp, container
-  # if(input$method_sp_3d %in% c("srs", "strs")){
-  #   n_sp = input$n_sp_3d
-  #   container = compartment = type = NULL
-  #   
-  # } else {
-  #   n_sp = NaN
-  #   container = input$container
-  #   
-  #   if(container == "hopper"){
-  #     compartment = input$compartment
-  #     type = input$type
-  #     
-  #   } else {
-  #     compartment = type = NULL
-  #   }
-  # }
   
   # by = "2d" or "row/column"
   if(input$by_3d == "2d"){
@@ -339,7 +324,7 @@ load_once_manual_3D = function(input, conc_neg){
 load_once_smart_3D = function(input, conc_neg){
   
   # Create the discrete contamination level
-  dis_level = make_dis_level(input = input, chosen_mode = "v_smart")
+  dis_level = make_dis_level_gui(input = input, chosen_mode = "v_smart")
   
   # n_affected: = 0 VS > 0
   if(input$n_affected_vs > 0){

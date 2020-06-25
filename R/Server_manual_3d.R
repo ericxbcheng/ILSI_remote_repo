@@ -39,7 +39,7 @@ observeEvent(eventExpr = {input$Mc}, handlerExpr = {
 observeEvent(eventExpr = {input$c_hat}, handlerExpr = {
   
   lims = list(xlim = c(0, input$x_lim_3d), ylim = c(0, input$y_lim_3d), zlim = c(0, input$z_lim_3d))
-  dis_level = make_dis_level(input = input, chosen_mode = "3D")
+  dis_level = make_dis_level_gui(input = input, chosen_mode = "3D")
   
   # n_contam_total = n_spot + n_spot * n_affected
   n_contam_total = calc_n_contam(c_hat = input$c_hat, lims = lims, rho = input$rho, m_kbar = input$m_kbar, dis_level = dis_level, conc_neg = conc_neg)
