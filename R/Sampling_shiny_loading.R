@@ -288,7 +288,7 @@ load_once_smart_2D = function(input){
 load_once_manual_3D = function(input, conc_neg){
   
   # Create the discrete contamination level
-  dis_level = make_dis_level(input = input, chosen_mode = "3D")
+  dis_level = make_dis_level_gui(input = input, chosen_mode = "3D")
   
   # n_affected: = 0 VS > 0
   if(input$n_affected > 0){
@@ -324,7 +324,7 @@ load_once_manual_3D = function(input, conc_neg){
 load_once_smart_3D = function(input, conc_neg){
   
   # Create the discrete contamination level
-  dis_level = make_dis_level(input = input, chosen_mode = "v_smart")
+  dis_level = make_dis_level_gui(input = input, chosen_mode = "v_smart")
   
   # n_affected: = 0 VS > 0
   if(input$n_affected_vs > 0){
