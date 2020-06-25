@@ -45,7 +45,7 @@ make_n_strata = function(input){
     
     if(input$method_sp_vs != "srs"){
       if(input$by_vs == "2d"){
-        n_strata = c(input$n_strata_row_vs, input$n_strata_col_vs)
+        n_strata = c(input$n_strata_col_vs, input$n_strata_row_vs)
       } else {
         n_strata = input$n_strata_vs
       }
@@ -61,7 +61,7 @@ make_n_strata = function(input){
     
     if(input$method_sp_3d_vs == "strs"){
       if(input$by_3d_vs == "2d"){
-        n_strata = c(input$n_strata_row_3d_vs, input$n_strata_col_3d_vs)
+        n_strata = c(input$n_strata_col_3d_vs, input$n_strata_row_3d_vs)
       } else {
         n_strata = input$n_strata_3d_vs
       }
@@ -243,7 +243,7 @@ ph = p("Under development")
 load_once_manual_2D = function(input){
   
   if(input$by == "2d"){
-    n_strata = c(input$n_strata_row, input$n_strata_col)
+    n_strata = c(input$n_strata_col, input$n_strata_row)
   } else {
     n_strata = input$n_strata
   }
@@ -300,7 +300,7 @@ load_once_manual_3D = function(input, conc_neg){
   
   # by = "2d" or "row/column"
   if(input$by_3d == "2d"){
-    n_strata = c(input$n_strata_row_3d, input$n_strata_col_3d)
+    n_strata = c(input$n_strata_col_3d, input$n_strata_row_3d)
   } else {
     n_strata = input$n_strata_3d
   }
