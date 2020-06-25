@@ -1,5 +1,5 @@
 #Helper: create the dis_level list in the 3D mode
-make_dis_level = function(input, chosen_mode){
+make_dis_level_gui = function(input, chosen_mode){
   
   # manual or smart?
   if(chosen_mode == "3D"){
@@ -7,9 +7,11 @@ make_dis_level = function(input, chosen_mode){
     
     # dis_level: constant VS Gamma
     if(type == "constant"){
-      dis_level = list(type = "constant", args = input$dis_level_const_arg)
+      dis_level = make_dis_level(type = type, args = input$dis_level_const_arg)
+      
     } else if (type == "Gamma"){
-      dis_level = list(type = "Gamma", args = list("mode"= input$dis_level_gm_mode, "lb" = input$dis_level_gm_lb))
+      dis_level = make_dis_level(type = type, args = c(input$dis_level_gm_mode, input$dis_level_gm_lb))
+
     } else {
       stop("Unknown discrete level type. Choose 'constant' or 'Gamma'.")
     }
@@ -18,10 +20,11 @@ make_dis_level = function(input, chosen_mode){
     
     # dis_level: constant VS Gamma
     if(type == "constant"){
-      dis_level = list(type = "constant", args = input$dis_level_const_arg_vs)
+      dis_level = make_dis_level(type = type, args = input$dis_level_const_arg_vs)
+      
     } else if (type == "Gamma"){
-      dis_level = list(type = "Gamma", args = list("mode"= input$dis_level_gm_mode_vs, 
-                                                   "lb" = input$dis_level_gm_lb_vs))
+      dis_level = make_dis_level(type = type, args = c(input$dis_level_gm_mode_vs, input$dis_level_gm_lb_vs))
+      
     } else {
       stop("Unknown discrete level type. Choose 'constant' or 'Gamma'.")
     }
