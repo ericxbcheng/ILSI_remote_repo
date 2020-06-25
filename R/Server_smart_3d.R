@@ -34,7 +34,7 @@ observeEvent(eventExpr = {input$dis_level_type_vs}, handlerExpr = {
                 input$z_lim_3d_vs, input$rho_vs, input$m_kbar_vs))){
       
       lims = list(xlim = c(0, input$x_lim_3d_vs), ylim = c(0, input$y_lim_3d_vs), zlim = c(0, input$z_lim_3d_vs))
-      dis_level = make_dis_level(input = input, chosen_mode = "v_smart")
+      dis_level = make_dis_level_gui(input = input, chosen_mode = "v_smart")
       
       # n_contam_total = n_spot + n_spot * n_affected
       n_contam_total = calc_n_contam(c_hat = input$c_hat_vs, lims = lims,
