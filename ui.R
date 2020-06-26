@@ -10,6 +10,7 @@
 library(shiny)
 library(shinydashboard)
 
+
 sidebar = dashboardSidebar(
   
   sidebarMenu(
@@ -39,7 +40,8 @@ v_manual_3D = fluidRow(
     splitLayout(
       numericInput(inputId = "x_lim_3d", label = "Length (m)", value = 3, min = 1),
       numericInput(inputId = "y_lim_3d", label = "Width (m)", value = 2, min = 1),
-      numericInput(inputId = "z_lim_3d", label = "Height (m)", value = 1.5, min = 1)
+      numericInput(inputId = "z_lim_3d", label = "Height (m)", value = 1.5, min = 1),
+      actionButton("Doc_Bins", "",width = "20%",icon = icon("question-circle") ) 
     ),
     splitLayout(
       selectInput(inputId = "tox", label = "Mycotoxin", choices = list("Aflatoxin" = "AF")),
