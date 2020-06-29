@@ -1,0 +1,65 @@
+<html>
+
+<h2>Probe Specifications:</h2>
+<table>
+<tbody>
+<tr>
+<td width="324">
+<p>Carrier</p>
+</td>
+<td width="148">
+<p>Probe Length</p>
+</td>
+</tr>
+<tr>
+<td width="324">
+<p>Barges and Boats</p>
+</td>
+<td width="148">
+<p>12 ft</p>
+</td>
+</tr>
+<tr>
+<td width="324">
+<p>Bins</p>
+</td>
+<td width="148">
+<p>12 ft</p>
+</td>
+</tr>
+<tr>
+<td width="324">
+<p>Boxcars and Containers</p>
+</td>
+<td width="148">
+<p>6 ft</p>
+</td>
+</tr>
+<tr>
+<td width="324">
+<p>Flat bottom trucks, trains and wagons</p>
+</td>
+<td width="148">
+<p>5-6 ft</p>
+</td>
+</tr>
+<tr>
+<td width="324">
+<p>Hopper Bottom Trucks</p>
+</td>
+<td width="148">
+<p>6,8,10 ft</p>
+</td>
+</tr>
+<tr>
+<td width="324">
+<p>Hopper Cars</p>
+</td>
+<td width="148">
+<p>10-12 ft.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Diameter: </strong>The diameter of probes may vary, generally probes are between 1.38 in and 2.0 in (0.035052 m - 0.0508 m)</p>
+</html>

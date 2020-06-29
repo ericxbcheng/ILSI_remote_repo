@@ -1,0 +1,406 @@
+<html>
+
+<h2>Truck, Totes and Barge Industry Sizes.</h2>
+<h3>Dry Bulk Trailers:</h3>
+<table>
+<tbody>
+<tr>
+<td width="104">
+<p>Type</p>
+</td>
+<td width="109">
+<p>Length (ft)</p>
+</td>
+<td width="107">
+<p>Width (in)</p>
+</td>
+<td width="109">
+<p>Height (in)</p>
+</td>
+<td width="104">
+<p>Capacity (lb.)</p>
+</td>
+<td width="91">
+<p>Hoppers</p>
+</td>
+</tr>
+<tr>
+<td width="104">
+<p>Single (Closed End)</p>
+</td>
+<td width="109">
+<p>42</p>
+</td>
+<td width="107">
+<p>102</p>
+</td>
+<td width="109">
+<p>75</p>
+</td>
+<td width="104">
+<p>13,800</p>
+</td>
+<td width="91">
+<p>2</p>
+</td>
+</tr>
+<tr>
+<td width="104">
+<p>Single (Open End)</p>
+</td>
+<td width="109">
+<p>45</p>
+</td>
+<td width="107">
+<p>102</p>
+</td>
+<td width="109">
+<p>79</p>
+</td>
+<td width="104">
+<p>12,900</p>
+</td>
+<td width="91">
+<p>3</p>
+</td>
+</tr>
+<tr>
+<td width="104">
+<p>Single (Open End)</p>
+</td>
+<td width="109">
+<p>36</p>
+</td>
+<td width="107">
+<p>102</p>
+</td>
+<td width="109">
+<p>75</p>
+</td>
+<td width="104">
+<p>10,100</p>
+</td>
+<td width="91">
+<p>2</p>
+</td>
+</tr>
+<tr>
+<td width="104">
+<p>Single (Open End)</p>
+</td>
+<td width="109">
+<p>40</p>
+</td>
+<td width="107">
+<p>102</p>
+</td>
+<td width="109">
+<p>75</p>
+</td>
+<td width="104">
+<p>10,500</p>
+</td>
+<td width="91">
+<p>2</p>
+</td>
+</tr>
+<tr>
+<td width="104">
+<p>Single (Open End)</p>
+</td>
+<td width="109">
+<p>42</p>
+</td>
+<td width="107">
+<p>102</p>
+</td>
+<td width="109">
+<p>75</p>
+</td>
+<td width="104">
+<p>10,900</p>
+</td>
+<td width="91">
+<p>2</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Railroad Covered Hopper:</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p>Small Cube</p>
+</td>
+<td>
+<p>Jumbo</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>Length</p>
+</td>
+<td>
+<p>39-50&rsquo;</p>
+</td>
+<td>
+<p>55-65&rsquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>Width</p>
+</td>
+<td>
+<p>9&rsquo;6&rdquo;</p>
+</td>
+<td>
+<p>9&rsquo;6&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>Height</p>
+</td>
+<td>
+<p>13-15.5&rsquo;</p>
+</td>
+<td>
+<p>15-15.5&rsquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>Capacity:</p>
+</td>
+<td>
+<p>2,700 - 3,500 cubic feet</p>
+</td>
+<td>
+<p>3,600 - 5,324 cubic feet</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Barge:</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p>Type</p>
+</td>
+<td>
+<p>Length (ft)</p>
+</td>
+<td>
+<p>Width (ft)</p>
+</td>
+<td>
+<p>Height (ft)</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>195</p>
+</td>
+<td>
+<p>35</p>
+</td>
+<td>
+<p>16</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Totes:</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p>Type</p>
+</td>
+<td>
+<p>Length (in)</p>
+</td>
+<td>
+<p>Width (in)</p>
+</td>
+<td>
+<p>Height (in)</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>18 cf (648 lb.)</p>
+</td>
+<td>
+<p>35</p>
+</td>
+<td>
+<p>35</p>
+</td>
+<td>
+<p>25</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>25 cf (900 lb.)</p>
+</td>
+<td>
+<p>35</p>
+</td>
+<td>
+<p>35</p>
+</td>
+<td>
+<p>35</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>35 cf (1,260 lb.)</p>
+</td>
+<td>
+<p>35</p>
+</td>
+<td>
+<p>35</p>
+</td>
+<td>
+<p>50</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>43 cf (1,548 lb.)</p>
+</td>
+<td>
+<p>35</p>
+</td>
+<td>
+<p>35</p>
+</td>
+<td>
+<p>60</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>27 cf (972 lb.)</p>
+</td>
+<td>
+<p>36</p>
+</td>
+<td>
+<p>36</p>
+</td>
+<td>
+<p>36</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>43 cf (1,548 lb.)</p>
+</td>
+<td>
+<p>38</p>
+</td>
+<td>
+<p>46</p>
+</td>
+<td>
+<p>43</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>45 cf (1,620 lb.)</p>
+</td>
+<td>
+<p>40</p>
+</td>
+<td>
+<p>46</p>
+</td>
+<td>
+<p>42</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>53 cf (1,908 lb.)</p>
+</td>
+<td>
+<p>40</p>
+</td>
+<td>
+<p>46</p>
+</td>
+<td>
+<p>50</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>59 cf (2,124 lb.)</p>
+</td>
+<td>
+<p>46</p>
+</td>
+<td>
+<p>46</p>
+</td>
+<td>
+<p>55</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>64 cf (2,304 lb.)</p>
+</td>
+<td>
+<p>46</p>
+</td>
+<td>
+<p>46</p>
+</td>
+<td>
+<p>60</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>75 cf (2,700 lb.)</p>
+</td>
+<td>
+<p>46</p>
+</td>
+<td>
+<p>46</p>
+</td>
+<td>
+<p>70</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>85 cf (3,060 lb.)</p>
+</td>
+<td>
+<p>46</p>
+</td>
+<td>
+<p>46</p>
+</td>
+<td>
+<p>80</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><br />*Dimensions vary depending on specifications.</p>
+<p>*Capacity depends on size.</p>
+
+</html>
