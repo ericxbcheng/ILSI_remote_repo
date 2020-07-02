@@ -89,7 +89,7 @@ f_ui_method_sp_2d = function(input,...){
       p("Q11A. Along which direction do you want to take a sample every k steps?"),
       selectInput(inputId = "by_vs",
                   label = NULL,
-                  choices = list("Vertical" = "row", "Horizontal" = "column"),
+                  choices = list("Row" = "row", "Column" = "column"),
                   multiple = FALSE)
     )
   } else {
