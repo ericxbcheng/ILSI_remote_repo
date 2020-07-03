@@ -12,7 +12,7 @@ f_ui_assay = function(input){
     )
   } else if(input$spread_vs == "discrete"){
     verticalLayout(
-      actionButton("Doc_Homogeneity", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_Homogeneity_s", "",width = "40px",icon = icon("question-circle") ),
       p("Q12. How homogeneous should the samples be after grinding?"),
       sliderInput(inputId = "homogeneity_vs", label = NULL, value = 0.6, min = 0, max = 1, step = 0.1),
       p("Q13. What's the detection method?"),

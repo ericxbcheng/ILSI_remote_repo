@@ -20,10 +20,10 @@ f_ui_sp = function(input, ...){
       }
     } else if (input$spread_vs == "discrete"){
       verticalLayout(
-        actionButton("Doc_Probes", "",width = "40px",icon = icon("question-circle") ),
+        actionButton("Doc_Probe", "",width = "40px",icon = icon("question-circle") ),
         p("Q10. What's the diameter of the probe (m)?"),
         numericInput(inputId = "d_vs", label = NULL, value = 0.04, min = 0.01, max = 1, step = 0.01),
-        actionButton("Doc_Sampling", "",width = "40px",icon = icon("question-circle") ),
+        actionButton("Doc_Sampling_s", "",width = "40px",icon = icon("question-circle") ),
         p("Q11. Which sampling strategy would you use?"),
         radioButtons(inputId = "method_sp_3d_vs", label = NULL, choices = list("SRS" = "srs", "STRS" = "strs", "GIPSA SS" = "ss"), selected = character(0), inline = TRUE)
       )

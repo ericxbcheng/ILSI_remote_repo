@@ -16,11 +16,11 @@ f_ui_dims = function(input, ...){
   } else if (input$spread_vs == "discrete"){
     verticalLayout(
       p("Q2. What are the dimensions of the grain bin?"),
+      actionButton(inputId = "Doc_Bin", label = "",width = "40px",icon = icon("question-circle") ),
       splitLayout(
         numericInput(inputId = "x_lim_3d_vs", label = "Length (m)", value = NULL, min = 1),
         numericInput(inputId = "y_lim_3d_vs", label = "Width (m)", value = NULL, min = 1),
-        numericInput(inputId = "z_lim_3d_vs", label = "Height (m)", value = NULL, min = 1),
-        actionButton("Doc_Bins", "",width = "40px",icon = icon("question-circle") ) 
+        numericInput(inputId = "z_lim_3d_vs", label = "Height (m)", value = NULL, min = 1)
       )
     )
   } else {
@@ -75,12 +75,12 @@ f_ui_contam = function(input, ...){
     verticalLayout(
       p("Q5. Which mycotoxin do you want to simulate?"), 
       selectInput(inputId = "tox_vs", label = NULL, choices = list("Aflatoxin" = "AF")),
-      actionButton("Doc_Levels", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_Level", "",width = "40px",icon = icon("question-circle") ),
       p("Q6. What's the mycotoxin regulatory threshold (ppb)?"),
       numericInput(inputId = "Mc_vs", label = NULL, value = 20, min = 0.001),
       p("Q7. What's the estimated overall mycotoxin level (ppb) in the bin?"),
       numericInput(inputId = "c_hat_vs", label = NULL, value = NULL, min = 0.001),
-      actionButton("Doc_Distributions", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_Distribution", "",width = "40px",icon = icon("question-circle") ),
       p("Q8. How is the mycotoxin distributed in contaminated grains?"),
       radioButtons(inputId = "dis_level_type_vs", 
                   label = NULL, 
@@ -109,7 +109,7 @@ f_ui_contam = function(input, ...){
 f_ui_n_affected = function(input,...){
   if(input$dis_level_type_vs %in% c("constant", "Gamma")){
     verticalLayout(
-      actionButton("Doc_Clusters", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_Cluster", "",width = "40px",icon = icon("question-circle") ),
       p("Q9. How many kernels are estimated to be in a cluster? (MUST be >= 0)"),
       numericInput(inputId = "n_affected_vs", label = NULL, value = NULL, min = 0, step = 1),
       conditionalPanel(condition = "input.n_affected_vs > 0",
