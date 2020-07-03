@@ -54,3 +54,21 @@ observeEvent(input$Doc_Probes, {
     ,size = "l"
   ))
 })
+
+observeEvent(input$Doc_Homogeneity, {
+  showModal(modalDialog(
+    title = "Documentatation: Homogenity",
+    includeHTML("R/Documentation Documents/Homogeneity.html"),
+    easyClose = TRUE
+    ,size = "l"
+  ))
+})
+
+observeEvent(input$Doc_Tuning, {
+  showModal(modalDialog(
+    title = "Documentatation: Tuning Parameters",
+    includeHTML("R/Documentation Documents/Tuning.html"),
+    easyClose = TRUE
+    ,size = "l"
+  ))
+})

@@ -116,7 +116,8 @@ v_manual_3D = fluidRow(
       numericInput(inputId = "m_kbar", label = "Single kernel mass (g)", value = 0.3, min = 0.001),
       numericInput(inputId = "rho", label = "Density (g/cm^3)", value = 1.28, min = 0.001)
     ),
-    sliderInput(inputId = "homogeneity", label = "% Grinding", value = 0.6, min = 0, max = 1, step = 0.1),
+    actionButton("Doc_Homogeneity", "",width = "40px",icon = icon("question-circle") ),
+    sliderInput(inputId = "homogeneity", label = "How homogeneous should the samples be after grinding?", value = 0.6, min = 0, max = 1, step = 0.1),
     splitLayout(
       selectInput(inputId = "method_det_3d", label = "Detection method", choices = list("ELISA" = "ELISA aflatoxin")),
       numericInput(inputId = "Mc", label = "Mc (ppb)", value = 20, min = 0.001)
@@ -127,6 +128,7 @@ v_manual_3D = fluidRow(
       numericInput(inputId = "n_seed_3d", label = "Number of contamination patterns", value = 1, min = 1, step = 1),
       numericInput(inputId = "n_iter_3d", label = "Number of sampling patterns per contamination pattern", value = 1, min = 1, step = 1)
     ),
+    actionButton("Doc_Tuning", "",width = "40px",icon = icon("question-circle") ),
     selectInput(inputId = "n_vars_3d", label = "Number of tuning parameters", choices = list(0,1,2), multiple = FALSE),
     uiOutput(outputId = "ui_tuning_3d"),
     actionButton(inputId = "load_3d", label = "Load parameters"),
