@@ -310,7 +310,7 @@ load_once_manual_3D = function(input, conc_neg){
                                                           zlim = c(0, input$z_lim_3d)), 
                          spread = "discrete", covar_mat = covar_mat, n_affected = input$n_affected, 
                          dis_level = dis_level, method_sp = input$method_sp_3d, 
-                         sp_radius = input$d/2, n_sp = input$n_sp, n_strata = n_strata, 
+                         sp_radius = input$d/2, n_sp = input$n_sp_3d, n_strata = n_strata, 
                          by = input$by_3d, L = input$z_lim_3d, rho = input$rho, 
                          m_kbar = input$m_kbar, conc_neg = conc_neg, tox = input$tox, 
                          Mc = input$Mc, method_det = input$method_det_3d, verbose = FALSE, 
