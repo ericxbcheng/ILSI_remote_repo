@@ -46,7 +46,7 @@ shinyServer(function(input, output, session) {
   # Smart version 3D
   source(file = "R/Server_smart_3d.R", local = TRUE)
   
-  # Smart version 3D
+  # Modal windows documentation
   source(file = "R/Documentation_Pop_ups.R", local = TRUE)
   
   # Download
