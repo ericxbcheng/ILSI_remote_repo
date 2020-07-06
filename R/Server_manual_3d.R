@@ -6,9 +6,7 @@ output$ui_tuning_3d = renderUI(expr = {
     verticalLayout(
       selectInput(inputId = "var_prim_3d",
                   label = "Primary tuning parameter",
-                  choices = list("Overall mycotoxin level (ppb)" = "c_hat",
-                                 "Number of probes" = "n_sp",
-                                 "Number of grains in a cluster" = "n_affected")),
+                  choices = f_var_tuning_3d(method_sp = input$method_sp_3d, n_vars = 1)),
       textInput(inputId = "val_prim_3d", label = "Tuning value(s) (separated by a comma)", value = "5,10,20")
     )
     
@@ -20,9 +18,7 @@ output$ui_tuning_3d = renderUI(expr = {
       textInput(inputId = "val_prim_3d", label = "Tuning value(s)", value = "5,10,20"),
       selectInput(inputId = "var_sec_3d",
                   label = "Secondary tuning parameter",
-                  choices = list("Number of probes" = "n_sp",
-                                 "Number of grains in a cluster" = "n_affected",
-                                 "Sampling strategy" = "method_sp")),
+                  choices = f_var_tuning_3d(method_sp = input$method_sp_3d, n_vars = 2)),
       textInput(inputId = "val_sec_3d", label = "Tuning value(s) (separated by a comma)", value = "5, 10, 100")
     )
   } else {

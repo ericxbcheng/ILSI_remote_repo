@@ -221,8 +221,8 @@ metrics_cont_sec_gui = function(data, input, vals_prim, vals_sec, chosen_mode){
   return(metrics_cont_sec(data = data, vals_prim = vals_prim, vals_sec = vals_sec, n_seed = n_seed))
 }
 
-# Reactively present choices
-f_var_prim = function(geom){
+# Reactively present choices (2D)
+f_var_tuning_2d = function(geom){
   
   choices = list("Number of contamination points" = "n_contam",
                  "Number of sample points" = "n_sp",
@@ -237,6 +237,7 @@ f_var_prim = function(geom){
   }
 }
 
+# UI for tuning 2D smart mode
 f_ui_tuning_2d_vs = function(input, ...){
   if(input$n_vars_vs == 0){
     NULL
@@ -246,7 +247,7 @@ f_ui_tuning_2d_vs = function(input, ...){
       p("Q15A. Which parameter do you want to tune?"),
       selectInput(inputId = "var_prim_vs",
                   label = NULL,
-                  choices = f_var_prim(geom = input$geom_vs)),
+                  choices = f_var_tuning_2d(geom = input$geom_vs)),
       p("Q15B. What values do you want to tune over? (separated by a comma)"),
       textInput(inputId = "val_prim_vs", label = NULL, value = "1,2,3")
     )
@@ -256,7 +257,7 @@ f_ui_tuning_2d_vs = function(input, ...){
       p("Q15A. Which primary parameter do you want to tune?"),
       selectInput(inputId = "var_prim_vs",
                   label = NULL,
-                  choices = f_var_prim(geom = input$geom_vs)),
+                  choices = f_var_tuning_2d(geom = input$geom_vs)),
       p("Q15B. What values do you want to tune the primary parameter over? (separated by a comma)"),
       textInput(inputId = "val_prim_vs", label = NULL, value = "1,2,3"),
       p("Q15C. Which secondary parameter do you want to tune?"),
@@ -313,6 +314,44 @@ f_iterate_tune_2d = function(input, output, Args, n_vars, chosen_mode){
 
 ############################################## 3D ##########################################
 
+# Reactively present choices (3D)
+f_var_tuning_3d = function(method_sp, n_vars){
+  
+  choices = list("Overall mycotoxin level (ppb)" = "c_hat",
+                 "Number of probes" = "n_sp",
+                 "Number of grains in a cluster" = "n_affected",
+                 "Sampling strategy" = "method_sp")
+  
+  if(n_vars == 1){
+    
+    if(method_sp == "ss"){
+      return(choices[c(1,3)])
+      
+    } else if (method_sp %in% c("srs", "strs")){
+      return(choices[1:3])
+      
+    } else {
+      stop("Unknown sampling strategy. Choose 'srs', 'strs', or 'ss'.")
+    }
+    
+  } else if (n_vars == 2){
+    
+    if(method_sp == "ss"){
+      return(choices[c(3,4)])
+      
+    } else if (method_sp %in% c("srs", "strs")){
+      return(choices[2:4])
+      
+    } else {
+      stop("Unknown sampling strategy. Choose 'srs', 'strs', or 'ss'.")
+    }
+    
+  } else {
+    stop("Undefined number of tuning variables. Choose 1 or 2.")
+  }
+}
+
+# Tuning 3D smart mode
 f_ui_tuning_3d_vs = function(input, ...){
   if(input$n_vars_3d_vs == 0){
     NULL
@@ -322,9 +361,7 @@ f_ui_tuning_3d_vs = function(input, ...){
       p("Q15A. Which parameter do you want to tune?"),
       selectInput(inputId = "var_prim_3d_vs",
                   label = NULL,
-                  choices = list("Overall mycotoxin level (ppb)" = "c_hat",
-                                 "Number of probes" = "n_sp",
-                                 "Number of grains in a cluster" = "n_affected")),
+                  choices = f_var_tuning_3d(method_sp = input$method_sp_3d_vs, n_vars = 1)),
       p("Q15B. What values do you want to tune over? (separated by a comma)"),
       textInput(inputId = "val_prim_3d_vs", label = NULL, value = "1,10,20")
     )
@@ -340,9 +377,7 @@ f_ui_tuning_3d_vs = function(input, ...){
       p("Q15C. Which secondary parameter do you want to tune?"),
       selectInput(inputId = "var_sec_3d_vs",
                   label = NULL,
-                  choices = list("Number of probes" = "n_sp",
-                                 "Number of grains in a cluster" = "n_affected",
-                                 "Sampling strategy" = "method_sp")),
+                  choices = f_var_tuning_3d(method_sp = input$method_sp_3d_vs, n_vars = 2)),
       conditionalPanel(condition = "input.var_sec_3d_vs == 'method_sp'",
                        wellPanel(
                          p("Q15C-1. Override: stratification direction"),
