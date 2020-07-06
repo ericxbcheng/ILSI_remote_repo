@@ -7,7 +7,7 @@ output$ui_tuning = renderUI(expr = {
     verticalLayout(
       selectInput(inputId = "var_prim",
                   label = "Primary tuning parameter",
-                  choices = f_var_prim(geom = input$geom)),
+                  choices = f_var_tuning_2d(geom = input$geom)),
       textInput(inputId = "val_prim", label = "Tuning value(s) (separated by a comma)", value = "1,2,3")
     )
     
@@ -15,7 +15,7 @@ output$ui_tuning = renderUI(expr = {
     verticalLayout(
       selectInput(inputId = "var_prim",
                   label = "Primary tuning parameter",
-                  choices = f_var_prim(geom = input$geom)),
+                  choices = f_var_tuning_2d(geom = input$geom)),
       textInput(inputId = "val_prim", label = "Tuning value(s)", value = "1,2,3"),
       selectInput(inputId = "var_sec",
                   label = "Secondary tuning parameter",
