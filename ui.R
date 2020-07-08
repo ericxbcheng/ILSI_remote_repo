@@ -157,25 +157,34 @@ v_manual_2D = fluidRow(
   box(title = "2D Input Parameters", 
       splitLayout(
         numericInput(inputId = "x_lim", label = "Length (m)", value = 10, min = 1),
-        numericInput(inputId = "y_lim", label = "Width (m)", value = 10, min = 1)
+        numericInput(inputId = "y_lim", label = "Width (m)", value = 10, min = 1),
+        actionButton("Doc_Field_Man", "",width = "40px",icon = icon("question-circle") )
       ),
       selectInput(inputId = "geom", label = "Geometry", choices = list("Point-source" = "point", "Area-based" = "area"), multiple = FALSE),
       conditionalPanel(
         condition = "input.geom == 'point'",
+        actionButton("Doc_Geometry_Man", "",width = "40px",icon = icon("question-circle") ),
         numericInput(inputId = "n_contam", label = "Number of contamination points", value = 1, min = 1, step = 1),
+        actionButton("Doc_Radius_Man", "",width = "40px",icon = icon("question-circle") ),
         numericInput(inputId = "spread_radius", label = "Radius of contamination area (m)", value = 1, min = 0)
       ),
+      actionButton("Doc_Contlevels_Man", "",width = "40px",icon = icon("question-circle") ),
       splitLayout(
         numericInput(inputId = "cont_level_mu", label = "Mean contamination level (log CFU/g)", value = 3),
         numericInput(inputId = "cont_level_sd", label = "Standard deviation of contamination level (log CFU/g)", value = 1)
       ),
+      actionButton("Doc_Backlevels_Man", "",width = "40px",icon = icon("question-circle") ),
       numericInput(inputId = "bg_level", label = "Background level (CFU/g)", value = 0.00001, min = 0),
+      actionButton("Doc_Decay_Man", "",width = "40px",icon = icon("question-circle") ),
       selectInput(inputId = "fun", label = "Decay function", choices = list("Exponential" = "exp", "Gaussian" = "norm", "Uniform" = "unif")),
       conditionalPanel(
         condition = "input.fun != 'unif'",
+        actionButton("Doc_LimitCont_Man", "",width = "40px",icon = icon("question-circle") ),
         numericInput(inputId = "LOC", label = "Limit of contamination contribution (0 - 1)", value = 0.001, min = 0, max = 1)
       ),
+      actionButton("Doc_Samplepoints_Man", "",width = "40px",icon = icon("question-circle") ),
       numericInput(inputId = "n_sp", label = "Number of sample points", value = 5, min = 1, step = 1),
+      actionButton("Doc_SamplingStrat_Man", "",width = "40px",icon = icon("question-circle") ),
       selectInput(inputId = "method_sp", label = "Sampling strategy", choices = list("SRS" = "srs", "STRS" = "strs", "k-step SS" = "ss")),
       wellPanel(
         selectInput(inputId = "by",

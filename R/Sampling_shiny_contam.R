@@ -4,9 +4,11 @@ f_ui_dims = function(input, ...){
       p("Q2. What are the dimensions of the field?"),
       splitLayout(
         numericInput(inputId = "x_lim_vs", label = "Length (m)", value = NULL, min = 1),
-        numericInput(inputId = "y_lim_vs", label = "Width (m)", value = NULL, min = 1)
+        numericInput(inputId = "y_lim_vs", label = "Width (m)", value = NULL, min = 1),
+        actionButton("Doc_Field_Sma", "",width = "40px",icon = icon("question-circle") )
       ),
       p("Q3. How would you describe the geometry of the hazards?"),
+      actionButton("Doc_Geometry_Sma", "",width = "40px",icon = icon("question-circle") ),
       radioButtons(inputId = "geom_vs", 
                    label = NULL, 
                    choices = list("Point-source" = "point", "Area-based" = "area"),
@@ -33,6 +35,7 @@ f_ui_geom = function(input, ...) {
     verticalLayout(
       p("Q3A. Number of contamination points?"),
       numericInput(inputId = "n_contam_vs", label = NULL, value = NULL, min = 1, step = 1),
+      actionButton("Doc_Radius_Sma", "",width = "40px",icon = icon("question-circle") ),
       p("Q3B. Radius of contamination area(m)?"),
       numericInput(inputId = "spread_radius_vs", label = NULL, value = NULL, min = 0)
     )
@@ -53,12 +56,15 @@ f_ui_grain = function(input, ...){
 f_ui_contam = function(input, ...){
   if(input$spread_vs == "continuous"){
       verticalLayout(
+        actionButton("Doc_Contlevels_Sma", "",width = "40px",icon = icon("question-circle") ),
         p("Q4. Mean contamination level (log CFU/g)"),
         numericInput(inputId = "cont_level_mu_vs", label = NULL, value = NULL),
         p("Q5. Standard deviation of contamination level (log CFU/g)"),
         numericInput(inputId = "cont_level_sd_vs", label = NULL, value = NULL),
+        actionButton("Doc_Backlevels_Sma", "",width = "40px",icon = icon("question-circle") ),
         p("Q6. Background level (CFU/g)"),
         numericInput(inputId = "bg_level_vs", label = NULL, value = 0.00001, min = 0),
+        actionButton("Doc_Decay_Sma", "",width = "40px",icon = icon("question-circle") ),
         p("Q7. Decay function"),
         radioButtons(inputId = "fun_vs",
                      label = NULL,
