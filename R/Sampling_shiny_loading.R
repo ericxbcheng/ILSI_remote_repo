@@ -1,5 +1,5 @@
 #Helper: create the dis_level list in the 3D mode
-make_dis_level = function(input, chosen_mode){
+make_dis_level_gui = function(input, chosen_mode){
   
   # manual or smart?
   if(chosen_mode == "3D"){
@@ -7,9 +7,11 @@ make_dis_level = function(input, chosen_mode){
     
     # dis_level: constant VS Gamma
     if(type == "constant"){
-      dis_level = list(type = "constant", args = input$dis_level_const_arg)
+      dis_level = make_dis_level(type = type, args = input$dis_level_const_arg)
+      
     } else if (type == "Gamma"){
-      dis_level = list(type = "Gamma", args = list("mode"= input$dis_level_gm_mode, "lb" = input$dis_level_gm_lb))
+      dis_level = make_dis_level(type = type, args = c(input$dis_level_gm_mode, input$dis_level_gm_lb))
+
     } else {
       stop("Unknown discrete level type. Choose 'constant' or 'Gamma'.")
     }
@@ -18,10 +20,11 @@ make_dis_level = function(input, chosen_mode){
     
     # dis_level: constant VS Gamma
     if(type == "constant"){
-      dis_level = list(type = "constant", args = input$dis_level_const_arg_vs)
+      dis_level = make_dis_level(type = type, args = input$dis_level_const_arg_vs)
+      
     } else if (type == "Gamma"){
-      dis_level = list(type = "Gamma", args = list("mode"= input$dis_level_gm_mode_vs, 
-                                                   "lb" = input$dis_level_gm_lb_vs))
+      dis_level = make_dis_level(type = type, args = c(input$dis_level_gm_mode_vs, input$dis_level_gm_lb_vs))
+      
     } else {
       stop("Unknown discrete level type. Choose 'constant' or 'Gamma'.")
     }
@@ -42,7 +45,7 @@ make_n_strata = function(input){
     
     if(input$method_sp_vs != "srs"){
       if(input$by_vs == "2d"){
-        n_strata = c(input$n_strata_row_vs, input$n_strata_col_vs)
+        n_strata = c(input$n_strata_col_vs, input$n_strata_row_vs)
       } else {
         n_strata = input$n_strata_vs
       }
@@ -58,7 +61,7 @@ make_n_strata = function(input){
     
     if(input$method_sp_3d_vs == "strs"){
       if(input$by_3d_vs == "2d"){
-        n_strata = c(input$n_strata_row_3d_vs, input$n_strata_col_3d_vs)
+        n_strata = c(input$n_strata_col_3d_vs, input$n_strata_row_3d_vs)
       } else {
         n_strata = input$n_strata_3d_vs
       }
@@ -240,7 +243,7 @@ ph = p("Under development")
 load_once_manual_2D = function(input){
   
   if(input$by == "2d"){
-    n_strata = c(input$n_strata_row, input$n_strata_col)
+    n_strata = c(input$n_strata_col, input$n_strata_row)
   } else {
     n_strata = input$n_strata
   }
@@ -285,7 +288,7 @@ load_once_smart_2D = function(input){
 load_once_manual_3D = function(input, conc_neg){
   
   # Create the discrete contamination level
-  dis_level = make_dis_level(input = input, chosen_mode = "3D")
+  dis_level = make_dis_level_gui(input = input, chosen_mode = "3D")
   
   # n_affected: = 0 VS > 0
   if(input$n_affected > 0){
@@ -295,27 +298,9 @@ load_once_manual_3D = function(input, conc_neg){
     covar_mat = NULL
   }
   
-  # # n_sp, container
-  # if(input$method_sp_3d %in% c("srs", "strs")){
-  #   n_sp = input$n_sp_3d
-  #   container = compartment = type = NULL
-  #   
-  # } else {
-  #   n_sp = NaN
-  #   container = input$container
-  #   
-  #   if(container == "hopper"){
-  #     compartment = input$compartment
-  #     type = input$type
-  #     
-  #   } else {
-  #     compartment = type = NULL
-  #   }
-  # }
-  
   # by = "2d" or "row/column"
   if(input$by_3d == "2d"){
-    n_strata = c(input$n_strata_row_3d, input$n_strata_col_3d)
+    n_strata = c(input$n_strata_col_3d, input$n_strata_row_3d)
   } else {
     n_strata = input$n_strata_3d
   }
@@ -325,7 +310,7 @@ load_once_manual_3D = function(input, conc_neg){
                                                           zlim = c(0, input$z_lim_3d)), 
                          spread = "discrete", covar_mat = covar_mat, n_affected = input$n_affected, 
                          dis_level = dis_level, method_sp = input$method_sp_3d, 
-                         sp_radius = input$d/2, n_sp = input$n_sp, n_strata = n_strata, 
+                         sp_radius = input$d/2, n_sp = input$n_sp_3d, n_strata = n_strata, 
                          by = input$by_3d, L = input$z_lim_3d, rho = input$rho, 
                          m_kbar = input$m_kbar, conc_neg = conc_neg, tox = input$tox, 
                          Mc = input$Mc, method_det = input$method_det_3d, verbose = FALSE, 
@@ -339,7 +324,7 @@ load_once_manual_3D = function(input, conc_neg){
 load_once_smart_3D = function(input, conc_neg){
   
   # Create the discrete contamination level
-  dis_level = make_dis_level(input = input, chosen_mode = "v_smart")
+  dis_level = make_dis_level_gui(input = input, chosen_mode = "v_smart")
   
   # n_affected: = 0 VS > 0
   if(input$n_affected_vs > 0){

@@ -1,0 +1,324 @@
+---
+title: "Sampling Discrete Mode 3"
+author: "Xianbin Cheng"
+date: "6/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Objective
+
+  * This is an instruction for the discrete mode in the sampling model v3.
+      + Changes since v2: We adapted some tuning, analysis, and visualization functions from the GUI
+  
+# Method
+
+###1. Load libraries and source R code.
+
+```{r, warning = FALSE, message = FALSE}
+source(file = "Sampling_libraries.R")
+source(file = "Sampling_contamination.R")
+source(file = "Sampling_contamination_3d.R")
+source(file = "Sampling_visualization.R")
+source(file = "Sampling_assay_prep.R")
+source(file = "Sampling_plan.R")
+source(file = "Sampling_plan_3d.R")
+source(file = "Sampling_assay_3d.R")
+source(file = "Sampling_assay.R")
+source(file = "Sampling_outcome_3d.R")
+source(file = "Sampling_outcome.R")
+source(file = "Sampling_iteration.R")
+source(file = "Sampling_tuning_3d.R")
+source(file = "Sampling_analysis.R")
+```
+
+###2. List important parameters.
+
+**Sampling contamination**
+
+  * `c_hat` = the estimated mycotoxin concentration in the container  
+  * `x_lim` = the limits of the x-axis  
+  * `y_lim` = the limits of the y-axis  
+  * `z_lim` = the limits of the z-axis
+  * `dis_level` = a list of parameters associated with contamination level
+      + `type` = "constant"
+          - `args` = a constant value (ppb)
+      + `type` = "Gamma"    
+          - `args` = a list of the mode (ppb) and the lower bound (ppb), assuming contamination level follows $lb+Gamma(\alpha, \theta=\frac {mode-20}{\alpha-1})$
+  * `n_affected` = the number of affected kernels near the contamination spot   
+  * `covar_mat` = covariance matrix of `x` and `y`, which defines the spread of contamination. Assume the spread follows a 2D normal distribution with var(X) = 0.25, var(Y) = 0.25 and cov(X, Y) = 0   
+
+**Sampling strategies**
+
+  * `method_sp` = sampling strategy (`srs`, `strs`, `ss`)
+      + `srs` or `strs` = SRS and STRS with randomized probing locations
+      + `ss` = GIPSA designated probing locations
+  * `n_sp` = the number of probes
+  * `d` = inner diameter of the probe (m)
+  * `L` = length of the probe (m). We assume it's fully inserted to the bottom
+      + GIPSA protocol: `L` = 5, 6, 8, 10, 12 feet
+      + Depend on the container type. Remember to convert it to meters. 
+  * `rho` = average density of a kernel (g/cm3)
+  * `m_kbar` = average mass of a kernel (g)
+  * `homogeneity` = degree to which kernels are ground
+      + FGIS requires at least 60% of the ground sample passes a U.S. Standard No. 20 sieve
+  * `container` = grains container designated by GIPSA
+      + "truck"
+          - `depth_ft` = the depth of corn inside the truck.
+          - There are two sampling patterns for trucks, depending on whether depth is higher than or lower than 4 ft.
+      + "barge" 
+      + "hopper"
+          - `compartment` = 2 or 3, 
+          - `type` = `open_top` or `trough`
+   
+**Sample Assay**
+  
+  * `method_det` = method of detection  
+      + "ELISA": LOD = 1 ng/g (Helica Total Aflatoxins ELISA kit)  
+  * `Mc` = maximum concentration limit of mycotoxin (ng/g or ppb)
+  * `tox` = type of mycotoxin 
+      + `AF` = aflatoxin
+          - Minimum sample size: 
+          - 908 g (2 lbs) for trucks
+          - 1362 g (3 lbs) for railcars (hopper)
+          - 4540 g (10 lbs) for barges, sublots and composite samples
+          - 4540 g is the recommended submitted sample size
+      + `FM` = fumonisin
+      + `ZEN` = zearalenone
+      + `OTA` = Ochratoxin A
+      + `DEN` = Deoxynivalenol 
+        
+**Iteration**
+
+  * `n_iter` = the number of iterations
+
+```{r}
+# Pre-generate healthy kernel concentrations to save time
+conc_neg = rpert(n = 10^6, min = 0, mode = 0.7, max = 19.99, shape = 80)
+```
+
+```{r}
+## Contamination
+c_hat = 5
+x_lim = c(0, 3)
+y_lim = c(0, 2)
+z_lim = c(0, 1.5)
+lims = list(xlim = x_lim, ylim = y_lim, zlim = z_lim)
+
+dis_level = make_dis_level(type = "constant", args = 40000)
+# dis_level = make_dis_level(type = "Gamma", args = c(40000, 20))
+
+spread = "discrete"
+n_affected = 0
+covar_mat = make_covar_mat(spread = spread, varx = 0.0004, vary = 0.0004, varz = 0.0004, 
+                           covxy = 0, covxz = 0, covyz = 0)
+
+# Sampling
+method_sp = "srs"
+n_sp = 5
+n_strata = c(3,4) 
+by = "2d"
+d = 0.04
+sp_radius = d / 2
+L = z_lim[2]
+m_kbar = 0.3 
+rho = 1.28
+homogeneity = 0.6
+
+### SS
+# L = get_Lprobe(container = container, lims = lims)
+
+if(method_sp == "ss"){
+  container = "truck"
+  
+  if(container == "hopper"){
+    compartment = 2
+    type = "open_top"
+  } else {
+    compartment = type = NULL
+  }
+} else if (method_sp %in% c("srs", "strs")) {
+  container = type = compartment = NULL
+}
+
+# Assaying
+method_det = "ELISA aflatoxin"
+tox = "AF"
+Mc = 20
+
+# Iteration
+n_iter = 5
+
+# Wrap arguments into one single list
+ArgList_default = list(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat,
+                       n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
+                       sp_radius = sp_radius, n_sp = n_sp, n_strata = n_strata, by = by, L = L, 
+                       rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, tox = tox, Mc = Mc, 
+                       method_det = method_det, verbose = FALSE, homogeneity = homogeneity, 
+                       compartment = compartment, type = type, container = container)
+```
+
+
+###3. Set a parameter for tuning and a vector of values to tune over.
+
+  * For example, if you want to tune the parameter `n_contam`, just assign the character "n_contam" to the variable `param_name`, and then assign a vector of tuning values to the variable `vals`.
+  
+  * Parameters available for tuning:  
+      + Continuous parameters: `n_contam`, `spread_radius`, `cont_level`, `n_sp`, `n_strata`, `LOC`, `case`, `m`, `M`, `bg_level`, `m_sp`
+      + Categorical parameters: `method_sp`, `by`, `fun`, `method_det`, `geom`
+      
+  * Some parameters have a finite range of values. Going beyond the allowable range may not produce an error, but it will definitely produce weird results.
+  
+  * `seed` = the random seed for contamination locations
+  
+  * `n_seed` = the number of seeds.
+  
+```{r}
+# Primary tuning parameter
+var_prim = "c_hat"
+vals_prim = c(1,10, 20)
+
+# Secondary tuning parameter
+var_sec = "n_sp"
+vals_sec = c(5, 10, 15)
+
+# Seeds
+n_seed = 5
+```
+
+###4. Tune the parameter and produce the following results:
+
+  * `c_true` = true contamination level (ng/g)
+  * `decision` = a number that indicates lot decision. 
+      + 5 = Accept lot. Mean sample concentration < LOD
+      + 6 = Reject lot. Mean sample concentration >= Mc
+      + 7 = Accept lot
+  * In verbose mode
+      + `mean_raw` = mean contamination level of raw sample
+      + `mean_work` = mean contamination level of work portion
+      + `mean_test` = mean contamination level of test portion
+  * `param` = the tuning parameter
+
+```{r, warning = FALSE}
+# 0 tuning parameter
+sim_data_0 = sim_iterate2(n_seed = n_seed, n_iter = n_iter, Args = ArgList_default)
+
+# 1 tuning parameter
+sim_data_1 = tune_param_n(vals = vals_prim, Args = ArgList_default, n_seed = n_seed, n_iter = n_iter, var_prim = var_prim)
+
+# 2 tuning parameters
+sim_data_2 = tune_param_sec(Args = ArgList_default, var_prim = var_prim, vals_prim = vals_prim, var_sec = var_sec, vals_sec = vals_sec, n_seed = n_seed, n_iter = n_iter)
+```
+
+5. Clean up values of probability of acceptance.
+
+```{r, warning = FALSE}
+data_cleaned0 = metrics_dis_0(data = sim_data_0)
+
+data_cleaned1 = metrics_dis_n(data = sim_data_1)
+
+data_cleaned2 = metrics_dis_sec(data = sim_data_2, vals_prim = vals_prim, vals_sec = vals_sec, n_seed = n_seed)
+```
+
+# Visualization
+
+###1. Run the model once for visualization purposes.
+
+```{r}
+# Remove unnecessary arguments
+ArgList_vis = ArgList_default 
+ArgList_vis[c("Mc", "method_det", "verbose")] = NULL
+ArgList_vis$seed = NaN
+
+# Produce intermediate outputs
+one_iteration = do.call(what = sim_intmed, args = ArgList_vis)
+```
+
+```{r, eval = FALSE, warning = FALSE, echo = FALSE, out.width = "50%"}
+overlay_draw(method_sp = method_sp, data = one_iteration[["contam_sp_xy"]]$combined , spread = spread, xlim = lims$xlim, ylim = lims$ylim, n_strata = n_strata, by = by)
+overlay_draw_probe(data = one_iteration[["contam_sp_xy"]]$combined, lims = lims, L = L)
+sample_dist(raw = one_iteration$contam_sp_xy$raw, work = one_iteration$sample$work, test = one_iteration$sample$test, Mc = Mc)
+assay_draw(data = one_iteration$sample$test, Mc = Mc, method_det = method_det, spread = spread)
+```
+
+###2. Visualize the probability of detection and acceptance. 
+
+1. 0 tuning parameter
+
+```{r}
+plot_tune0(data = data_cleaned0)
+```
+
+2. 1 tuning parameter.
+
+```{r}
+plot_tune1(data = data_cleaned1, xlab = "Estimated aflatoxin concentration (ppb)")
+```
+
+3. 2 tuning paramters.
+
+```{r}
+# Ribbon plot: acceptance probability
+plot_tune2_ribbon(data = data_cleaned2, xlab = "Estimated aflatoxin concentration (ppb)", legend_lab = "Number of samples")
+```
+
+
+# Appendix
+
+  * This is for the purpose of debugging only. The following functions are important intermediate functions. You may figure out which step is malfunctioning by running through these functions line by line.
+  * For more info on the model framework, please refer to the function call graph in the slides "Schemes.pptx".
+  
+```{r, eval = FALSE}
+# These functions produce intermediate data
+contam_xy = sim_contam_new(c_hat = c_hat, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, 
+                           lims = lims, spread = spread, n_affected = n_affected, 
+                           covar = covar_mat, dis_level = dis_level, seed = seed)
+sp_xy = sim_plan_new(method_sp = method_sp, spread = spread, lims = lims, 
+                     radius = sp_radius, n_sp = n_sp, n_strata = n_strata, by = by)
+dist_contam_sp = calc_dist(df_contam = contam_xy, df_sp = sp_xy, spread = spread, 
+                           method_sp = method_sp)
+contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, df_sp = sp_xy, dist = dist_contam_sp, 
+                                spread = spread, L = L, rho = rho, m_kbar = m_kbar, 
+                                sp_radius = sp_radius, conc_neg = conc_neg, 
+                                method_sp = method_sp, lims = lims)
+sample_dis = get_sample_dis(data = contam_sp_xy$raw, m_kbar = m_kbar, tox = tox, homogeneity = homogeneity)
+decision = lot_decision_new(data = sample_dis$test, Mc = Mc, spread = spread, method_det = method_det)
+words(x = decision)
+
+# This function produces the dataframe "contam_sp_xy" and the distance dataframe
+test1 = sim_intmed(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat,
+                   n_affected = n_affected, dis_level = dis_level, method_sp = method_sp,
+                   n_sp = n_sp, n_strata = n_strata, by = by, container = container, sp_radius = sp_radius, L = L, rho = rho, 
+                   m_kbar = m_kbar, tox = tox, conc_neg = conc_neg, seed = seed, homogeneity = homogeneity)
+
+# This function produces
+test2 = sim_outcome_new(c_hat = c_hat, lims = lims, spread = spread, method_sp = method_sp, 
+                        method_det = method_det, covar_mat = covar_mat, n_affected = n_affected, 
+                        dis_level = dis_level, sp_radius = sp_radius, n_sp = n_sp, n_strata = n_strata, by = by, container = container, 
+                        L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg, Mc = Mc,
+                        tox = tox, verbose = TRUE, seed = seed, homogeneity = homogeneity)
+
+# This function produces a sim_outcome_new() function with all the input parameters loaded
+test3 = gen_sim_outcome_new(c_hat = c_hat, lims = lims, spread = spread, n_sp = n_sp, n_strata = n_strata, by = by,
+                            method_sp = method_sp, method_det = method_det, covar_mat = covar_mat, 
+                            n_affected = n_affected, dis_level = dis_level, sp_radius = sp_radius, 
+                            container = container, L = L, rho = rho, m_kbar = m_kbar, Mc = Mc, 
+                            conc_neg = conc_neg, tox = tox, verbose = TRUE, seed = seed, homogeneity = homogeneity)
+
+# First layer of iteration: This function iterates the sim_outcome_new() for n_iter times with the same contamination locations
+test4 = sim_iterate(n_iter = n_iter, Args = ArgList_default, seed = seed)
+
+# Second layer of iteration: Iterate the 1st layer with different seeds
+test5 = sim_iterate2(n_seed = n_seed, n_iter = n_iter, Args = ArgList_default)
+
+# Tuning layer
+test6 = tune_param(Args = ArgList_default, n_seed = n_seed, n_iter = n_iter, param = param_name, val = 30)
+```
+
+```{r, echo = TRUE}
+sessionInfo()
+```
+

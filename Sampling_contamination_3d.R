@@ -324,3 +324,18 @@ rgamma_lim = function(n, alpha = 2, mode, lb){
 
   return(a)
 }
+
+# A wrapper for discrete level inputs
+make_dis_level = function(type, args){
+  
+  if(type == "constant"){
+    dis_level = list(type = "constant", args = args)
+    
+  } else if (type == "Gamma"){
+    dis_level = list(type = "Gamma", args = list("mode"= args[1], "lb" = args[2]))
+    
+  } else {
+    stop("Unknown discrete level type. Choose 'constant' or 'Gamma'.")
+  }
+  return(dis_level)
+}

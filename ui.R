@@ -38,10 +38,10 @@ v_manual_3D = fluidRow(
   box(
     title = "3D Input Parameters",
     splitLayout(
-      numericInput(inputId = "x_lim_3d", label = "Length (m)", value = 3, min = 1),
-      numericInput(inputId = "y_lim_3d", label = "Width (m)", value = 2, min = 1),
-      numericInput(inputId = "z_lim_3d", label = "Height (m)", value = 1.5, min = 1),
-      actionButton("Doc_Bins", "",width = "40px",icon = icon("question-circle") ) 
+      numericInput(inputId = "x_lim_3d", label = "Length (m)", value = 1, min = 1),
+      numericInput(inputId = "y_lim_3d", label = "Width (m)", value = 1, min = 1),
+      numericInput(inputId = "z_lim_3d", label = "Height (m)", value = 1, min = 1),
+      actionButton("Doc_Bins", "",width = "40px",icon = icon("question-circle"))
     ),
     splitLayout(
       selectInput(inputId = "tox", label = "Mycotoxin", choices = list("Aflatoxin" = "AF")),
