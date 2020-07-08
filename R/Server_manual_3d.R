@@ -83,3 +83,31 @@ observeEvent(eventExpr = {input$iterate_3d}, handlerExpr = {
   removeModal()
   
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
+
+# Show a message when tuning over n_affected
+observeEvent(eventExpr = {input$n_vars_3d}, handlerExpr = {
+  
+  if(input$n_vars_3d == 1){
+    
+    observeEvent(eventExpr = {input$var_prim_3d}, handlerExpr = {
+      if(input$var_prim_3d == "n_affected"){
+        if(input$n_affected == 0){
+          showModal(ui = modalDialog("Please go back and set 'number of grains in a cluster' to > 0. For example, set it to 1."))
+        }
+      }
+    })
+    
+  } else if (input$n_vars_3d == 2){
+    
+    observeEvent(eventExpr = {input$var_sec_3d}, handlerExpr = {
+      if(input$var_sec_3d == "n_affected"){
+        if(input$n_affected == 0){
+          showModal(ui = modalDialog("Please go back and set 'number of grains in a cluster' to > 0. For example, set it to 1."))
+        }
+      }
+    })
+    
+  } else {
+    NULL
+  }
+}, ignoreNULL = TRUE, ignoreInit = TRUE)
