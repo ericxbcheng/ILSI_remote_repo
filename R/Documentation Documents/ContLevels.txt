@@ -1,0 +1,6 @@
+<html>
+
+<p><strong>Mean and standard deviation of contamination level (log CFU/g)</strong></p>
+<p>If you previously measured the contamination level or have historical data of microbial load in your field, please insert here.</p>
+
+</html>

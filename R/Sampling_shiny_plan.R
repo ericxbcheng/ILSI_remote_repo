@@ -5,6 +5,7 @@ f_ui_sp = function(input, ...){
         p("Q8. Which sampling attribute case?"),
         sliderInput(inputId = "case_vs", label = NULL, min = 1, value = 10, max = 15, step = 1, round = TRUE),
         disabled(
+          actionButton("Doc_Samplepoints_Sma", "",width = "40px",icon = icon("question-circle") ),
           p("Q9. How many samples do you want?"),
           numericInput(inputId = "n_sp_vs", label = NULL, value = 5, min = 1, step = 1)
         ),
@@ -13,6 +14,7 @@ f_ui_sp = function(input, ...){
           numericInput(inputId = "m_vs", label = "m", value = 0, min = 0),
           numericInput(inputId = "M_vs", label = "M", value = 0, min = 0)
         ),
+        actionButton("Doc_SamplingStrat_Sma", "",width = "40px",icon = icon("question-circle") ),
         p("Q11. Which sampling strategy would you use?"),
         radioButtons(inputId = "method_sp_vs", label = NULL, choices = list("SRS" = "srs", "STRS" = "strs", "k-step SS" = "ss"), selected = character(0), inline = TRUE)
       )} else {
@@ -20,8 +22,10 @@ f_ui_sp = function(input, ...){
       }
     } else if (input$spread_vs == "discrete"){
       verticalLayout(
+        actionButton("Doc_Probe", "",width = "40px",icon = icon("question-circle") ),
         p("Q10. What's the diameter of the probe (m)?"),
         numericInput(inputId = "d_vs", label = NULL, value = 0.04, min = 0.01, max = 1, step = 0.01),
+        actionButton("Doc_Sampling_s", "",width = "40px",icon = icon("question-circle") ),
         p("Q11. Which sampling strategy would you use?"),
         radioButtons(inputId = "method_sp_3d_vs", label = NULL, choices = list("SRS" = "srs", "STRS" = "strs", "GIPSA SS" = "ss"), selected = character(0), inline = TRUE)
       )

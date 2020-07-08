@@ -1,0 +1,6 @@
+<html>
+
+<p><strong>Background level (CFU/g) </strong></p>
+<p>This is the endemic bacteria that might be present in soil. In this interface we assume the prevalence of pathogens is low, however, if you previously applied manure or if your field is close to cattle ranching field or surface waters, the likelihood of having detectable levels of bacteria is higher.</p>
+
+</html>

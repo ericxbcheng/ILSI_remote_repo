@@ -1,0 +1,6 @@
+<html>
+
+<p><strong>Field Area Parameter details</strong></p>
+<p>Common field area measurement consists on one-acre field. In this User Interface, we assume that the dimensions of the field are 64 x 64 m (convert to ft) for an equally sized acre plot. However, we provide the options to customize the length and width of your field, depending on your own farm&rsquo;s reality or your preferred management practices.</p>
+
+</html>
