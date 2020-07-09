@@ -154,6 +154,42 @@ observeEvent(eventExpr = {input$iterate_3d_vs}, handlerExpr = {
   
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
+# Show a message when tuning over n_affected or method_sp
+observeEvent(eventExpr = {input$n_vars_3d_vs}, handlerExpr = {
+  
+  if(input$n_vars_3d_vs == 1){
+    
+    observeEvent(eventExpr = {input$var_prim_3d_vs}, handlerExpr = {
+      if(input$var_prim_3d_vs == "n_affected"){
+        if(input$n_affected_vs == 0){
+          showModal(ui = modalDialog("Please go back to Q9 and set it to > 0. For example, set it to 1."))
+        }
+      }
+    })
+    
+  } else if (input$n_vars_3d_vs == 2){
+    
+    observeEvent(eventExpr = {input$var_sec_3d_vs}, handlerExpr = {
+      if(input$var_sec_3d_vs == "n_affected"){
+        if(input$n_affected_vs == 0){
+          showModal(ui = modalDialog("Please go back to Q9 and set it to > 0. For example, set it to 1."))
+        }
+        
+      } else if (input$var_sec_3d_vs == "method_sp"){
+        if(input$method_sp_3d_vs == "ss"){
+          showModal(ui = modalDialog("Please go back to Q11 and set it to 'simple random sampling' or 'stratified random sampling' so that you can set the number of samples for tuning purposes."))
+        }
+        
+      } else {
+        NULL
+      }
+    })
+    
+  } else {
+    NULL
+  }
+}, ignoreNULL = TRUE, ignoreInit = TRUE)
+
 #Documentation Bin Sizes
 observeEvent(input$Doc_Bin, {
   showModal(modalDialog(
