@@ -196,17 +196,17 @@ v_manual_2D = fluidRow(
         numericInput(inputId = "n_strata_row", label = "Number of row strata (2D only)", value = NULL, min = 1),
         numericInput(inputId = "n_strata_col", label = "Number of column strata (2D only)", value = NULL, min = 1)
       ),
+      sliderInput(inputId = "case", label = "Case", min = 1, value = 10, max = 15, step = 1, round = TRUE),
+      splitLayout(
+        numericInput(inputId = "m", label = "m", value = 0, min = 0),
+        numericInput(inputId = "M", label = "M", value = 0, min = 0)
+      ),
       numericInput(inputId = "m_sp", label = "Individual sample mass (g)", value = 25, min = 0),
       selectInput(inputId = "method_det",
                   label = "Detection method",
                   choices = list("Plating" = "plating", "Enrichment" = "enrichment"),
                   selected = "enrichment",
                   multiple = FALSE),
-      sliderInput(inputId = "case", label = "Case", min = 1, value = 10, max = 15, step = 1, round = TRUE),
-      splitLayout(
-        numericInput(inputId = "m", label = "m", value = 0, min = 0),
-        numericInput(inputId = "M", label = "M", value = 0, min = 0)
-      ),
       h3(),
       h2("Iteration section"),
       splitLayout(

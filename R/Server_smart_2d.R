@@ -25,11 +25,17 @@ observeEvent(eventExpr = {input$geom_vs}, handlerExpr = {
 observeEvent(eventExpr = {input$case_vs}, handlerExpr = {
   
   # Match the n_sp with case
-  n_sp_update = case_sp_lookup(input = input)
+  n_sp_update = case_sp_lookup(case = input$case_vs)
   
   # Update n_sp_vs
   updateNumericInput(session = session, inputId = "n_sp_vs", value = n_sp_update)
 })
+
+# Give a warning when n_sp is not consistent with case
+observeEvent(eventExpr = {input$n_sp_vs}, handlerExpr = {
+  make_modal_n_sp_case(n_sp = input$n_sp_vs, case = input$case_vs)
+})
+
 
 # Sampling strategy
 observeEvent(eventExpr = {input$method_sp_vs}, handlerExpr = {
