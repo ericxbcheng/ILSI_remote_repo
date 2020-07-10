@@ -190,6 +190,24 @@ observeEvent(eventExpr = {input$n_vars_3d_vs}, handlerExpr = {
   }
 }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
+# Warning: n_sp and n_strata
+observeEvent(eventExpr = {input$method_sp_3d_vs}, handlerExpr = {
+  if(input$method_sp_3d_vs == "strs"){
+    observeEvent(eventExpr = {c(input$n_strata_3d_vs, input$by_3d_vs, input$n_strata_row_3d_vs, input$n_strata_col_3d_vs)}, handlerExpr = {
+      
+      if(input$by_3d_vs == "2d"){
+        req(input$n_strata_row_3d_vs, input$n_strata_col_3d_vs)
+      } else {
+        req(input$n_strata_3d_vs)
+      }
+      
+      warning_n_sp_n_strata(spread = "discrete", v_smart = TRUE, input = input)
+      
+    })
+  }
+})
+
+
 #Documentation Bin Sizes
 observeEvent(input$Doc_Bin, {
   showModal(modalDialog(
