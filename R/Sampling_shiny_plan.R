@@ -147,3 +147,62 @@ f_ui_method_sp_3d = function(input, ...){
     stop("Unknown sampling strategy.")
   }
 }
+
+# A warning message when n_sp is not consistent with n_strata
+warning_n_sp_n_strata = function(spread, v_smart, input){
+  
+  # Extract n_sp, n_strata, by
+  if(spread == "continuous"){
+    if(v_smart == FALSE){
+      n_sp = input$n_sp
+      by = input$by
+      if(by != "2d"){
+        n_strata = input$n_strata
+        
+      } else {
+        n_strata = c(input$n_strata_row, input$n_strata_col)
+      }
+      
+    } else {
+      n_sp = input$n_sp_vs
+      by = input$by_vs
+      n_strata = make_n_strata(input = input)
+      
+    }
+  } else if (spread == "discrete"){
+    if(v_smart == FALSE){
+      n_sp = input$n_sp_3d
+      by = input$by_3d
+      if(by != "2d"){
+        n_strata = input$n_strata_3d
+      } else {
+        n_strata = c(input$n_strata_row_3d, input$n_strata_col_3d)
+      }
+      
+    } else {
+      n_sp = input$n_sp_3d_vs
+      by = input$by_3d_vs
+      n_strata = make_n_strata(input = input)
+      
+    }
+  } else {
+    stop("Undefined spread type. Select 'continuous' or 'discrete'.")
+  }
+  
+  # Make the warning
+  make_modal_n_sp_n_strata(n_sp = n_sp, n_strata = n_strata, by = by)
+}
+
+# Make a warning message for when n_sp is not consistent with n_strata
+make_modal_n_sp_n_strata = function(n_sp, n_strata, by){
+  
+  if(by != "2d"){
+    if(n_sp %% n_strata != 0){
+      showModal(ui = modalDialog("Please ensure the number of samples is a multiple of the number of strata."))
+    }
+  } else {
+    if(n_sp %% (n_strata[1]*n_strata[2]) != 0){
+      showModal(ui = modalDialog("Please ensure the number of samples is a multiple of row strata times column strata."))
+    }
+  }
+}

@@ -122,6 +122,23 @@ observeEvent(eventExpr = {input$iterate_vs}, handlerExpr = {
   
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
+# Warning: n_sp and n_strata
+observeEvent(eventExpr = {input$method_sp_vs}, handlerExpr = {
+  if(input$method_sp_vs == "strs"){
+    observeEvent(eventExpr = {c(input$n_strata_vs, input$by_vs, input$n_strata_row_vs, input$n_strata_col_vs)}, handlerExpr = {
+      
+      if(input$by_vs == "2d"){
+        req(input$n_strata_row_vs, input$n_strata_col_vs)
+      } else {
+        req(input$n_strata_vs)
+      }
+      
+      warning_n_sp_n_strata(spread = "continuous", v_smart = TRUE, input = input)
+      
+    })
+  }
+})
+
 
 #Pop Up Modals
 # 2D ----------------------------------------------------------------------

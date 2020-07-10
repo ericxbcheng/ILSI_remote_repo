@@ -67,3 +67,20 @@ observeEvent(eventExpr = {input$iterate}, handlerExpr = {
   removeModal()
   
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
+
+# Warning: n_sp and n_strata
+observeEvent(eventExpr = {input$method_sp}, handlerExpr = {
+  if(input$method_sp == "strs"){
+    observeEvent(eventExpr = {c(input$n_strata, input$by, input$n_strata_row, input$n_strata_col)}, handlerExpr = {
+      
+      if(input$by == "2d"){
+        req(input$n_strata_row, input$n_strata_col)
+      } else {
+        req(input$n_strata)
+      }
+      
+      warning_n_sp_n_strata(spread = "continuous", v_smart = FALSE, input = input)
+      
+    })
+  }
+})
