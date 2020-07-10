@@ -84,3 +84,13 @@ observeEvent(eventExpr = {input$method_sp}, handlerExpr = {
     })
   }
 })
+
+# Associate case with n_sp
+observeEvent(eventExpr = {input$case}, handlerExpr = {
+  
+  # Match the n_sp with case
+  n_sp_update = case_sp_lookup(case = input$case)
+  
+  # Update n_sp_vs
+  updateNumericInput(session = session, inputId = "n_sp", value = n_sp_update)
+})
