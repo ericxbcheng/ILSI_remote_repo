@@ -25,7 +25,7 @@ observeEvent(eventExpr = {input$geom_vs}, handlerExpr = {
 observeEvent(eventExpr = {input$case_vs}, handlerExpr = {
   
   # Match the n_sp with case
-  n_sp_update = case_sp_lookup(input = input)
+  n_sp_update = case_sp_lookup(case = input$case_vs)
   
   # Update n_sp_vs
   updateNumericInput(session = session, inputId = "n_sp_vs", value = n_sp_update)

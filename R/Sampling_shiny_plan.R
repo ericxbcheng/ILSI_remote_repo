@@ -34,8 +34,8 @@ f_ui_sp = function(input, ...){
   }
 }
 
-case_sp_lookup = function(input){
-  switch(EXPR = input$case_vs, 
+case_sp_lookup = function(case){
+  switch(EXPR = case, 
          `1` = 5,
          `2` = 5,
          `3` = 5,
