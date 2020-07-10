@@ -111,3 +111,20 @@ observeEvent(eventExpr = {input$n_vars_3d}, handlerExpr = {
     NULL
   }
 }, ignoreNULL = TRUE, ignoreInit = TRUE)
+
+# Warning: n_sp and n_strata
+observeEvent(eventExpr = {input$method_sp_3d}, handlerExpr = {
+  if(input$method_sp_3d == "strs"){
+    observeEvent(eventExpr = {c(input$n_strata_3d, input$by_3d, input$n_strata_row_3d, input$n_strata_col_3d)}, handlerExpr = {
+      
+      if(input$by_3d == "2d"){
+        req(input$n_strata_row_3d, input$n_strata_col_3d)
+      } else {
+        req(input$n_strata_3d)
+      }
+      
+      warning_n_sp_n_strata(spread = "discrete", v_smart = FALSE, input = input)
+      
+    })
+  }
+})
