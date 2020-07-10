@@ -94,3 +94,8 @@ observeEvent(eventExpr = {input$case}, handlerExpr = {
   # Update n_sp_vs
   updateNumericInput(session = session, inputId = "n_sp", value = n_sp_update)
 })
+
+# Give a warning when n_sp is not consistent with case
+observeEvent(eventExpr = {input$n_sp}, handlerExpr = {
+  make_modal_n_sp_case(n_sp = input$n_sp, case = input$case)
+})

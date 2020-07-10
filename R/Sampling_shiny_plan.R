@@ -206,3 +206,14 @@ make_modal_n_sp_n_strata = function(n_sp, n_strata, by){
     }
   }
 }
+
+# Make a warning message for when n_sp is not consistent with case
+make_modal_n_sp_case = function(n_sp, case){
+  
+  # Correct n_sp
+  n_sp_correct = case_sp_lookup(case = case)
+  
+  if(n_sp != n_sp_correct){
+    showModal(ui = modalDialog("Warning! The number of samples doesn't match the attribute case. The assayed samples will be evaluated by the chosen attribute case."))
+  }
+}

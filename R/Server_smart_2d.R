@@ -31,6 +31,12 @@ observeEvent(eventExpr = {input$case_vs}, handlerExpr = {
   updateNumericInput(session = session, inputId = "n_sp_vs", value = n_sp_update)
 })
 
+# Give a warning when n_sp is not consistent with case
+observeEvent(eventExpr = {input$n_sp_vs}, handlerExpr = {
+  make_modal_n_sp_case(n_sp = input$n_sp_vs, case = input$case_vs)
+})
+
+
 # Sampling strategy
 observeEvent(eventExpr = {input$method_sp_vs}, handlerExpr = {
   
