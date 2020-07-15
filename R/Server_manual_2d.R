@@ -67,3 +67,35 @@ observeEvent(eventExpr = {input$iterate}, handlerExpr = {
   removeModal()
   
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
+
+# Warning: n_sp and n_strata
+observeEvent(eventExpr = {input$method_sp}, handlerExpr = {
+  if(input$method_sp == "strs"){
+    observeEvent(eventExpr = {c(input$n_strata, input$by, input$n_strata_row, input$n_strata_col)}, handlerExpr = {
+      
+      if(input$by == "2d"){
+        req(input$n_strata_row, input$n_strata_col)
+      } else {
+        req(input$n_strata)
+      }
+      
+      warning_n_sp_n_strata(spread = "continuous", v_smart = FALSE, input = input)
+      
+    })
+  }
+})
+
+# Associate case with n_sp
+observeEvent(eventExpr = {input$case}, handlerExpr = {
+  
+  # Match the n_sp with case
+  n_sp_update = case_sp_lookup(case = input$case)
+  
+  # Update n_sp_vs
+  updateNumericInput(session = session, inputId = "n_sp", value = n_sp_update)
+})
+
+# Give a warning when n_sp is not consistent with case
+observeEvent(eventExpr = {input$n_sp}, handlerExpr = {
+  make_modal_n_sp_case(n_sp = input$n_sp, case = input$case)
+})

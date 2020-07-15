@@ -25,11 +25,17 @@ observeEvent(eventExpr = {input$geom_vs}, handlerExpr = {
 observeEvent(eventExpr = {input$case_vs}, handlerExpr = {
   
   # Match the n_sp with case
-  n_sp_update = case_sp_lookup(input = input)
+  n_sp_update = case_sp_lookup(case = input$case_vs)
   
   # Update n_sp_vs
   updateNumericInput(session = session, inputId = "n_sp_vs", value = n_sp_update)
 })
+
+# Give a warning when n_sp is not consistent with case
+observeEvent(eventExpr = {input$n_sp_vs}, handlerExpr = {
+  make_modal_n_sp_case(n_sp = input$n_sp_vs, case = input$case_vs)
+})
+
 
 # Sampling strategy
 observeEvent(eventExpr = {input$method_sp_vs}, handlerExpr = {
@@ -121,5 +127,22 @@ observeEvent(eventExpr = {input$iterate_vs}, handlerExpr = {
   removeModal()
   
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
+
+# Warning: n_sp and n_strata
+observeEvent(eventExpr = {input$method_sp_vs}, handlerExpr = {
+  if(input$method_sp_vs == "strs"){
+    observeEvent(eventExpr = {c(input$n_strata_vs, input$by_vs, input$n_strata_row_vs, input$n_strata_col_vs)}, handlerExpr = {
+      
+      if(input$by_vs == "2d"){
+        req(input$n_strata_row_vs, input$n_strata_col_vs)
+      } else {
+        req(input$n_strata_vs)
+      }
+      
+      warning_n_sp_n_strata(spread = "continuous", v_smart = TRUE, input = input)
+      
+    })
+  }
+})
 
 source(file="R/Documentation_Smart_2D.R", local=TRUE)
