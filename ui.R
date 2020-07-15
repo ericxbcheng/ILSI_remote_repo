@@ -155,15 +155,20 @@ ph = p("Under development")
 v_manual_2D = fluidRow(
   
   box(title = "2D Input Parameters", 
-      splitLayout(
-        numericInput(inputId = "x_lim", label = "Length (m)", value = 10, min = 1),
-        numericInput(inputId = "y_lim", label = "Width (m)", value = 10, min = 1),
-        actionButton("Doc_Field_Man", "",width = "40px",icon = icon("question-circle") )
-      ),
+      fluidRow(
+        column(width = 10, 
+               splitLayout(
+                 numericInput(inputId = "x_lim", label = "Length (m)", value = 10, min = 1),
+                 numericInput(inputId = "y_lim", label = "Width (m)", value = 10, min = 1)
+                 ), style = "padding-right: 0px;"),
+      column(width = 2, 
+             actionButton("Doc_Field_Man", "",icon = icon("question-circle"), 
+                          style = "padding: 5px; margin: 26px 0px 0px 0px;" )
+             )),
       selectInput(inputId = "geom", label = "Geometry", choices = list("Point-source" = "point", "Area-based" = "area"), multiple = FALSE),
+      actionButton("Doc_Geometry_Man", "",width = "40px",icon = icon("question-circle") ),
       conditionalPanel(
         condition = "input.geom == 'point'",
-        actionButton("Doc_Geometry_Man", "",width = "40px",icon = icon("question-circle") ),
         numericInput(inputId = "n_contam", label = "Number of contamination points", value = 1, min = 1, step = 1),
         actionButton("Doc_Radius_Man", "",width = "40px",icon = icon("question-circle") ),
         numericInput(inputId = "spread_radius", label = "Radius of contamination area (m)", value = 1, min = 0)
