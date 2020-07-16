@@ -35,19 +35,28 @@ sidebar = dashboardSidebar(
 # Manual version for 3D
 v_manual_3D = fluidRow(
 
-  box(
-    title = "3D Input Parameters",
-    splitLayout(
-      numericInput(inputId = "x_lim_3d", label = "Length (m)", value = 1, min = 1),
-      numericInput(inputId = "y_lim_3d", label = "Width (m)", value = 1, min = 1),
-      numericInput(inputId = "z_lim_3d", label = "Height (m)", value = 1, min = 1),
-      actionButton("Doc_Bins", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle"))
-    ),
-    splitLayout(
-      selectInput(inputId = "tox", label = "Mycotoxin", choices = list("Aflatoxin" = "AF")),
-      numericInput(inputId = "c_hat", label = "Overall mycotoxin level (ppb)", value = 1, min = 0.001),
-      actionButton("Doc_Levels", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ) 
-    ),
+  box(title = "3D Input Parameters", 
+      fluidRow(
+        column(width = 10, 
+               splitLayout(
+                 numericInput(inputId = "x_lim_3d", label = "Length (m)", value = 1, min = 1),
+                 numericInput(inputId = "y_lim_3d", label = "Width (m)", value = 1, min = 1),
+                 numericInput(inputId = "z_lim_3d", label = "Height (m)", value = 1, min = 1)
+               ), style = "padding-right: 0px;"),
+        column(width = 2, 
+               actionButton("Doc_Bins", "",icon = icon("question-circle"), 
+                            style = "padding: 5px; margin: 26px 0px 0px 0px;" )
+        )),
+      fluidRow(
+        column(width = 10, 
+               splitLayout(
+                 selectInput(inputId = "tox", label = "Mycotoxin", choices = list("Aflatoxin" = "AF")),
+                 numericInput(inputId = "c_hat", label = "Overall mycotoxin level (ppb)", value = 1, min = 0.001)
+               ), style = "padding-right: 0px;"),
+        column(width = 2, 
+               actionButton("Doc_Levels", "",icon = icon("question-circle"), 
+                            style = "padding: 5px; margin: 26px 0px 0px 0px;" )
+        )), 
     
     actionButton("Doc_Distributions", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
     selectInput(inputId = "dis_level_type", 

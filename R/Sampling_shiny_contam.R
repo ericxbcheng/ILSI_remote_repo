@@ -2,11 +2,16 @@ f_ui_dims = function(input, ...){
   if(input$spread_vs == "continuous"){
     verticalLayout(
       p("Q2. What are the dimensions of the field?"),
-      splitLayout(
-        numericInput(inputId = "x_lim_vs", label = "Length (m)", value = NULL, min = 1),
-        numericInput(inputId = "y_lim_vs", label = "Width (m)", value = NULL, min = 1),
-        actionButton("Doc_Field_Sma", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") )
-      ),
+      fluidRow(
+        column(width = 10, 
+               splitLayout(
+                 numericInput(inputId = "x_lim_vs", label = "Length (m)", value = NULL, min = 1),
+                 numericInput(inputId = "y_lim_vs", label = "Width (m)", value = NULL, min = 1)
+               ), style = "padding-right: 0px;"),
+        column(width = 2, 
+               actionButton("Doc_Field_Sma", "",icon = icon("question-circle"), 
+                            style = "padding: 5px; margin: 26px 0px 0px 0px;" )
+        )), 
       p("Q3. How would you describe the geometry of the hazards?"),
       actionButton("Doc_Geometry_Sma", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
       radioButtons(inputId = "geom_vs", 
@@ -18,12 +23,17 @@ f_ui_dims = function(input, ...){
   } else if (input$spread_vs == "discrete"){
     verticalLayout(
       p("Q2. What are the dimensions of the grain bin?"),
-      splitLayout(
-        numericInput(inputId = "x_lim_3d_vs", label = "Length (m)", value = NULL, min = 1),
-        numericInput(inputId = "y_lim_3d_vs", label = "Width (m)", value = NULL, min = 1),
-        numericInput(inputId = "z_lim_3d_vs", label = "Height (m)", value = NULL, min = 1),
-        actionButton(inputId = "Doc_Bin", label = "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") )
-      )
+      fluidRow(
+        column(width = 10, 
+               splitLayout(
+                 numericInput(inputId = "x_lim_3d_vs", label = "Length (m)", value = NULL, min = 1),
+                 numericInput(inputId = "y_lim_3d_vs", label = "Width (m)", value = NULL, min = 1),
+                 numericInput(inputId = "z_lim_3d_vs", label = "Height (m)", value = NULL, min = 1)
+               ), style = "padding-right: 0px;"),
+        column(width = 2, 
+               actionButton("Doc_Bin", "",icon = icon("question-circle"), 
+                            style = "padding: 5px; margin: 26px 0px 0px 0px;" )
+        ))  
     )
   } else {
     stop("Unknown spread type")
