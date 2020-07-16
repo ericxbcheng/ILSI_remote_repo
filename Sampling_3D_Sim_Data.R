@@ -35,8 +35,8 @@ covar_mat = make_covar_mat(spread = spread, varx = 0.0004,
 
 # Sampling
 method_sp = "srs"
-n_sp = 7
-n_strata = 7 
+n_sp = 9
+n_strata = 9 
 by = "column"
 d = 0.04
 sp_radius = d / 2
@@ -74,7 +74,7 @@ Args_default_Ex1 = list(c_hat = c_hat, lims = lims, spread = spread, covar_mat =
                        compartment = compartment, type = type, container = container)
 
 
-# Generate 4 argument lists
+# Generate 3 argument lists
 Args_list_Ex1 = list()
 Args_list_Ex1 = c(Args_list_Ex1, map(.x = n_affected_vec, .f = update_arg,
                                      param = "n_affected", Args = Args_default_Ex1))
@@ -98,7 +98,7 @@ Args_default_Ex2 = list(c_hat = c_hat, lims = lims, spread = spread, covar_mat =
                         method_det = method_det, verbose = FALSE, homogeneity = 0.1, 
                         compartment = compartment, type = type, container = container)
 
-# Generate 4 argument lists
+# Generate 3 argument lists
 Args_list_Ex2 = list()
 Args_list_Ex2 = c(Args_list_Ex2, map(.x = n_affected_vec, .f = update_arg,
                                      param = "n_affected", Args = Args_default_Ex2))
