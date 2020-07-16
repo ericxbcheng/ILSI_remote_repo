@@ -41,15 +41,15 @@ v_manual_3D = fluidRow(
       numericInput(inputId = "x_lim_3d", label = "Length (m)", value = 1, min = 1),
       numericInput(inputId = "y_lim_3d", label = "Width (m)", value = 1, min = 1),
       numericInput(inputId = "z_lim_3d", label = "Height (m)", value = 1, min = 1),
-      actionButton("Doc_Bins", "",width = "40px",icon = icon("question-circle"))
+      actionButton("Doc_Bins", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle"))
     ),
     splitLayout(
       selectInput(inputId = "tox", label = "Mycotoxin", choices = list("Aflatoxin" = "AF")),
       numericInput(inputId = "c_hat", label = "Overall mycotoxin level (ppb)", value = 1, min = 0.001),
-      actionButton("Doc_Levels", "",width = "40px",icon = icon("question-circle") ) 
+      actionButton("Doc_Levels", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ) 
     ),
     
-    actionButton("Doc_Distributions", "",width = "40px",icon = icon("question-circle") ),
+    actionButton("Doc_Distributions", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
     selectInput(inputId = "dis_level_type", 
                 label = "Mycotoxin distribution in contaminated grains", 
                 choices = list("Uniform" = "constant", "Gamma" = "Gamma"), 
@@ -69,7 +69,7 @@ v_manual_3D = fluidRow(
                                     min = 0.001)
                        )
                      ),
-    actionButton("Doc_Clusters", "",width = "40px",icon = icon("question-circle") ),
+    actionButton("Doc_Clusters", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
     numericInput(inputId = "n_affected", label = "Number of grains in a cluster", value = 0, min = 0, step = 1),
     conditionalPanel(condition = "input.n_affected > 0",
                      wellPanel(
@@ -90,7 +90,7 @@ v_manual_3D = fluidRow(
                          numericInput(inputId = "vcov_33", label = NULL, value = 0.0004, min = 0)
                        )
                      )),
-    actionButton("Doc_Sampling", "",width = "40px",icon = icon("question-circle") ),
+    actionButton("Doc_Sampling", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
     selectInput(inputId = "method_sp_3d", label = "Sampling strategy", choices = list("SRS" = "srs", "STRS" = "strs", "SS" = "ss")),
     wellPanel(
       numericInput(inputId = "n_sp_3d", label = "Number of probes", value = 5, min = 1),
@@ -110,13 +110,13 @@ v_manual_3D = fluidRow(
                                    choices = list("Open-top" = "open_top", "Trough" = "trough")))
       
     ),
-    actionButton("Doc_Probes", "",width = "40px",icon = icon("question-circle") ),
+    actionButton("Doc_Probes", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
     numericInput(inputId = "d", label = "Probe diameter (m)", value = 0.04, min = 0.01, max = 1, step = 0.01),
     splitLayout(
       numericInput(inputId = "m_kbar", label = "Single kernel mass (g)", value = 0.3, min = 0.001),
       numericInput(inputId = "rho", label = "Density (g/cm^3)", value = 1.28, min = 0.001)
     ),
-    actionButton("Doc_Homogeneity", "",width = "40px",icon = icon("question-circle") ),
+    actionButton("Doc_Homogeneity", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
     sliderInput(inputId = "homogeneity", label = "How homogeneous should the samples be after grinding?", value = 0.6, min = 0, max = 1, step = 0.1),
     splitLayout(
       selectInput(inputId = "method_det_3d", label = "Detection method", choices = list("ELISA" = "ELISA aflatoxin")),
@@ -128,7 +128,7 @@ v_manual_3D = fluidRow(
       numericInput(inputId = "n_seed_3d", label = "Number of contamination patterns", value = 1, min = 1, step = 1),
       numericInput(inputId = "n_iter_3d", label = "Number of sampling patterns per contamination pattern", value = 1, min = 1, step = 1)
     ),
-    actionButton("Doc_Tuning", "",width = "40px",icon = icon("question-circle") ),
+    actionButton("Doc_Tuning", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
     selectInput(inputId = "n_vars_3d", label = "Number of tuning parameters", choices = list(0,1,2), multiple = FALSE),
     uiOutput(outputId = "ui_tuning_3d"),
     actionButton(inputId = "load_3d", label = "Load parameters"),
@@ -166,30 +166,30 @@ v_manual_2D = fluidRow(
                           style = "padding: 5px; margin: 26px 0px 0px 0px;" )
              )),
       selectInput(inputId = "geom", label = "Geometry", choices = list("Point-source" = "point", "Area-based" = "area"), multiple = FALSE),
-      actionButton("Doc_Geometry_Man", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_Geometry_Man", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
       conditionalPanel(
         condition = "input.geom == 'point'",
         numericInput(inputId = "n_contam", label = "Number of contamination points", value = 1, min = 1, step = 1),
-        actionButton("Doc_Radius_Man", "",width = "40px",icon = icon("question-circle") ),
+        actionButton("Doc_Radius_Man", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
         numericInput(inputId = "spread_radius", label = "Radius of contamination area (m)", value = 1, min = 0)
       ),
-      actionButton("Doc_Contlevels_Man", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_Contlevels_Man", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
       splitLayout(
         numericInput(inputId = "cont_level_mu", label = "Mean contamination level (log CFU/g)", value = 3),
         numericInput(inputId = "cont_level_sd", label = "Standard deviation of contamination level (log CFU/g)", value = 1)
       ),
-      actionButton("Doc_Backlevels_Man", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_Backlevels_Man", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
       numericInput(inputId = "bg_level", label = "Background level (CFU/g)", value = 0.00001, min = 0),
-      actionButton("Doc_Decay_Man", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_Decay_Man", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
       selectInput(inputId = "fun", label = "Decay function", choices = list("Exponential" = "exp", "Gaussian" = "norm", "Uniform" = "unif")),
       conditionalPanel(
         condition = "input.fun != 'unif'",
-        actionButton("Doc_LimitCont_Man", "",width = "40px",icon = icon("question-circle") ),
+        actionButton("Doc_LimitCont_Man", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
         numericInput(inputId = "LOC", label = "Limit of contamination contribution (0 - 1)", value = 0.001, min = 0, max = 1)
       ),
-      actionButton("Doc_Samplepoints_Man", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_Samplepoints_Man", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
       numericInput(inputId = "n_sp", label = "Number of sample points", value = 5, min = 1, step = 1),
-      actionButton("Doc_SamplingStrat_Man", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_SamplingStrat_Man", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
       selectInput(inputId = "method_sp", label = "Sampling strategy", choices = list("SRS" = "srs", "STRS" = "strs", "k-step SS" = "ss")),
       wellPanel(
         selectInput(inputId = "by",

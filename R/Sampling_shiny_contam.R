@@ -5,10 +5,10 @@ f_ui_dims = function(input, ...){
       splitLayout(
         numericInput(inputId = "x_lim_vs", label = "Length (m)", value = NULL, min = 1),
         numericInput(inputId = "y_lim_vs", label = "Width (m)", value = NULL, min = 1),
-        actionButton("Doc_Field_Sma", "",width = "40px",icon = icon("question-circle") )
+        actionButton("Doc_Field_Sma", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") )
       ),
       p("Q3. How would you describe the geometry of the hazards?"),
-      actionButton("Doc_Geometry_Sma", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_Geometry_Sma", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
       radioButtons(inputId = "geom_vs", 
                    label = NULL, 
                    choices = list("Point-source" = "point", "Area-based" = "area"),
@@ -18,7 +18,7 @@ f_ui_dims = function(input, ...){
   } else if (input$spread_vs == "discrete"){
     verticalLayout(
       p("Q2. What are the dimensions of the grain bin?"),
-      actionButton(inputId = "Doc_Bin", label = "",width = "40px",icon = icon("question-circle") ),
+      actionButton(inputId = "Doc_Bin", label = "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
       splitLayout(
         numericInput(inputId = "x_lim_3d_vs", label = "Length (m)", value = NULL, min = 1),
         numericInput(inputId = "y_lim_3d_vs", label = "Width (m)", value = NULL, min = 1),
@@ -35,7 +35,7 @@ f_ui_geom = function(input, ...) {
     verticalLayout(
       p("Q3A. Number of contamination points?"),
       numericInput(inputId = "n_contam_vs", label = NULL, value = NULL, min = 1, step = 1),
-      actionButton("Doc_Radius_Sma", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_Radius_Sma", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
       p("Q3B. Radius of contamination area(m)?"),
       numericInput(inputId = "spread_radius_vs", label = NULL, value = NULL, min = 0)
     )
@@ -56,15 +56,15 @@ f_ui_grain = function(input, ...){
 f_ui_contam = function(input, ...){
   if(input$spread_vs == "continuous"){
       verticalLayout(
-        actionButton("Doc_Contlevels_Sma", "",width = "40px",icon = icon("question-circle") ),
+        actionButton("Doc_Contlevels_Sma", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
         p("Q4. Mean contamination level (log CFU/g)"),
         numericInput(inputId = "cont_level_mu_vs", label = NULL, value = NULL),
         p("Q5. Standard deviation of contamination level (log CFU/g)"),
         numericInput(inputId = "cont_level_sd_vs", label = NULL, value = NULL),
-        actionButton("Doc_Backlevels_Sma", "",width = "40px",icon = icon("question-circle") ),
+        actionButton("Doc_Backlevels_Sma", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
         p("Q6. Background level (CFU/g)"),
         numericInput(inputId = "bg_level_vs", label = NULL, value = 0.00001, min = 0),
-        actionButton("Doc_Decay_Sma", "",width = "40px",icon = icon("question-circle") ),
+        actionButton("Doc_Decay_Sma", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
         p("Q7. Decay function"),
         radioButtons(inputId = "fun_vs",
                      label = NULL,
@@ -81,12 +81,12 @@ f_ui_contam = function(input, ...){
     verticalLayout(
       p("Q5. Which mycotoxin do you want to simulate?"), 
       selectInput(inputId = "tox_vs", label = NULL, choices = list("Aflatoxin" = "AF")),
-      actionButton("Doc_Level", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_Level", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
       p("Q6. What's the mycotoxin regulatory threshold (ppb)?"),
       numericInput(inputId = "Mc_vs", label = NULL, value = 20, min = 0.001),
       p("Q7. What's the estimated overall mycotoxin level (ppb) in the bin?"),
       numericInput(inputId = "c_hat_vs", label = NULL, value = NULL, min = 0.001),
-      actionButton("Doc_Distribution", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_Distribution", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
       p("Q8. How is the mycotoxin distributed in contaminated grains?"),
       radioButtons(inputId = "dis_level_type_vs", 
                   label = NULL, 
@@ -115,7 +115,7 @@ f_ui_contam = function(input, ...){
 f_ui_n_affected = function(input,...){
   if(input$dis_level_type_vs %in% c("constant", "Gamma")){
     verticalLayout(
-      actionButton("Doc_Cluster", "",width = "40px",icon = icon("question-circle") ),
+      actionButton("Doc_Cluster", "",style = "padding: 5px; margin: 26px 0px 0px 0px;",icon = icon("question-circle") ),
       p("Q9. How many kernels are estimated to be in a cluster? (MUST be >= 0)"),
       numericInput(inputId = "n_affected_vs", label = NULL, value = NULL, min = 0, step = 1),
       conditionalPanel(condition = "input.n_affected_vs > 0",
