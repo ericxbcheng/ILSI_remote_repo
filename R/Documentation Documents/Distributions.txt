@@ -2,6 +2,14 @@
 
 <h2>Distributions:</h2>
 <p><strong>Uniform Distribution:</strong> A uniform distribution is a distribution that has a constant probability. The probability density function lies between an specific interval [a,b]</p>
-<p>&lt;explain how the inputs will affect what the distribution will do&gt;</p>
+
+
+<img src="Uniform.jpg" alt="Uniform Distribution"/>
+<p>Image of Uniform Distribution</p>
+
+<p><strong>Gamma Distribution:</strong>&nbsp;The Contamination follows a gamma distribution, meaning that the contaimnation levels will not necessarily be contant. It will be a right-skewed probability distribution. &nbsp;</p>
+
+<img src="Gamma.jpg" alt="Gamma Distribution"/>
+<p>Image of Gamma Distribution</p>
 
 </html>
