@@ -99,19 +99,34 @@ kable_styling(kable_input = kable(x = exp_names, format = "html"), full_width = 
 
 2. Further summarizing of the data to produce OC curves
 
-```{r}
+```{r, echo = FALSE}
 # Combine two experiments
-exp_all_cleaned = exp1_cleaned %>%
-  mutate(n_sp = 7, experiment = 1) %>%
-  rbind(cbind(exp2_cleaned, method_sp = "srs", experiment = 2))
+f_combine = function(data1, data2, exp1_param, exp2_param){
+  
+  a = data1 %>%
+    rename(.data = ., "method_sp" = "param2", "c_hat" = "param", "n_affected" = "param3") %>%
+    mutate(experiment = 1, n_sp = exp1_param) %>%
+    dplyr::select(experiment, seed, P_rej, Paccept, c_true, c_hat, n_sp, method_sp, n_affected)
+  
+  b = data2 %>%
+    rename(.data = ., "n_sp" = "param2", "c_hat" = "param", "n_affected" = "param3") %>%
+    mutate(experiment = 2, method_sp = exp2_param) %>%
+    dplyr::select(experiment, seed, P_rej, Paccept, c_true, c_hat, n_sp, method_sp, n_affected)
+    
+  return(rbind.data.frame(a, b))
+}
+```
+
+```{r}
+exp_combined = f_combine(data1 = exp1_cleaned, data2 = exp2_cleaned, exp1_param = 9, exp2_param = "srs")
 ```
 
 3. Sensitivity analysis
 
 ```{r}
 # Experiment all
-sens_all = sensitivity::pcc(X = subset(x = exp_all_cleaned, select = c("param", "method_sp", "n_affected", "n_sp")), 
-                            y = exp_all_cleaned$Paccept, 
+sens_all = sensitivity::pcc(X = subset(x = exp_combined, select = c("c_hat", "method_sp", "n_affected", "n_sp")), 
+                            y = exp_combined$Paccept, 
                             rank = TRUE, 
                             nboot = 100, 
                             conf = 0.95)
@@ -119,7 +134,7 @@ sens_all = sensitivity::pcc(X = subset(x = exp_all_cleaned, select = c("param", 
 
 4. ANOVA for `Paccept` ~ `method_sp`/`n_sp` under different `n_affected`
 
-```{r}
+```{r, echo = FALSE}
 # ANOVA pvalues
 get_pval = function(data, form){
   a = data %>%
@@ -128,12 +143,14 @@ get_pval = function(data, form){
     summary() 
   return(b[[1]]$`Pr(>F)`[1])
 }
+```
 
-pval1 = split(x = exp1_cleaned, f = exp1_cleaned$n_affected) %>%
-  map(.x = ., .f = get_pval, form = Paccept ~ as.factor(method_sp))
+```{r}
+pval1 = split(x = exp1_cleaned, f = exp1_cleaned$param3) %>%
+  map(.x = ., .f = get_pval, form = Paccept ~ as.factor(param2))
 
-pval2 = split(x = exp2_cleaned, f = exp2_cleaned$n_affected) %>%
-  map(.x = ., .f = get_pval, form = Paccept ~ as.factor(n_sp))
+pval2 = split(x = exp2_cleaned, f = exp2_cleaned$param3) %>%
+  map(.x = ., .f = get_pval, form = Paccept ~ as.factor(param2))
 
 pval_all = rbind.data.frame(bind_cols(pval1), bind_cols(pval2)) %>%
   mutate(experiment = c(1, 2), formula = c("Paccept ~ as.factor(method_sp)", "Paccept ~ as.factor(n_sp)"), c_hat = 20) %>%
@@ -144,8 +161,6 @@ pval_all = rbind.data.frame(bind_cols(pval1), bind_cols(pval2)) %>%
 # Results
 
 ```{r, echo = FALSE}
-
-
 plot_tornado = function(data){
   
   a = rownames_to_column(.data = data$PRCC, var = "Variable")
@@ -160,18 +175,69 @@ plot_tornado = function(data){
     coord_flip(ylim = c(-1, 1)) +
     theme_bw()
 }
+
+plot_tune3 = function(data, xlab, legend_lab){
+  
+  a = data %>% 
+    gather(data = ., key = "metric", value = "value", -c(seed, param, param2, param3)) %>% 
+    group_by(param3, param2, param, metric) %>% 
+    summarise(lb = quantile(x = value, probs = 0.025), med = median(x = value), 
+              ub = quantile(x = value, probs = 0.975)) %>% 
+    dplyr::filter(metric == "Paccept")
+  
+  b = ggplot(data = a) + 
+    geom_ribbon(aes(x = param, ymin = lb, 
+                    ymax = ub, group = as.factor(param2), 
+                    fill = as.factor(param2)), 
+                alpha = 0.3) + 
+    geom_line(aes(x = param, y = med, color = as.factor(param2))) + 
+    geom_point(aes(x = param, y = med, color = as.factor(param2))) + 
+    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) + 
+    scale_fill_discrete(name = legend_lab) + 
+    scale_color_discrete(name = legend_lab) + 
+    coord_cartesian(ylim = c(0, 1)) + 
+    labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") + 
+    facet_grid(param3 ~ .) +
+    theme_bw() + 
+    theme(legend.position = "top")
+    
+  return(b)
+}
+
+vis_diag = function(data){
+  a = data %>% 
+    gather(data = ., key = "metric", value = "value", -c(seed, param, param2, param3)) %>% 
+    group_by(param3, param2, param, metric) %>% 
+    summarise(lb = quantile(x = value, probs = 0.025), med = median(x = value), 
+              ub = quantile(x = value, probs = 0.975)) %>% 
+    dplyr::filter(metric == "c_true")
+    
+  ggplot(data = a) +
+      geom_ribbon(aes(x = param, ymin = lb, ymax = ub, group = as.factor(param2), fill = as.factor(param2)), 
+                  alpha = 0.3) +
+      geom_line(aes(x = param, y = med, color = as.factor(param2))) +
+      geom_point(aes(x = param, y = med, color = as.factor(param2))) +
+      geom_abline(slope = 1,intercept = 0, color = "red") +
+      # scale_x_log10(breaks = c(5, seq(10, 100, 10))) +
+      # scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
+      # coord_cartesian(ylim = c(0,1)) +
+      labs(x = "Input concentration (ppb)", y = "Output concentration (2.5th - 97.5th percentile)") +
+      theme_bw() +
+      facet_wrap(~ param3) +
+      theme(legend.position = "top")
+}
 ```
 
 1. Visualization: Experiment 1
 
 ```{r, echo = FALSE}
-f_vis(data = OC1, tune_param = "method_sp", Mc = Mc, type = "c_hat")
+plot_tune3(data = exp1_cleaned, xlab = "Estimated aflatoxin concentration (ppb)", legend_lab = "Sampling strategy")
 ```
 
 2. Visualization: Experiment 2
 
 ```{r, echo = FALSE}
-f_vis(data = OC2, tune_param = "n_sp", Mc = Mc, type = "c_hat")
+plot_tune3(data = exp2_cleaned, xlab = "Estimated aflatoxin concentration (ppb)", legend_lab = "Number of samples")
 ```
 
 3. Sensitivity tornado plot
@@ -190,8 +256,8 @@ kable_styling(kable_input = kable(pval_all, format = "html"), full_width = TRUE)
 5. Quality control figures that show how much the output concentration deviates from the input concentration.
 
 ```{r, echo = FALSE}
-f_vis(data = OC1, tune_param = "method_sp", type = "diag")
-f_vis(data = OC2, tune_param = "n_sp", type = "diag")
+vis_diag(data = exp1_cleaned)
+vis_diag(data = exp2_cleaned)
 ```
 
 
