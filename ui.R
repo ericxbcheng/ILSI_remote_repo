@@ -39,7 +39,7 @@ v_manual_3D = fluidRow(
       
       fluidRow(
         column(width = 10, 
-               actionButton("ThreeD_Scenario", "Click for Automatic Scenario"), style = "padding-right: 5px;"),
+               actionButton( "ThreeD_Scenario", "Click for Automatic Scenario"), style = "padding-right: 0px;"),
         column(width = 2, 
                actionButton("Doc_Scenario", "",icon = icon("question-circle"), 
                             style = "padding: 5px; margin: 0px 0px 0px 0px;" )

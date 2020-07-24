@@ -52,8 +52,19 @@
     #selecting Input, missing the tunning options, depends on the scenario
     updateSelectInput(session, "var_prim_3d", selected = "c_hat")
     updateTextInput(session, "val_prim_3d", value = "5,10,20")
-    #missing second
+    #Second tunning parameter
+    updateSelectInput(session,"var_sec_3d", selected = "n_affected")
+    updateTextInput(session, "val_sec_3d", value = "5,10,20")
     
+  })
+  
+  #Modal Shows updated
+  observeEvent(input$ThreeD_Scenario, {
+    showModal(modalDialog(
+      title = "Your Scenario has been updated",
+      easyClose = TRUE
+      ,size = "s"
+    ))
   })
   
 #2D Scenario
@@ -95,9 +106,19 @@
     updateNumericInput(session, "n_iter", value =1)
     #missing tunning
     updateSelectInput(session, "n_vars", selected = 2)
-    #updateSelectInput(session,"var_prim", value = 1) #missing
+    updateSelectInput(session,"var_prim", selected = "n_contam")
     updateTextInput(session,"val_prim", value = "1,2,3")
     updateSelectInput(session,"var_sec", selected = "method_sp" ) 
     updateTextInput(session, "val_sec", value = "srs, strs, ss")
     
   })
+  
+  #Modal Shows updated
+  observeEvent(input$TwoD_Scenario, {
+    showModal(modalDialog(
+      title = "Your Scenario has been updated",
+      easyClose = TRUE
+      ,size = "s"
+    ))
+  })
+  
