@@ -36,6 +36,15 @@ sidebar = dashboardSidebar(
 v_manual_3D = fluidRow(
 
   box(title = "3D Input Parameters", 
+      
+      fluidRow(
+        column(width = 10, 
+               actionButton( "ThreeD_Scenario", "Click for Automatic Scenario"), style = "padding-right: 0px;"),
+        column(width = 2, 
+               actionButton("Doc_Scenario", "",icon = icon("question-circle"), 
+                            style = "padding: 5px; margin: 0px 0px 0px 0px;" )
+        )),
+      
       fluidRow(
         column(width = 10, 
                splitLayout(
@@ -190,6 +199,15 @@ ph = p("Under development")
 v_manual_2D = fluidRow(
   
   box(title = "2D Input Parameters", 
+      
+      fluidRow(
+        column(width = 10, 
+               actionButton("TwoD_Scenario", "Click for Automatic Scenario"), style = "padding-right: 5px;"),
+        column(width = 2, 
+               actionButton("Doc_Scenario", "",icon = icon("question-circle"), 
+                            style = "padding: 5px; margin: 0px 0px 0px 0px;" )
+        )),
+      
       fluidRow(
         column(width = 10, 
                splitLayout(

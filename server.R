@@ -49,6 +49,9 @@ shinyServer(function(input, output, session) {
   # Modal windows documentation
   source(file = "R/Documentation_Pop_ups.R", local = TRUE)
   
+  # Modal windows documentation
+  source(file = "R/Scenario_Buttons.R", local = TRUE)
+  
   # Download
   output$downloadData = downloadHandler(
     filename = "simulation.csv",
