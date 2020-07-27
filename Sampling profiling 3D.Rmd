@@ -130,7 +130,7 @@ ArgList_Ex1 = list(c_hat = c_hat, lims = lims, spread = spread, covar_mat = cova
 
 profvis(expr = {tune_param(Args = ArgList_Ex1, n_seed = 1, n_iter = 1, param = "c_hat", val = 5)})
 
-profvis(expr = {tune_param(Args = ArgList_Ex1, n_seed = 1, n_iter = 1, param = "c_hat", val = 10)})
+profvis(expr = {tune_param(Args = ArgList_Ex1, n_seed = 1, n_iter = 1, param = "c_hat", val = 50)})
 
 profvis(expr = {tune_param(Args = ArgList_Ex1, n_seed = 1, n_iter = 1, param = "n_sp", val = 10)})
 
@@ -141,9 +141,9 @@ profvis(expr = {tune_param(Args = ArgList_Ex1, n_seed = 10, n_iter = 10, param =
 
 ```{r, eval = FALSE}
 # 2x1x1
-x_lim = c(0, 2)
-y_lim = c(0, 1)
-z_lim = c(0, 1)
+x_lim = c(0, 2.5)
+y_lim = c(0, 2)
+z_lim = c(0, 2)
 lims = list(xlim = x_lim, ylim = y_lim, zlim = z_lim)
 L = z_lim[2]
 
@@ -154,13 +154,13 @@ ArgList_Ex2 = list(c_hat = c_hat, lims = lims, spread = spread, covar_mat = cova
                        method_det = method_det, verbose = FALSE, homogeneity = homogeneity, 
                        compartment = compartment, type = type, container = container)
 
-profvis(expr = {tune_param(Args = ArgList_Ex2, n_seed = 1, n_iter = 1, param = "c_hat", val = 1)})
+profvis(expr = {tune_param(Args = ArgList_Ex2, n_seed = 1, n_iter = 1, param = "c_hat", val = 5)})
 
-profvis(expr = {tune_param(Args = ArgList_Ex2, n_seed = 1, n_iter = 1, param = "c_hat", val = 10)})
+profvis(expr = {tune_param(Args = ArgList_Ex2, n_seed = 1, n_iter = 1, param = "c_hat", val = 50)})
 
 profvis(expr = {tune_param(Args = ArgList_Ex2, n_seed = 1, n_iter = 1, param = "n_sp", val = 10)})
 
 profvis(expr = {tune_param(Args = ArgList_Ex2, n_seed = 1, n_iter = 1, param = "n_affected", val = 10)})
 
-profvis(expr = {tune_param(Args = ArgList_Ex2, n_seed = 10, n_iter = 10, param = "c_hat", val = 1)})
+profvis(expr = {tune_param(Args = ArgList_Ex2, n_seed = 10, n_iter = 10, param = "c_hat", val = 5)})
 ```
