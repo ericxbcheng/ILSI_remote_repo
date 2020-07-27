@@ -56,8 +56,8 @@ tox = "AF"
 Mc = 20
 
 # Iteration
-n_iter = 100
-n_seed = 100
+n_iter = 10
+n_seed = 10
 
 # Parameter tuning
 c_hat_vec = c(5, 10, 20, 40, 80, 100)
