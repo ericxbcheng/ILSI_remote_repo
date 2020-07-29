@@ -1,5 +1,5 @@
 ---
-title: "Sampling 3D Simulation"
+title: "Sampling 3D Simulation v2"
 author: "Xianbin Cheng"
 date: "07/17/2020"
 output: html_document
@@ -7,7 +7,7 @@ output: html_document
 
 # Objective
 
-  To analyze data from 10,000 iterations of 3D simulation
+  To analyze data from 100 iterations of 3D simulation
   
 # Method
 
@@ -38,8 +38,8 @@ homogeneity = 0.1
 Mc = 20
 
 # Iteration
-n_iter = 100
-n_seed = 100
+n_iter = 10
+n_seed = 10
 
 # Parameter tuning
 c_hat_vec = c(5, 10, 20, 40, 80, 100)
@@ -67,7 +67,7 @@ f_clean_up = function(data, vals_prim, vals_sec, vals_tert, n_seed){
 
 ```{r, eval = FALSE}
 # Get the RDS file names
-rds_files = dir(path = paste0(getwd(), "/RDS/3D Simulation"),pattern = ".rds", full.names = TRUE)
+rds_files = dir(path = paste0(getwd(), "/RDS/3D Simulation"),pattern = "10x10.rds", full.names = TRUE)
 
 # Read rds files
 exp1 = map(.x = str_subset(string = rds_files, pattern = "9"), .f = readRDS)
