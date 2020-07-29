@@ -45,6 +45,8 @@ v_manual_3D = fluidRow(
                             style = "padding: 5px; margin: 0px 0px 0px 0px;" )
         )),
       
+      p(),
+      
       fluidRow(
         column(width = 10, 
                splitLayout(
@@ -207,6 +209,8 @@ v_manual_2D = fluidRow(
                actionButton("Doc_Scenario", "",icon = icon("question-circle"), 
                             style = "padding: 5px; margin: 0px 0px 0px 0px;" )
         )),
+      
+      p(),
       
       fluidRow(
         column(width = 10, 
