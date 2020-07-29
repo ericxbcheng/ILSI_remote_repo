@@ -161,7 +161,7 @@ pval_all = rbind.data.frame(bind_cols(pval1), bind_cols(pval2)) %>%
 # Results
 
 ```{r, echo = FALSE}
-plot_tornado = function(data){
+plot_tornado = function(data, param_labels){
   
   a = rownames_to_column(.data = data$PRCC, var = "Variable")
   colnames(a)[4:6] = c("std_error", "min_ci", "max_ci")
@@ -169,7 +169,7 @@ plot_tornado = function(data){
   ggplot(data = a) +
     geom_crossbar(aes(x = Variable, y = original, ymin = min_ci, ymax = max_ci)) +
     geom_hline(yintercept = 0, color = "red") +
-    scale_x_discrete(labels = c("Sampling strategy","Clustering", "Number of probes", "Aflatoxin concentration")) +
+    scale_x_discrete(labels = param_labels) +
     scale_y_continuous(breaks = seq(-1, 1, 0.2)) +
     labs(x = "Variables", y = "PRCC index") +
     coord_flip(ylim = c(-1, 1)) +
@@ -244,7 +244,7 @@ plot_tune3(data = exp2_cleaned, xlab = "Estimated aflatoxin concentration (ppb)"
 
 ```{r, echo = FALSE}
 sens_all
-plot_tornado(data = sens_all)
+plot_tornado(data = sens_all, param_labels = c("Aflatoxin concentration", "Sampling strategy", "Clustering", "Number of probes"))
 ```
 
 4. ANOVA results
