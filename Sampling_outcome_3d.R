@@ -18,7 +18,8 @@ sim_intmed_dis = function(c_hat, lims, spread, covar_mat, n_affected, dis_level,
   
   # Generate combined dataset
   contam_sp_xy = gen_sim_data_new(df_contam = contam_xy, df_sp = sp_xy, dist = dist_contam_sp, 
-                                  spread = spread, sp_radius = sp_radius, L = L, rho = rho, m_kbar = m_kbar, conc_neg = conc_neg)
+                                  spread = spread, sp_radius = sp_radius, L = L, rho = rho, 
+                                  m_kbar = m_kbar, conc_neg = conc_neg, method_sp = method_sp, lims = lims)
   
   # Create work portion and test portion
   sample_dis = get_sample_dis(data = contam_sp_xy$raw, m_kbar = m_kbar, tox = tox, homogeneity = homogeneity)
@@ -102,14 +103,16 @@ sim_outcome_cont = function(n_contam, lims, spread, spread_radius, cont_level, b
 # Outcome simulation for discrete case
 sim_outcome_dis = function(c_hat, lims, spread, covar_mat, n_affected, dis_level, 
                            method_sp, sp_radius, container, L, rho, m_kbar, conc_neg, 
-                           tox, Mc, method_det, verbose = FALSE, seed, homogeneity, n_sp, n_strata, by){
+                           tox, Mc, method_det, verbose = FALSE, seed, homogeneity, n_sp,
+                           n_strata, by, compartment, type){
   
   # Create intermediate datasets
   a = sim_intmed(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat, 
                  n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
                  sp_radius = sp_radius, container = container, L = L, rho = rho, 
                  m_kbar = m_kbar, conc_neg = conc_neg, tox = tox, seed = seed, 
-                 homogeneity = homogeneity, n_sp = n_sp, n_strata = n_strata, by = by)
+                 homogeneity = homogeneity, n_sp = n_sp, n_strata = n_strata, 
+                 by = by, compartment = compartment, type = type)
   
   # Extract intermediate datasets
   c_true = a$contam_sp_xy$c_true
@@ -143,14 +146,15 @@ sim_outcome_new = function(n_contam, c_hat, lims, spread, spread_radius, method_
                            n_strata, by, LOC, fun, case, m, M, m_sp, method_det, 
                            covar_mat, n_affected, dis_level, cont_level, bg_level, 
                            sp_radius, container, L, rho, m_kbar, conc_neg, tox, 
-                           Mc, verbose = FALSE, geom, seed, homogeneity){
+                           Mc, verbose = FALSE, geom, seed, homogeneity, compartment, type){
   
   if(spread == "discrete"){
     sim_outcome_dis(c_hat = c_hat, lims = lims, spread = spread, covar_mat = covar_mat, 
                     n_affected = n_affected, dis_level = dis_level, method_sp = method_sp, 
                     sp_radius = sp_radius, container = container, L = L, rho = rho, m_kbar = m_kbar, 
                     conc_neg = conc_neg, tox = tox, Mc = Mc, method_det = method_det, verbose = verbose, 
-                    seed = seed, homogeneity = homogeneity, n_sp = n_sp, n_strata = n_strata, by = by)
+                    seed = seed, homogeneity = homogeneity, n_sp = n_sp, n_strata = n_strata, 
+                    by = by, compartment = compartment, type = type)
     
   } else {
     sim_outcome_cont(n_contam = n_contam, lims = lims, spread = spread, spread_radius = spread_radius, cont_level = cont_level,

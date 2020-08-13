@@ -231,10 +231,12 @@ gen_conc_neg = function(n, conc_neg){
 }
 
 # Form a pooled sample
-get_pooled_sample = function(df_contam, df_sp, dist, method_sp, L, rho, m_kbar, sp_radius, conc_neg){
+get_pooled_sample = function(df_contam, df_sp, dist, method_sp, L, rho, 
+                             m_kbar, sp_radius, conc_neg, lims){
  
   # Find the number of kernels for each sampler
-  n_k = calc_k_num(method_sp = method_sp, L = L, rho = rho, m_kbar = m_kbar, sp_radius = sp_radius)
+  n_k = calc_k_num(method_sp = method_sp, L = L, rho = rho, m_kbar = m_kbar, 
+                   sp_radius = sp_radius, sampler = TRUE, lims = lims)
   
   # Find captured kernels
   kcap = capture_kernel(method_sp = method_sp, df_contam = df_contam, dist = dist, sp_radius = sp_radius, lims = lims, L = L)
@@ -271,7 +273,7 @@ calc_true_contam = function(df_contam, rho, lims, m_kbar, conc_neg){
 
 # Create a function that calculates contamination levels for each sample point and combine "contam_xy" and "sp_xy"
 gen_sim_data_new = function(df_contam, df_sp, dist, spread, spread_radius, LOC, bg_level,
-                            fun, L, rho, m_kbar, sp_radius, conc_neg, geom){
+                            fun, L, rho, m_kbar, sp_radius, conc_neg, geom, method_sp, lims){
   
   stopifnot(spread %in% c("continuous", "discrete"))
 
@@ -299,7 +301,7 @@ gen_sim_data_new = function(df_contam, df_sp, dist, spread, spread_radius, LOC, 
     
     b = get_pooled_sample(df_contam = df_contam, df_sp = df_sp, dist = dist, 
                           method_sp = method_sp, L = L, rho = rho, 
-                          m_kbar = m_kbar, sp_radius = sp_radius, conc_neg = conc_neg)
+                          m_kbar = m_kbar, sp_radius = sp_radius, conc_neg = conc_neg, lims = lims)
     
     c = calc_true_contam(df_contam = df_contam, rho = rho, lims = lims, m_kbar = m_kbar, conc_neg = conc_neg)
     
