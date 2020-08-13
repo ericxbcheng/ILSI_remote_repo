@@ -2,7 +2,12 @@
 vis_once = function(input, output, ArgList, chosen_mode){
   
   if(ArgList$spread == "continuous"){
-    vis_once_2d(output = output, ArgList = ArgList, chosen_mode = chosen_mode)
+    if (chosen_mode == "1D") {
+      vis_once_1d(output = output, ArgList = ArgList, chosen_mode = chosen_mode)
+    } else {
+      vis_once_2d(output = output, ArgList = ArgList, chosen_mode = chosen_mode)
+    }
+   # vis_once_2d(output = output, ArgList = ArgList, chosen_mode = chosen_mode)
     
   } else if (ArgList$spread == "discrete"){
     vis_once_3d(output = output, ArgList = ArgList, chosen_mode = chosen_mode)
@@ -11,6 +16,43 @@ vis_once = function(input, output, ArgList, chosen_mode){
     stop("Unknown spread type")
   }
 }
+
+
+#RUBEN ADDED
+# Visualizing once for 1D mode
+vis_once_1d = function(output, ArgList, chosen_mode){
+  
+  # Remove unnecessary arguments
+  ArgList_vis = ArgList
+  ArgList_vis[c("case", "M", "m_sp", "method_det")] = NULL
+  ArgList_vis$seed = NaN
+  
+  # Produce intermediate outputs
+  one_iteration = do.call(what = sim_intmed, args = ArgList_vis)
+  
+  # Plot the overlay figure
+  fig_overlay_1D = overlay_draw(method_sp = ArgList_vis$method_sp, data = one_iteration[["contam_sp_xy"]], 
+                             spread = ArgList_vis$spread, xlim = ArgList_vis$lims$xlim, 
+                             ylim = ArgList_vis$lims$ylim, n_strata = ArgList_vis$n_strata, by = ArgList_vis$by)
+  
+  # Plot the 3D contamination level figure
+  ### Must use expr() to wrap contam_level_draw() because the graph is not an object but a side-effect
+  fig_contam_level_1D = expr(contam_level_draw(dimension = "3d", method = ArgList_vis$fun, 
+                                            spread_radius = ArgList_vis$spread_radius, LOC = ArgList_vis$LOC, 
+                                            df_contam = one_iteration[["contam_sp_xy"]], xlim = ArgList_vis$lims$xlim, 
+                                            ylim = ArgList_vis$lims$ylim, bg_level = ArgList_vis$bg_level,
+                                            geom = ArgList_vis$geom))
+  
+  if(chosen_mode != "v_smart"){
+    output$overlay_draw_1D = renderPlot(expr = {fig_overlay_1D})
+    output$contam_level_draw_1D = renderPlot(expr = {eval(fig_contam_level_1D)})
+    
+  } else {
+    output$overlay_draw_vs = renderPlot(expr = {fig_overlay})
+    output$contam_level_draw_vs = renderPlot(expr = {eval(fig_contam_level_1D)})
+  }
+}
+
 
 # Visualizing once for 2D mode
 vis_once_2d = function(output, ArgList, chosen_mode){

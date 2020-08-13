@@ -31,6 +31,10 @@ iterate_tune0 = function(input, Args, chosen_mode){
     n_seed = input$n_seed
     n_iter = input$n_iter
       
+  } else if (chosen_mode == "1D"){
+    n_seed = input$n_seed_1D
+    n_iter = input$n_iter_1D
+    
   } else if (chosen_mode == "3D"){
     n_seed = input$n_seed_3d
     n_iter = input$n_iter_3d
@@ -150,6 +154,10 @@ f_iterate_tune = function(input, output, Args, chosen_mode){
     return(f_iterate_tune_2d(input = input, output = output, Args = Args,
                              n_vars = n_vars, chosen_mode = chosen_mode))
     
+  } else if (chosen_mode == "1D"){
+    n_vars = input$n_vars
+    return(f_iterate_tune_2d(input = input, output = output, Args = Args,
+                             n_vars = n_vars, chosen_mode = chosen_mode))
   } else if (chosen_mode == "3D"){
     # 3D manual
     n_vars = input$n_vars_3d
