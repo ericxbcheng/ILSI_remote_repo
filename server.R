@@ -49,6 +49,61 @@ vis_once = function(input, output, spread, ArgList){
   }
 }
 
+#VISUALIZE FUNCTION IN 1D
+vis_once_1D = function(input, output, spread, ArgList){
+  
+  if(spread == "continuous"){
+    
+    # Remove unnecessary arguments
+    ArgList_vis = ArgList
+    ArgList_vis[c("case", "M", "m_sp", "method_det")] = NULL
+    ArgList_vis$seed = 123
+    
+    # Produce intermediate outputs
+    one_iteration = do.call(what = sim_intmed, args = ArgList_vis)
+    output$overlay_draw_1D = renderPlot(expr = {overlay_draw(method_sp = ArgList_vis$method_sp, data = one_iteration[["contam_sp_xy"]] , 
+                                                          spread = ArgList_vis$spread, xlim = ArgList_vis$lims$xlim, ylim = ArgList_vis$lims$ylim, 
+                                                          n_strata = ArgList_vis$n_strata, by = ArgList_vis$by)})
+    output$contam_level_draw_1D = renderPlot(expr = {contam_level_draw(dimension = "3d", method = ArgList_vis$fun, 
+                                                                    spread_radius = ArgList_vis$spread_radius, LOC = ArgList_vis$LOC, 
+                                                                    df_contam = one_iteration[["contam_sp_xy"]] , xlim = ArgList_vis$lims$xlim, 
+                                                                    ylim = ArgList_vis$lims$ylim, bg_level = ArgList_vis$bg_level, 
+                                                                    geom = ArgList_vis$geom)})
+    
+  } else {
+    message("Under construction.") 
+  }
+}
+
+
+
+#TESTING
+load_once_1D = function(input, output){
+  
+  if(input$sidebarMenu == "1D"){
+    spread = "continuous"
+    
+    if(input$by_1D == "1d"){
+      n_strata = c(input$n_strata_row_1D, input$n_strata_col_1D)
+    } else {
+      n_strata = input$n_strata_1D
+    }
+    
+    ArgList_default = list(n_contam = input$n_contam_1D, lims = list(xlim = c(0, input$x_lim_1D), ylim = c(0, input$y_lim_1D)),
+                           spread = spread, spread_radius = input$spread_radius_1D,
+                           cont_level = c(input$cont_level_mu_1D, input$cont_level_sd_1D), method_sp = input$method_sp_1D,
+                           n_sp = input$n_sp_1D, n_strata = n_strata, by = input$by_1D, LOC = input$LOC_1D,
+                           fun = input$fun_1D, case = input$case_1D, m = input$m_1D, M = input$M_1D, m_sp = input$m_sp_1D,
+                           method_det = input$method_det_1D, bg_level = input$bg_level_1D, geom = input$geom_1D)
+    
+  } else if(input$sidebarMenu == "3D"){
+    spread = "discrete"
+  } else {
+    stop("Unknown manual mode")
+  }
+  return(list(spread = spread, ArgList_default = ArgList_default))
+}
+
 load_once = function(input, output){
   
   if(input$sidebarMenu == "2D"){
@@ -159,9 +214,20 @@ shinyServer(function(input, output) {
     output$print_param = renderPrint(expr = list_load$ArgList_default)
   })
   
+  #LOAD 1D
+  observeEvent(eventExpr = {input$load_1D}, handlerExpr = {
+    list_load <<- load_once_1D(input = input, output = output)
+    output$print_param = renderPrint(expr = list_load$ArgList_default)
+  })
+  
   # Visualize for one iteration
   observeEvent(eventExpr = {input$vis}, handlerExpr = {
     vis_once(input = input, output = output, spread = list_load$spread, ArgList = list_load$ArgList_default)
+  })
+  
+  #VISUALIZE 1D
+  observeEvent(eventExpr = {input$vis_1D}, handlerExpr = {
+    vis_once_1D(input = input, output = output, spread = list_load$spread, ArgList = list_load$ArgList_default)
   })
   
   observeEvent(eventExpr = {input$iteration}, handlerExpr = {
