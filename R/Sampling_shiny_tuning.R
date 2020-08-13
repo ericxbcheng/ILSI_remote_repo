@@ -31,6 +31,10 @@ iterate_tune0 = function(input, Args, chosen_mode){
     n_seed = input$n_seed
     n_iter = input$n_iter
       
+  } else if (chosen_mode == "1D") {
+    n_seed = input$n_seed_1D
+    n_iter = input$n_iter_1D
+    
   } else if (chosen_mode == "3D"){
     n_seed = input$n_seed_3d
     n_iter = input$n_iter_3d
@@ -148,6 +152,11 @@ f_iterate_tune = function(input, output, Args, chosen_mode){
     # 2D manual
     n_vars = input$n_vars
     return(f_iterate_tune_2d(input = input, output = output, Args = Args,
+                             n_vars = n_vars, chosen_mode = chosen_mode))
+    
+  } else if (chosen_mode == "1D") {
+    n_vars = input$n_vars_1D
+    return(f_iterate_tune_1d(input = input, output = output, Args = Args,
                              n_vars = n_vars, chosen_mode = chosen_mode))
     
   } else if (chosen_mode == "3D"){
@@ -315,6 +324,44 @@ f_ui_tuning_2d_vs = function(input, ...){
     stop("Unknown number of tuning paramters")
   }
 }
+
+
+######################################################################## TESTING 1D
+# Iterate and tuning for 2D mode (smart + manual)
+f_iterate_tune_1d = function(input, output, Args, n_vars_1D, chosen_mode){
+  
+  if(n_vars_1D == 0){
+    
+    # When there is no tuning parameter
+    data_raw = iterate_tune0(input = input, Args = Args, chosen_mode = chosen_mode)
+    data_cleaned = metrics_cont_0(data = data_raw)
+    return(list(data_cleaned = data_cleaned, n_vars = n_vars_1D))
+    
+  } else if (n_vars_1D == 1){
+    
+    # When there is 1 tuning parameter
+    data_raw = iterate_tune1(input = input, Args = Args, chosen_mode = chosen_mode)
+    data_cleaned = metrics_cont_n(data = data_raw)
+    return(list(data_cleaned = data_cleaned, n_vars = n_vars_1D))
+    
+  } else if (n_vars_1D == 2) {
+    
+    data_raw = iterate_tune2(input = input, Args = Args, chosen_mode = chosen_mode)
+    data_cleaned = metrics_cont_sec(data = data_raw[["sim_data"]], 
+                                    input = input, 
+                                    vals_prim = data_raw[["vals_prim"]], 
+                                    vals_sec = data_raw[["vals_sec"]], chosen_mode = chosen_mode)
+    return(list(data_cleaned = data_cleaned, n_vars = n_vars_1D))
+    
+  } else {
+    message("Unknown number of tuning variables for 1D")
+  }
+}
+
+
+
+######################################################################## Ruben Testing
+
 
 # Iterate and tuning for 2D mode (smart + manual)
 f_iterate_tune_2d = function(input, output, Args, n_vars, chosen_mode){
