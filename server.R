@@ -33,25 +33,29 @@ source(file = "R/Sampling_shiny_assay.R")
 source(file = "R/Sampling_shiny_iteration.R")
 
 shinyServer(function(input, output, session) {
-  
+
+  # Manual version 1D
+  source(file = "R/Server_manual_1d.R", local = TRUE)
+
+
   # Manual version 2D
   source(file = "R/Server_manual_2d.R", local = TRUE)
-  
+
   # Manual version 3D
   source(file = "R/Server_manual_3d.R", local = TRUE)
 
   # Smart version 2D
   source(file = "R/Server_smart_2d.R", local = TRUE)
-  
+
   # Smart version 3D
   source(file = "R/Server_smart_3d.R", local = TRUE)
-  
+
   # Modal windows documentation
   source(file = "R/Documentation_Pop_ups.R", local = TRUE)
-  
+
   # Modal windows documentation
   source(file = "R/Scenario_Buttons.R", local = TRUE)
-  
+
   # Download
   output$downloadData = downloadHandler(
     filename = "simulation.csv",
