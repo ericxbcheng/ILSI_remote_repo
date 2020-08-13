@@ -21,7 +21,8 @@ sidebar = dashboardSidebar(
              menuItem(text = "Smart Version", 
                       tabName = "v_smart"), 
              menuItem(text = "Manual Version", 
-                      tabName = "v_manual", 
+                      tabName = "v_manual",
+                      menuSubItem(text = "1D", tabName = "1D"),
                       menuSubItem(text = "2D", tabName = "2D"), 
                       menuSubItem(text = "3D", tabName = "3D")),
              tabName = "inputs"),
@@ -29,6 +30,79 @@ sidebar = dashboardSidebar(
              menuSubItem(text = "Visualization", tabName = "vis"),
              menuSubItem(text = "Data Export", tabName = "export"),
              tabName = "outputs")
+  )
+)
+
+
+# Manual version for 1D
+v_manual_1D = fluidRow(
+  
+  box(title = "1D Input Parameters", 
+      splitLayout(
+        numericInput(inputId = "x_lim_1D", label = "Production Time (h)", value = 10, min = 1),
+        numericInput(inputId = "y_lim_1D", label = "Production Rate (Kg/h)", value = 10, min = 1)
+      ),
+      selectInput(inputId = "geom_1D", label = "Hazard Geometry", choices = list("Point-source" = "point", "Area-based" = "area"), multiple = FALSE),
+      conditionalPanel(
+        condition = "input.geom_1D == 'point'",
+        numericInput(inputId = "n_contam_1D", label = "Number of Clusters" , value = 1, min = 1, step = 1),
+        numericInput(inputId = "spread_radius_1D", label = "Radius of contamination area (m)", value = 1, min = 0)
+      ),
+      splitLayout(
+        numericInput(inputId = "cont_level_mu_1D", label = "Mean contamination level in clusters", value = 3),
+        numericInput(inputId = "cont_level_sd_1D", label = "Standard deviation of contamination level in clusters", value = 1)
+      ),
+      numericInput(inputId = "bg_level_1D", label = "Background level (CFU/g)", value = 0.00001, min = 0),
+      selectInput(inputId = "fun_1D", label = "Decay function", choices = list("Exponential" = "exp", "Gaussian" = "norm", "Uniform" = "unif")),
+      conditionalPanel(
+        condition = "input.fun_1D != 'unif'",
+        numericInput(inputId = "LOC_1D", label = "Limit of contamination contribution (0 - 1)", value = 0.001, min = 0, max = 1)
+      ),
+      numericInput(inputId = "n_sp_1D", label = "Number of sample points", value = 5, min = 1, step = 1),
+      selectInput(inputId = "method_sp_1D", label = "Sampling strategy", choices = list("SRS" = "srs", "STRS" = "strs", "k-step SS" = "ss")),
+      wellPanel(
+        selectInput(inputId = "by_1D",
+                    label = "Stratify by",
+                    choices = list("Row" = "row", "Column" = "column", "1D" = "1d"),
+                    selected = NA,
+                    multiple = FALSE),
+        numericInput(inputId = "n_strata_1D", label = "Number of strata", value = 5, min = 1),
+        numericInput(inputId = "n_strata_row_1D", label = "Number of row strata (1D only)", value = NULL, min = 1),
+        numericInput(inputId = "n_strata_col_1D", label = "Number of column strata (1D only)", value = NULL, min = 1)
+      ),
+      numericInput(inputId = "m_sp_1D", label = "Individual sample mass (g)", value = 10, min = 0),
+      selectInput(inputId = "method_det_1D",
+                  label = "Detection method",
+                  choices = list("Plating" = "plating", "Enrichment" = "enrichment"),
+                  selected = "enrichment",
+                  multiple = FALSE),
+      sliderInput(inputId = "case_1D", label = "Case", min = 1, value = 10, max = 15, step = 1, round = TRUE),
+      splitLayout(
+        numericInput(inputId = "m_1D", label = "m", value = 0, min = 0),
+        numericInput(inputId = "M_1D", label = "M", value = 0, min = 0)
+      ),
+      h3(),
+      h2("Iteration section"),
+      splitLayout(
+        numericInput(inputId = "n_seed_1D", label = "Number of contamination patterns", value = 1, min = 1, step = 1),
+        numericInput(inputId = "n_iter_1D", label = "Number of sampling patterns per contamination pattern", value = 1, min = 1, step = 1)
+      ),
+      selectInput(inputId = "n_vars_1D", label = "Number of tuning parameters", choices = list(0,1,2), multiple = FALSE),
+      uiOutput(outputId = "ui_tuning_1D"),
+      actionButton(inputId = "load_1D", label = "Load parameters"),
+      h2(),
+      conditionalPanel(
+        condition = "input.load_1D > 0",
+        splitLayout(
+          actionButton(inputId = "vis_1D", label = "Visualize"),
+          actionButton(inputId = "iterate_1D", label = "Iterate")
+        )
+      )
+  ),
+  
+  box(title = "Visualization for one iteration",
+      plotOutput(outputId = "overlay_draw_1D"),
+      plotOutput(outputId = "contam_level_draw_1D")
   )
 )
 
@@ -401,6 +475,7 @@ body = dashboardBody(
     tabItem(tabName = "intro", 
             h2("This is the introduction page.")),
     tabItem(tabName = "v_smart", v_smart),
+    tabItem(tabName = "1D", v_manual_1D),
     tabItem(tabName = "2D", v_manual_2D),
     tabItem(tabName = "3D", v_manual_3D),
     tabItem(tabName = "vis", page_vis),

@@ -34,6 +34,10 @@ source(file = "R/Sampling_shiny_iteration.R")
 
 shinyServer(function(input, output, session) {
   
+  # Manual version 1D
+  source(file = "R/Server_manual_1d.R", local = TRUE)
+  
+  
   # Manual version 2D
   source(file = "R/Server_manual_2d.R", local = TRUE)
   
