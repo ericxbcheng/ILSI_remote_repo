@@ -222,9 +222,10 @@ contam_dis = function(spot_coord, n_contam, n_affected, covar, spread, dis_level
     stopifnot(sum(dim(covar)) == 6)
     
     # Create spread contaminations. Use multivariate normal distribution.
-    spread_coord = apply(X = spot_coord, MARGIN = 1, FUN = mvrnorm, n = n_affected, Sigma = covar) %>%
+    spread_coord = apply(X = spot_coord, MARGIN = 1, FUN = rmvn, n = n_affected, 
+                         sigma = covar, isChol = FALSE, ncores = 1) %>%
       split(x = ., f = col(.)) %>%
-      map(.x = ., .f = function(x) {matrix(x, ncol = ncol(spot_coord))}) %>%
+      lapply(X = ., FUN = function(x) {matrix(x, ncol = ncol(spot_coord))}) %>%
       do.call(what = rbind, args = .) %>%
       as.data.frame(., stringsAsFactors = FALSE) %>%
       naming_spread(df = ., spot = n_contam, spread = n_affected)
