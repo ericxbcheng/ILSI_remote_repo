@@ -1,5 +1,5 @@
 ---
-title: "Sampling 3D Simulation v2"
+title: "Sampling 3D Simulation v1"
 author: "Xianbin Cheng"
 date: "07/17/2020"
 output: html_document
@@ -7,7 +7,7 @@ output: html_document
 
 # Objective
 
-  To analyze data from 100 iterations of 3D simulation in a 1m x 1m x 1m bin.
+  To analyze data from 10,000 iterations of 3D simulation in a 1m x 1m x 1m bin.
   
 # Method
 
