@@ -1,5 +1,5 @@
 ---
-title: "Sampling 3D Simulation v1"
+title: "Sampling 3D Simulation v3"
 author: "Xianbin Cheng"
 date: "07/17/2020"
 output: html_document
@@ -7,7 +7,7 @@ output: html_document
 
 # Objective
 
-  To analyze data from 10,000 iterations of 3D simulation in a 1m x 1m x 1m bin.
+  To analyze data from 100 iterations of 3D simulation in a 14m x 3m x 2.5m hopper car.
   
 # Method
 
@@ -38,8 +38,8 @@ homogeneity = 0.1
 Mc = 20
 
 # Iteration
-n_iter = 100
-n_seed = 100
+n_iter = 10
+n_seed = 10
 
 # Parameter tuning
 c_hat_vec = c(5, 10, 20, 40, 80, 100)
@@ -67,11 +67,11 @@ f_clean_up = function(data, vals_prim, vals_sec, vals_tert, n_seed){
 
 ```{r, eval = FALSE}
 # Get the RDS file names
-rds_files = dir(path = paste0(getwd(), "/RDS/3D Simulation"),pattern = "10x10.rds", full.names = TRUE)
+rds_files = dir(path = paste0(getwd(), "/RDS/3D Simulation"),pattern = "14x3x2.5", full.names = TRUE)
 
 # Read rds files
-exp1 = map(.x = str_subset(string = rds_files, pattern = "9"), .f = readRDS)
-exp2 = map(.x = str_subset(string = rds_files, pattern = "9", negate = TRUE), .f = readRDS)
+exp1 = map(.x = str_subset(string = rds_files, pattern = "srsxstrsxss"), .f = readRDS)
+exp2 = map(.x = str_subset(string = rds_files, pattern = "srsxstrsxss", negate = TRUE), .f = readRDS)
 
 # Clean up the rds files into csv files
 exp1_cleaned = f_clean_up(data = exp1, vals_prim = c_hat_vec, vals_sec = method_sp_vec, vals_tert = n_affected_vec, n_seed = n_seed)
@@ -80,15 +80,15 @@ exp2_cleaned = f_clean_up(data = exp2, vals_prim = c_hat_vec, vals_sec = n_sp_ve
 ```
 
 ```{r, echo = FALSE, message = FALSE}
-exp1_cleaned = read.csv(file = "sim_3D_exp1_9_srsxstrsxss_1x10x100_100x100.csv", header = TRUE, row.names = 1, stringsAsFactors = FALSE)
-exp2_cleaned = read.csv(file = "sim_3D_exp2_5x10x100_srs_1x10x100_100x100.csv", header = TRUE, row.names = 1, stringsAsFactors = FALSE)
+exp1_cleaned = read.csv(file = "sim_14x3x2.5_exp1_4_srsxstrsxss_1x10x100_10x10.csv", header = TRUE, row.names = 1, stringsAsFactors = FALSE)
+exp2_cleaned = read.csv(file = "sim_14x3x2.5_exp2_5x10x100_srs_1x10x100_10x10.csv", header = TRUE, row.names = 1, stringsAsFactors = FALSE)
 ```
 
 ```{r, echo = FALSE}
 exp_names = tibble(experiment = c(1,2), 
                    c_hat = rep(x = str_c(c_hat_vec, collapse = ","), times = 2), 
                    homogeneity = rep(homogeneity, 2), 
-                   n_sp = c("9", str_c(as.character(n_sp_vec), collapse = ",")), 
+                   n_sp = c("4", str_c(as.character(n_sp_vec), collapse = ",")), 
                    method_sp = c(str_c(method_sp_vec, collapse = ","), "srs"), 
                    n_affected = rep(str_c(as.character(n_affected_vec), collapse = ","), times = 2), 
                    n_seed = rep(n_seed, times = 2), 
@@ -118,7 +118,7 @@ f_combine = function(data1, data2, exp1_param, exp2_param){
 ```
 
 ```{r}
-exp_combined = f_combine(data1 = exp1_cleaned, data2 = exp2_cleaned, exp1_param = 9, exp2_param = "srs")
+exp_combined = f_combine(data1 = exp1_cleaned, data2 = exp2_cleaned, exp1_param = 4, exp2_param = "srs")
 ```
 
 3. Sensitivity analysis
