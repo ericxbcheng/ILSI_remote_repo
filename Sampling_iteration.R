@@ -102,7 +102,7 @@ sim_iterate = function(n_iter, Args, seed){
 sim_iterate2 = function(n_seed, n_iter, Args, ...){
   
   # Run the model for n_iter times under each seed
-  a = map(.x = 1:n_seed, .f = sim_iterate, Args = Args, n_iter = n_iter)
+  a = map(.x = runif(n = n_seed, min = 1, max = 100), .f = sim_iterate, Args = Args, n_iter = n_iter)
   
   # Clean the data
   b = clean_new(spread = Args$spread, data = a, verbose = Args$verbose)
