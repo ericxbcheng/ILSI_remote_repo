@@ -38,18 +38,18 @@ homogeneity = 0.1
 Mc = 20
 
 # Iteration
-n_iter = 10
-n_seed = 10
+n_iter = 2
+n_seed = 2
 
 # Experiment 1
-n_sp = 9
+n_sp = 7
 
 # Experiment 2
 method_sp = "srs"
 
 # Parameter tuning
 c_hat_vec = c(5, 10, 20, 40, 80, 100)
-n_affected_vec = c(1, 10, 100)
+n_affected_vec = c(1, 10, 100, 1000)
 n_sp_vec = c(5, 10, 100)
 method_sp_vec = c("srs", "strs", "ss")
 ```
@@ -73,7 +73,7 @@ f_clean_up = function(data, vals_prim, vals_sec, vals_tert, n_seed){
 
 ```{r, eval = FALSE}
 # Get the RDS file names
-rds_files = dir(path = paste0(getwd(), "/RDS/3D Simulation"),pattern = "1x1x1", full.names = TRUE)
+rds_files = dir(path = paste0(getwd(), "/RDS/3D Simulation"),pattern = "3x2x1.5", full.names = TRUE)
 
 # Read rds files
 exp1 = map(.x = str_subset(string = rds_files, pattern = "srsxstrsxss"), .f = readRDS)
