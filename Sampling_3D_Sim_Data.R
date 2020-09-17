@@ -82,17 +82,17 @@ Args_list_Ex1 = c(Args_list_Ex1, map(.x = n_affected_vec, .f = update_arg,
 
 # 2 tuning parameters
 
-#### Option 1: No parallelization
+# ### Option 1: No parallelization
 # for(i in 1:length(Args_list_Ex1)){
-#   
-#   sim_data_Ex1 = tune_param_sec(Args = Args_list_Ex1[[i]], var_prim = "c_hat", vals_prim = c_hat_vec, 
+# 
+#   sim_data_Ex1 = tune_param_sec(Args = Args_list_Ex1[[i]], var_prim = "c_hat", vals_prim = c_hat_vec,
 #                               var_sec = "method_sp", vals_sec = method_sp_vec, n_seed = n_seed, n_iter = n_iter)
-#   
-#   saveRDS(object = sim_data_Ex1, file = sprintf(fmt = "sim_1x1x1_%d_0.1_srsxstrsxss_%d_%dx%d.rds", n_sp, n_affected_vec[i], n_seed, n_iter))  
+# 
+#   saveRDS(object = sim_data_Ex1, file = sprintf(fmt = "sim_1x1x1_%d_0.1_srsxstrsxss_%d_%dx%d.rds", n_sp, n_affected_vec[i], n_seed, n_iter))
 # }
 
 ### Option 2: Parallelization
-libs = read_table(file = "Sampling_libraries.R", col_names = FALSE) %>% 
+libs = read_table(file = "Sampling_libraries.R", col_names = FALSE) %>%
   unlist() %>%
   str_split(string = ., pattern = "\\(|\\)", simplify = TRUE) %>%
   .[,2]
@@ -102,8 +102,8 @@ cl = makePSOCKcluster(detectCores() - 2)
 registerDoParallel(cl)
 
 foreach(i = 1:length(Args_list_Ex1), .packages = libs) %dopar%
-  {tune_param_sec(Args = Args_list_Ex1[[i]], var_prim = "c_hat", vals_prim = c_hat_vec, 
-                  var_sec = "method_sp", vals_sec = method_sp_vec, n_seed = n_seed, n_iter = n_iter) %>% 
+  {tune_param_sec(Args = Args_list_Ex1[[i]], var_prim = "c_hat", vals_prim = c_hat_vec,
+                  var_sec = "method_sp", vals_sec = method_sp_vec, n_seed = n_seed, n_iter = n_iter) %>%
       saveRDS(object = ., file = sprintf(fmt = "sim_1x1x1_%d_0.1_srsxstrsxss_%d_%dx%d.rds", n_sp, n_affected_vec[i], n_seed, n_iter))}
 
 stopCluster(cl)
@@ -127,15 +127,15 @@ Args_list_Ex2 = c(Args_list_Ex2, map(.x = n_affected_vec, .f = update_arg,
 
 # ### Option 1: No parallelization
 # for(i in 1:length(Args_list_Ex2)){
-#   
-#   sim_data_Ex2 = tune_param_sec(Args = Args_list_Ex2[[i]], var_prim = "c_hat", vals_prim = c_hat_vec, 
+# 
+#   sim_data_Ex2 = tune_param_sec(Args = Args_list_Ex2[[i]], var_prim = "c_hat", vals_prim = c_hat_vec,
 #                               var_sec = "n_sp", vals_sec = n_sp_vec, n_seed = n_seed, n_iter = n_iter)
-#   
-#   saveRDS(object = sim_data_Ex2, file = sprintf(fmt = "sim_1x1x1_5x10x100_0.1_srs_%d_%dx%d.rds", n_affected_vec[i], n_seed, n_iter))  
+# 
+#   saveRDS(object = sim_data_Ex2, file = sprintf(fmt = "sim_1x1x1_5x10x100_0.1_srs_%d_%dx%d.rds", n_affected_vec[i], n_seed, n_iter))
 # }
 
 ### Option 2: Parallelization
-libs = read_table(file = "Sampling_libraries.R", col_names = FALSE) %>% 
+libs = read_table(file = "Sampling_libraries.R", col_names = FALSE) %>%
   unlist() %>%
   str_split(string = ., pattern = "\\(|\\)", simplify = TRUE) %>%
   .[,2]
@@ -145,8 +145,8 @@ cl = makePSOCKcluster(detectCores() - 2)
 registerDoParallel(cl)
 
 foreach(i = 1:length(Args_list_Ex2), .packages = libs) %dopar%
-  {tune_param_sec(Args = Args_list_Ex2[[i]], var_prim = "c_hat", vals_prim = c_hat_vec, 
-                  var_sec = "n_sp", vals_sec = n_sp_vec, n_seed = n_seed, n_iter = n_iter) %>% 
+  {tune_param_sec(Args = Args_list_Ex2[[i]], var_prim = "c_hat", vals_prim = c_hat_vec,
+                  var_sec = "n_sp", vals_sec = n_sp_vec, n_seed = n_seed, n_iter = n_iter) %>%
       saveRDS(object = ., file = sprintf(fmt = "sim_1x1x1_5x10x100_0.1_srs_%d_%dx%d.rds", n_affected_vec[i], n_seed, n_iter))}
 
 stopCluster(cl)
