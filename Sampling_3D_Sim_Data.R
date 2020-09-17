@@ -15,7 +15,7 @@ source(file = "Sampling_analysis.R")
 library(doParallel)
 
 ######## Parameter ############
-set.seed(123)
+# set.seed(123)
 # Pre-generate healthy kernel concentrations to save time
 conc_neg = rpert(n = 10^6, min = 0, mode = 0.7, max = 19.99, shape = 80)
 
