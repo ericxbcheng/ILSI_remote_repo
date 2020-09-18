@@ -7,7 +7,7 @@ output: html_document
 
 # Objective
 
-  To analyze data from 100 iterations of 3D simulation in a 1m x 1m x 1m tote (with parallelization).
+  To analyze data from 100 iterations of 3D simulation in a 1m x 1m x 1m tote (without parallelization).
   
 # Method
 
@@ -38,18 +38,18 @@ homogeneity = 0.1
 Mc = 20
 
 # Iteration
-n_iter = 2
-n_seed = 2
+n_iter = 100
+n_seed = 100
 
 # Experiment 1
-n_sp = 7
+n_sp = 9
 
 # Experiment 2
 method_sp = "srs"
 
 # Parameter tuning
 c_hat_vec = c(5, 10, 20, 40, 80, 100)
-n_affected_vec = c(1, 10, 100, 1000)
+n_affected_vec = c(1, 10, 100)
 n_sp_vec = c(5, 10, 100)
 method_sp_vec = c("srs", "strs", "ss")
 ```
@@ -73,7 +73,7 @@ f_clean_up = function(data, vals_prim, vals_sec, vals_tert, n_seed){
 
 ```{r, eval = FALSE}
 # Get the RDS file names
-rds_files = dir(path = paste0(getwd(), "/RDS/3D Simulation"),pattern = "3x2x1.5", full.names = TRUE)
+rds_files = dir(path = paste0(getwd(), "/RDS/3D Simulation"),pattern = "1x1x1", full.names = TRUE)
 
 # Read rds files
 exp1 = map(.x = str_subset(string = rds_files, pattern = "srsxstrsxss"), .f = readRDS)
@@ -86,8 +86,8 @@ exp2_cleaned = f_clean_up(data = exp2, vals_prim = c_hat_vec, vals_sec = n_sp_ve
 ```
 
 ```{r, echo = FALSE, message = FALSE}
-exp1_cleaned = read.csv(file = "sim_1x1x1_exp1_9_srsxstrsxss_1x10x100_10x10_parallel.csv", header = TRUE, row.names = 1, stringsAsFactors = FALSE)
-exp2_cleaned = read.csv(file = "sim_1x1x1_exp2_5x10x100_srs_1x10x100_10x10_parallel.csv", header = TRUE, row.names = 1, stringsAsFactors = FALSE)
+exp1_cleaned = read.csv(file = "sim_1x1x1_exp1_9_srsxstrsxss_1x10x100_100x100.csv", header = TRUE, row.names = 1, stringsAsFactors = FALSE)
+exp2_cleaned = read.csv(file = "sim_1x1x1_exp2_5x10x100_srs_1x10x100_100x100.csv", header = TRUE, row.names = 1, stringsAsFactors = FALSE)
 ```
 
 ```{r, echo = FALSE}
@@ -200,6 +200,7 @@ plot_tune3 = function(data, xlab, legend_lab){
     geom_line(aes(x = param, y = med, color = as.factor(param2))) + 
     geom_point(aes(x = param, y = med, color = as.factor(param2))) + 
     scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) + 
+    scale_x_continuous(breaks = seq(from = 0, to = 100, by = 10))+
     scale_fill_discrete(name = legend_lab) + 
     scale_color_discrete(name = legend_lab) + 
     coord_cartesian(ylim = c(0, 1)) + 
