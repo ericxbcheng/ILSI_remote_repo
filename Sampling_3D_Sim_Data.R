@@ -21,9 +21,9 @@ conc_neg = rpert(n = 10^6, min = 0, mode = 0.7, max = 19.99, shape = 80)
 
 ## Contamination
 c_hat = 5
-x_lim = c(0, 3)
-y_lim = c(0, 2)
-z_lim = c(0, 1.5)
+x_lim = c(0, 14)
+y_lim = c(0, 3)
+z_lim = c(0, 2.5)
 lims = list(xlim = x_lim, ylim = y_lim, zlim = z_lim)
 
 dis_level = make_dis_level(type = "constant", args = 40000)
@@ -36,8 +36,8 @@ covar_mat = make_covar_mat(spread = spread, varx = 0.0004,
 
 # Sampling
 method_sp = "srs"
-n_sp = 7
-n_strata = 7 
+n_sp = 4
+n_strata = 4 
 by = "column"
 d = 0.04
 sp_radius = d / 2
@@ -47,9 +47,9 @@ rho = 1.28
 homogeneity = 0.1
 
 ### SS
-container = "truck"
-compartment = NA
-type = NA
+container = "hopper"
+compartment = 2
+type = "open_top"
 
 # Assaying
 method_det = "ELISA aflatoxin"
@@ -88,7 +88,7 @@ for(i in 1:length(Args_list_Ex1)){
   sim_data_Ex1 = tune_param_sec(Args = Args_list_Ex1[[i]], var_prim = "c_hat", vals_prim = c_hat_vec,
                               var_sec = "method_sp", vals_sec = method_sp_vec, n_seed = n_seed, n_iter = n_iter)
 
-  saveRDS(object = sim_data_Ex1, file = sprintf(fmt = "sim_3x2x1.5_%d_0.1_srsxstrsxss_%d_%dx%d.rds", n_sp, n_affected_vec[i], n_seed, n_iter))
+  saveRDS(object = sim_data_Ex1, file = sprintf(fmt = "sim_14x3x2.5_%d_0.1_srsxstrsxss_%d_%dx%d.rds", n_sp, n_affected_vec[i], n_seed, n_iter))
 }
 
 # ### Option 2: Parallelization
@@ -104,7 +104,7 @@ for(i in 1:length(Args_list_Ex1)){
 # foreach(i = 1:length(Args_list_Ex1), .packages = libs) %dopar%
 #   {tune_param_sec(Args = Args_list_Ex1[[i]], var_prim = "c_hat", vals_prim = c_hat_vec,
 #                   var_sec = "method_sp", vals_sec = method_sp_vec, n_seed = n_seed, n_iter = n_iter) %>%
-#       saveRDS(object = ., file = sprintf(fmt = "sim_3x2x1.5_%d_0.1_srsxstrsxss_%d_%dx%d.rds", n_sp, n_affected_vec[i], n_seed, n_iter))}
+#       saveRDS(object = ., file = sprintf(fmt = "sim_14x3x2.5_%d_0.1_srsxstrsxss_%d_%dx%d.rds", n_sp, n_affected_vec[i], n_seed, n_iter))}
 # 
 # stopCluster(cl)
 
@@ -131,7 +131,7 @@ for(i in 1:length(Args_list_Ex2)){
   sim_data_Ex2 = tune_param_sec(Args = Args_list_Ex2[[i]], var_prim = "c_hat", vals_prim = c_hat_vec,
                               var_sec = "n_sp", vals_sec = n_sp_vec, n_seed = n_seed, n_iter = n_iter)
 
-  saveRDS(object = sim_data_Ex2, file = sprintf(fmt = "sim_3x2x1.5_5x10x100_0.1_srs_%d_%dx%d.rds", n_affected_vec[i], n_seed, n_iter))
+  saveRDS(object = sim_data_Ex2, file = sprintf(fmt = "sim_14x3x2.5_5x10x100_0.1_srs_%d_%dx%d.rds", n_affected_vec[i], n_seed, n_iter))
 }
 
 # ### Option 2: Parallelization
@@ -147,7 +147,7 @@ for(i in 1:length(Args_list_Ex2)){
 # foreach(i = 1:length(Args_list_Ex2), .packages = libs) %dopar%
 #   {tune_param_sec(Args = Args_list_Ex2[[i]], var_prim = "c_hat", vals_prim = c_hat_vec,
 #                   var_sec = "n_sp", vals_sec = n_sp_vec, n_seed = n_seed, n_iter = n_iter) %>%
-#       saveRDS(object = ., file = sprintf(fmt = "sim_3x2x1.5_5x10x100_0.1_srs_%d_%dx%d.rds", n_affected_vec[i], n_seed, n_iter))}
+#       saveRDS(object = ., file = sprintf(fmt = "sim_14x3x2.5_5x10x100_0.1_srs_%d_%dx%d.rds", n_affected_vec[i], n_seed, n_iter))}
 # 
 # stopCluster(cl)
 
