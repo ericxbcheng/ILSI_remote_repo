@@ -138,31 +138,62 @@ sens_all = sensitivity::pcc(X = subset(x = exp_combined, select = c("method_sp",
                             conf = 0.95)
 ```
 
-4. ANOVA for `Paccept` ~ `method_sp`/`n_sp` under different `n_affected`
+4. Comparison of slopes at 20 ppb.
 
 ```{r, echo = FALSE}
-# ANOVA pvalues
-get_pval = function(data, form){
-  a = data %>%
-    dplyr::filter(param == 20)
-  b = aov(formula = form, data = a) %>%
-    summary() 
-  return(b[[1]]$`Pr(>F)`[1])
+# Calculate slope
+calc_slope = function(x1, x2, y1, y2){
+  return((y1 - y2)/(x1 - x2))
 }
+
+# Calculate the mean slope at the threshold (Mc)
+calc_mean_slope = function(data, Mc, c_hat_vec, experiment, n_sp, n_affected, method_sp){
+  
+  # Make a subset to get data for OC curves at one input combination
+  if(experiment == 1){
+    # method_sp VS n_affected
+    temp = data[data$experiment == 1 & data$method_sp == method_sp & data$n_affected == n_affected,] 
+
+  } else if (experiment == 2){
+    # n_sp VS n_affected
+    temp = data[data$experiment == 2 & data$n_sp == n_sp & data$n_affected == n_affected,]
+    
+  } else{
+    stop("Undefined experiment")
+  }
+  
+  # Get the index of Mc in the c_hat_vec
+  Mc_idx = which(x = c_hat_vec == Mc)
+  
+  # Check point
+  if(Mc_idx %in% c(1, length(c_hat_vec))){
+    stop("Can't calculate slope for end points")
+  }
+  
+  # Find the concentration levels before and after Mc (i.e. 10 and 40)
+  x_lower = c_hat_vec[Mc_idx - 1]
+  x_higher = c_hat_vec[Mc_idx + 1]
+  
+  # Find the Paccepts for each concentration level
+  Pa_lower = subset(x = temp, subset = c_hat == x_lower, select = Paccept)
+  Pa_Mc = subset(x = temp, subset = c_hat == Mc, select = Paccept)
+  Pa_higher = subset(x = temp, subset = c_hat == x_higher, select = Paccept)
+  
+  # Calculate the mean slope at Mc
+  return(mean(c(unlist(calc_slope(x1 = x_lower, x2 = Mc, 
+                                  y1 = Pa_lower, y2 = Pa_Mc)),
+                unlist(calc_slope(x1 = Mc, x2 = x_higher, 
+                                  y1 = Pa_Mc, y2 = Pa_higher)))
+              )
+         )
+}
+
+test = exp_combined %>%
+  dplyr::filter(experiment == 2 & n_sp == 100 & n_affected == 100)
+calc_mean_slope(data = test, Mc = Mc, c_hat_vec = c_hat_vec, experiment = 2, n_sp = 100, n_affected = 100)
+calc_mean_slope(data = exp_combined, Mc = Mc, c_hat_vec = c_hat_vec, experiment = 2, n_sp = 100, n_affected = 100)
 ```
 
-```{r}
-pval1 = split(x = exp1_cleaned, f = exp1_cleaned$param3) %>%
-  map(.x = ., .f = get_pval, form = Paccept ~ as.factor(param2))
-
-pval2 = split(x = exp2_cleaned, f = exp2_cleaned$param3) %>%
-  map(.x = ., .f = get_pval, form = Paccept ~ as.factor(param2))
-
-pval_all = rbind.data.frame(bind_cols(pval1), bind_cols(pval2)) %>%
-  mutate(experiment = c(1, 2), formula = c("Paccept ~ as.factor(method_sp)", "Paccept ~ as.factor(n_sp)"), c_hat = 20) %>%
-  gather(data = ., key = "n_affected", value = "p.value", -c(experiment, formula, c_hat)) %>%
-  dplyr::arrange(experiment)
-```
 
 # Results
 
@@ -255,12 +286,6 @@ sens_all
 plot_tornado(data = sens_all, param_labels = c("Sampling strategy", "Clustering", "Number of probes", "Aflatoxin concentration"))
 ```
 
-4. ANOVA results
-
-```{r, echo = FALSE}
-kable_styling(kable_input = kable(pval_all, format = "html"), full_width = TRUE)
-```
-
 5. Quality control figures that show how much the output concentration deviates from the input concentration.
 
 ```{r, echo = FALSE}
@@ -275,3 +300,34 @@ vis_diag(data = exp2_cleaned)
 sessionInfo()
 ```
 
+# Retired code
+
+ANOVA for `Paccept` ~ `method_sp`/`n_sp` under different `n_affected`
+
+```{r, echo = FALSE, eval =FALSE}
+# ANOVA pvalues
+get_pval = function(data, form){
+  a = data %>%
+    dplyr::filter(param == 20)
+  b = aov(formula = form, data = a) %>%
+    summary() 
+  return(b[[1]]$`Pr(>F)`[1])
+}
+```
+
+```{r, eval = FALSE}
+pval1 = split(x = exp1_cleaned, f = exp1_cleaned$param3) %>%
+  map(.x = ., .f = get_pval, form = Paccept ~ as.factor(param2))
+
+pval2 = split(x = exp2_cleaned, f = exp2_cleaned$param3) %>%
+  map(.x = ., .f = get_pval, form = Paccept ~ as.factor(param2))
+
+pval_all = rbind.data.frame(bind_cols(pval1), bind_cols(pval2)) %>%
+  mutate(experiment = c(1, 2), formula = c("Paccept ~ as.factor(method_sp)", "Paccept ~ as.factor(n_sp)"), c_hat = 20) %>%
+  gather(data = ., key = "n_affected", value = "p.value", -c(experiment, formula, c_hat)) %>%
+  dplyr::arrange(experiment)
+```
+
+```{r, echo = FALSE, eval = FALSE}
+kable_styling(kable_input = kable(pval_all, format = "html"), full_width = TRUE)
+```
