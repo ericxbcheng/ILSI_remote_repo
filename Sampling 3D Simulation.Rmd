@@ -140,6 +140,11 @@ sens_all = sensitivity::pcc(X = subset(x = exp_combined, select = c("method_sp",
 
 4. Comparison of slopes at 20 ppb.
 
+* Intuition: We can't directly calculate the slope at 20 ppb because we don't have a differentiable OC curve. Since we have discrete data points at 10, 20, 40 ppb, we can first calculate the slope of each OC curve between 10 and 20 ppb, and then calculate the slope between 20 and 40 ppb. Finally, we take the average and treat it as an estimate of the slope at 20 ppb.
+
+$$slope=\frac{1}{2n}\times (\sum_{j=1}^n\frac{P_{10j}-P_{20j}}{10-20}+\sum_{j=1}^n\frac{P_{20j}-P_{40j}}{20-40})$$,
+where $P_{ij}=$ acceptance probability at $i^{th}$ concentration for $j^{th}$ OC curve, $n=$ `n_seed`.
+
 ```{r, echo = FALSE}
 # Calculate slope
 calc_slope = function(x1, x2, y1, y2){
@@ -188,12 +193,45 @@ calc_mean_slope = function(data, Mc, c_hat_vec, experiment, n_sp, n_affected, me
          )
 }
 
-test = exp_combined %>%
-  dplyr::filter(experiment == 2 & n_sp == 100 & n_affected == 100)
-calc_mean_slope(data = test, Mc = Mc, c_hat_vec = c_hat_vec, experiment = 2, n_sp = 100, n_affected = 100)
-calc_mean_slope(data = exp_combined, Mc = Mc, c_hat_vec = c_hat_vec, experiment = 2, n_sp = 100, n_affected = 100)
+# Calculate slopes for each experiment
+calc_mean_slope2 = function(data, Mc, c_hat_vec, experiment, n_sp_vec, n_affected_vec, method_sp_vec){
+  
+  if(experiment == 1){
+    
+    inputs = expand.grid(method_sp = method_sp_vec, n_affected = n_affected_vec, stringsAsFactors = FALSE)
+    slope = vector(mode = "numeric", length = nrow(inputs))
+    
+    for(i in 1:length(slope)){
+      slope[i] = calc_mean_slope(data = data, Mc = Mc, c_hat_vec = c_hat_vec, 
+                                  experiment = 1, n_affected = inputs$n_affected[i], 
+                                  method_sp = inputs$method_sp[i])
+    }
+    
+  }else if (experiment == 2){
+    
+    inputs = expand.grid(n_sp = n_sp_vec, n_affected = n_affected_vec, stringsAsFactors = FALSE)
+    slope = vector(mode = "numeric", length = nrow(inputs))
+    
+    for(i in 1:length(slope)){
+      slope[i] = calc_mean_slope(data = data, Mc = Mc, c_hat_vec = c_hat_vec, 
+                                  experiment = 2, n_affected = inputs$n_affected[i], 
+                                  n_sp = inputs$n_sp[i])
+    }
+    
+  }else{
+    stop("unknown experiment")
+  }
+  
+  return(cbind.data.frame(inputs, slope))
+}
 ```
 
+```{r}
+slopes_exp1 = calc_mean_slope2(data = exp_combined, Mc = Mc, c_hat_vec = c_hat_vec, experiment = 1, 
+                               method_sp_vec = method_sp_vec, n_affected_vec = n_affected_vec)
+slopes_exp2 = calc_mean_slope2(data = exp_combined, Mc = Mc, c_hat_vec = c_hat_vec, experiment = 2, 
+                               n_sp_vec = n_sp_vec, n_affected_vec = n_affected_vec)
+```
 
 # Results
 
@@ -273,11 +311,20 @@ vis_diag = function(data){
 plot_tune3(data = exp1_cleaned, xlab = "Estimated aflatoxin concentration (ppb)", legend_lab = "Sampling strategy")
 ```
 
+```{r, echo = FALSE}
+slopes_exp1
+```
+
 2. Visualization: Experiment 2
 
 ```{r, echo = FALSE}
 plot_tune3(data = exp2_cleaned, xlab = "Estimated aflatoxin concentration (ppb)", legend_lab = "Number of samples")
 ```
+
+```{r, echo = FALSE}
+slopes_exp2
+```
+
 
 3. Sensitivity tornado plot
 
