@@ -252,7 +252,11 @@ plot_tornado = function(data, param_labels){
     theme_bw()
 }
 
-plot_tune3 = function(data, xlab, legend_lab){
+appender = function(string, unit = " kernels/cluster source"){
+  return(paste0(string, unit))
+}
+
+plot_tune3 = function(data, xlab, legend_lab, Mc){
   
   a = data %>% 
     gather(data = ., key = "metric", value = "value", -c(seed, param, param2, param3)) %>% 
@@ -268,13 +272,14 @@ plot_tune3 = function(data, xlab, legend_lab){
                 alpha = 0.3) + 
     geom_line(aes(x = param, y = med, color = as.factor(param2))) + 
     geom_point(aes(x = param, y = med, color = as.factor(param2))) + 
+    geom_vline(xintercept = Mc, linetype = 2) +
     scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) + 
     scale_x_continuous(breaks = seq(from = 0, to = 100, by = 10))+
     scale_fill_discrete(name = legend_lab) + 
     scale_color_discrete(name = legend_lab) + 
     coord_cartesian(ylim = c(0, 1)) + 
     labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") + 
-    facet_wrap(param3 ~ .) +
+    facet_wrap(param3 ~ ., labeller = as_labeller(appender)) +
     theme_bw() + 
     theme(legend.position = "top")
     
@@ -308,7 +313,9 @@ vis_diag = function(data){
 1. Visualization: Experiment 1
 
 ```{r, echo = FALSE}
-plot_tune3(data = exp1_cleaned, xlab = "Estimated aflatoxin concentration (ppb)", legend_lab = "Sampling strategy")
+plot_sp_method = plot_tune3(data = exp1_cleaned, xlab = "Estimated aflatoxin concentration (ppb)", 
+           legend_lab = "Sampling strategy", Mc = Mc)
+plot_sp_method
 ```
 
 ```{r, echo = FALSE}
@@ -318,19 +325,21 @@ slopes_exp1
 2. Visualization: Experiment 2
 
 ```{r, echo = FALSE}
-plot_tune3(data = exp2_cleaned, xlab = "Estimated aflatoxin concentration (ppb)", legend_lab = "Number of samples")
+plot_n_sp = plot_tune3(data = exp2_cleaned, xlab = "Estimated aflatoxin concentration (ppb)", 
+           legend_lab = "Number of probes", Mc = Mc)
+plot_n_sp
 ```
 
 ```{r, echo = FALSE}
 slopes_exp2
 ```
 
-
 3. Sensitivity tornado plot
 
 ```{r, echo = FALSE}
 sens_all
-plot_tornado(data = sens_all, param_labels = c("Sampling strategy", "Clustering", "Number of probes", "Aflatoxin concentration"))
+plot_sens = plot_tornado(data = sens_all, param_labels = c("Sampling strategy", "Clustering", "Number of probes", "Aflatoxin concentration"))
+plot_sens
 ```
 
 5. Quality control figures that show how much the output concentration deviates from the input concentration.
@@ -378,3 +387,12 @@ pval_all = rbind.data.frame(bind_cols(pval1), bind_cols(pval2)) %>%
 ```{r, echo = FALSE, eval = FALSE}
 kable_styling(kable_input = kable(pval_all, format = "html"), full_width = TRUE)
 ```
+
+```{r, echo = FALSE, eval = FALSE}
+pdf("3D_paper_figures.pdf")
+  plot_sp_method
+  plot_n_sp
+  plot_sens
+dev.off()
+```
+
