@@ -233,6 +233,28 @@ slopes_exp2 = calc_mean_slope2(data = exp_combined, Mc = Mc, c_hat_vec = c_hat_v
                                n_sp_vec = n_sp_vec, n_affected_vec = n_affected_vec)
 ```
 
+5. Comparison of mean acceptance probabilities at 20 ppb.
+
+```{r}
+# Get the p-value for anova of mean difference in Paccept at 20 ppb among levels of param2
+calc_pval_anova = function(data, param3_val){
+  mod = aov(formula = Paccept ~ as.factor(param2), data = subset(x = data, subset = (param == 20) & (param3 == param3_val)))
+  return(summary(mod)[[1]]$`Pr(>F)`[1])
+}
+
+summarize_pval = function(data, n_affected_vec){
+  
+  pvals = sapply(X = n_affected_vec, FUN = calc_pval_anova, data = data)
+  result = data.frame(param3 = n_affected_vec, pval = pvals)
+  return(result)
+}
+```
+
+```{r}
+pval_exp1 = summarize_pval(data = exp1_cleaned, n_affected_vec = n_affected_vec)
+pval_exp2 = summarize_pval(data = exp2_cleaned, n_affected_vec = n_affected_vec)
+```
+
 # Results
 
 ```{r, echo = FALSE}
@@ -340,6 +362,27 @@ slopes_exp2
 sens_all
 plot_sens = plot_tornado(data = sens_all, param_labels = c("Sampling strategy", "Clustering", "Number of probes", "Aflatoxin concentration"))
 plot_sens
+```
+4. Summary of the mean acceptance probabilities at 20 ppb
+
+```{r}
+# Experiment 1
+summary_exp1 = exp1_cleaned %>%
+  dplyr::filter(param == 20) %>%
+  group_by(param3, param2) %>%
+  summarize(mean_Paccept = mean(Paccept))
+
+summary_exp1
+pval_exp1
+
+# Experiment 2
+summary_exp2 = exp2_cleaned %>%
+  dplyr::filter(param == 20) %>%
+  group_by(param3, param2) %>%
+  summarize(mean_Paccept = mean(Paccept))
+
+summary_exp2
+pval_exp2
 ```
 
 5. Quality control figures that show how much the output concentration deviates from the input concentration.
