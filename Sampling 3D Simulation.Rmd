@@ -236,24 +236,28 @@ slopes_exp2 = calc_mean_slope2(data = exp_combined, Mc = Mc, c_hat_vec = c_hat_v
 5. Comparison of mean acceptance probabilities at 20 ppb.
 
 ```{r}
-# Get the p-value for anova of mean difference in Paccept at 20 ppb among levels of param2
-calc_pval_anova = function(data, param3_val){
-  mod = aov(formula = Paccept ~ as.factor(param2), data = subset(x = data, subset = (param == 20) & (param3 == param3_val)))
+# Get the p-value for anova of mean difference in Paccept at 20 ppb. 
+# param2 == method_sp or n_sp, param3 == n_affected
+calc_pval_anova = function(data, fix, val){
+  if(fix == "param3"){
+    mod = aov(formula = Paccept ~ as.factor(param2), 
+              data = subset(x = data, subset = (param == 20) & (param3 == val)))
+  } else if (fix == "param2"){
+    mod = aov(formula = Paccept ~ as.factor(param3), 
+              data = subset(x = data, subset = (param == 20) & (param2 == val)))
+  }
+  
   return(summary(mod)[[1]]$`Pr(>F)`[1])
 }
 
-summarize_pval = function(data, n_affected_vec){
+summarize_pval = function(data, param_tune_vec, fix){
   
-  pvals = sapply(X = n_affected_vec, FUN = calc_pval_anova, data = data)
-  result = data.frame(param3 = n_affected_vec, pval = pvals)
+  pvals = sapply(X = param_tune_vec, FUN = calc_pval_anova, data = data, fix = fix)
+  result = data.frame(param_tune = param_tune_vec, pval = pvals)
   return(result)
 }
 ```
 
-```{r}
-pval_exp1 = summarize_pval(data = exp1_cleaned, n_affected_vec = n_affected_vec)
-pval_exp2 = summarize_pval(data = exp2_cleaned, n_affected_vec = n_affected_vec)
-```
 
 # Results
 
@@ -373,7 +377,8 @@ summary_exp1 = exp1_cleaned %>%
   summarize(mean_Paccept = mean(Paccept))
 
 summary_exp1
-pval_exp1
+summarize_pval(data = exp1_cleaned, fix = "param3", param_tune_vec = n_affected_vec)
+summarize_pval(data = exp1_cleaned, fix = "param2", param_tune_vec = method_sp_vec)
 
 # Experiment 2
 summary_exp2 = exp2_cleaned %>%
@@ -382,7 +387,8 @@ summary_exp2 = exp2_cleaned %>%
   summarize(mean_Paccept = mean(Paccept))
 
 summary_exp2
-pval_exp2
+summarize_pval(data = exp2_cleaned, fix = "param3", param_tune_vec = n_affected_vec)
+summarize_pval(data = exp2_cleaned, fix = "param2", param_tune_vec = n_sp_vec)
 ```
 
 5. Quality control figures that show how much the output concentration deviates from the input concentration.
