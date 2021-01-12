@@ -153,7 +153,8 @@ gen_contam_cont = function(geom, n_contam, lims, spread, spread_radius){
   return(list(spot_coord = spot_coord, n_contam = n_contam, spread_radius = spread_radius))
 }
 
-# Calculate the expected value of dis_level
+# Calculate the expected value of dis_level 
+## Note: for Gamma dist, we don't calculate the expected value because Gamma dist is skewed. We use the mode instead.
 calc_E_dis_level = function(dis_level){
   
   # Checkpoint
@@ -166,8 +167,8 @@ calc_E_dis_level = function(dis_level){
     # Assume alpha = 2
     # X ~ Gamma(alpha, theta) ==> E(X) = alpha * theta
     # mode = (alpha - 1) * theta
-    # E(C_pos) = lb + alpha * theta
-    return(dis_level[["args"]][["lb"]] + 2 * (dis_level[["args"]][["mode"]] - dis_level[["args"]][["lb"]]) / (2 - 1))
+    # E(C_pos) = lb + mode
+    return(dis_level[["args"]][["lb"]] + dis_level[["args"]][["mode"]])
   }
   
 }
