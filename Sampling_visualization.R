@@ -429,7 +429,7 @@ plot_tune0 = function(data){
   ggplot(data = data) +
     geom_boxplot(aes(x = "NA", y = Paccept)) +
     geom_point(aes(x = "NA",  y = mean(Paccept)), color = "red", pch = 4, size = 5) +
-    labs(x = NULL, y = "Probability of acceptance") +
+    labs(x = NULL, y = "Probability of acceptance", subtitle = paste0("Median: ", median(data$Paccept), " Mean: ", mean(data$Paccept))) +
     scale_y_continuous(breaks = seq(0,1,0.1)) +
     coord_cartesian(ylim = c(0,1)) +
     theme_bw()
