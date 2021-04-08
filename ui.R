@@ -394,12 +394,43 @@ page_export = fluidRow(
   
 )
 
+# Introduction page
+page_intro = fluidRow(box(width = 12,
+  h1("Welcome"),
+  tags$div("This is an interactive web app dedicated to sampling simulation in a food safety context. The simulation model and the web app were built by Xianbin (Eric) Cheng, a graduated PhD student, and are maintained by researchers of the Stasiewicz's lab under the department of ",
+           tags$b("Food Science and Human Nutrition"), 
+           " at the ",
+           tags$b("University of Illinois at Urbana-Champaign"), 
+           ". For more information about the Stasiewicz's lab, please click this ",
+           tags$a(href = "https://mjs.fshn.illinois.edu/", "link"),
+           "."),
+  p(),
+  p(),
+  h2("Version"),
+  p("The current version is v4.0 and was updated on: 04/08/2021"),
+  p(),
+  h2("Goal"),
+  p("We aim to provide a tool to simulate bulk sampling in 2D (e.g. a produce field) or 3D (e.g. a grain container) scenarios and evaluate the performance of any specific sampling plan."),
+  p(),
+  h2("Funding Source"),
+  p("This web app is the product of two research projects funded by International Life Science Institute North America (ILSI N.A.) and Center for Produce Safety (CPS)."),
+  p(),
+  h2("Major Outputs"),
+  p("This simulation model and web app have been used extensively in the following research articles."),
+  tags$div("Cheng, X., Stasiewicz, M. J. (2021). Evaluation of the impact of skewness, clustering, and probe sampling plan on aflatoxin detection in corn. Risk Analysis. ",
+           tags$a(href = "https://doi.org/10.1111/risa.13721", "https://doi.org/10.1111/risa.13721")),
+  tags$div("Place holder for 2D paper"),
+  p(),
+  h2("Contacts"),
+  p("Please feel free to contact us if you have any questions."),
+  tags$div(tags$b("Matthew Stasiewicz"), ": Principal Investigator, PhD, mstasie@illinois.edu"),
+  tags$div(tags$b("Xianbin (Eric) Cheng"), ": Model Creator, PhD, ericxbcheng@gmail.com", tags$a(href = "https://www.linkedin.com/in/xianbincheng/", "LinkedIn"))
+))
 
 body = dashboardBody(
   
   tabItems(
-    tabItem(tabName = "intro", 
-            h2("This is the introduction page.")),
+    tabItem(tabName = "intro", page_intro),
     tabItem(tabName = "v_smart", v_smart),
     tabItem(tabName = "2D", v_manual_2D),
     tabItem(tabName = "3D", v_manual_3D),
@@ -410,7 +441,7 @@ body = dashboardBody(
 
 shinyUI(dashboardPage(
   
-  dashboardHeader(title = "2D and 3D Sampling Simulation"),
+  dashboardHeader(title = "Food Safety Sampling"),
   sidebar,
   body
 ))
