@@ -35,7 +35,7 @@ sidebar = dashboardSidebar(
 # Manual version for 3D
 v_manual_3D = fluidRow(
 
-  box(title = "3D Input Parameters", 
+  box(title = "3D Input Parameters", solidHeader = TRUE, status = "primary",
       
       fluidRow(
         column(width = 10, 
@@ -188,7 +188,7 @@ v_manual_3D = fluidRow(
     )
   ),
   box(
-    title = "Visualization for one iteration",
+    title = "Visualization for one iteration", solidHeader = TRUE, status = "primary",
     plotOutput(outputId = "overlay_top"),
     plotOutput(outputId = "overlay_side")
   )
@@ -200,7 +200,7 @@ ph = p("Under development")
 # Manual version for 2D
 v_manual_2D = fluidRow(
   
-  box(title = "2D Input Parameters", 
+  box(title = "2D Input Parameters", solidHeader = TRUE, status = "primary",
       
       fluidRow(
         column(width = 10, 
@@ -322,7 +322,7 @@ v_manual_2D = fluidRow(
       )
   ),
   
-  box(title = "Visualization for one iteration",
+  box(title = "Visualization for one iteration", solidHeader = TRUE, status = "primary",
       plotOutput(outputId = "overlay_draw"),
       plotOutput(outputId = "contam_level_draw")
   )
@@ -331,7 +331,7 @@ v_manual_2D = fluidRow(
 # Smart version 
 v_smart = fluidPage(
   fluidRow(
-    box(title = "Questionnaire", 
+    box(title = "Questionnaire", solidHeader = TRUE, status = "primary",
         p("Q1: Which type of product do you want to simulate?"),
         radioButtons(inputId = "spread_vs",
                      label = NULL,
@@ -364,7 +364,7 @@ v_smart = fluidPage(
                          uiOutput(outputId = "ui_vis_iter_3d"))
         ),
     
-    box(title = "Visualization for one iteration", 
+    box(title = "Visualization for one iteration", solidHeader = TRUE, status = "primary",
         uiOutput(outputId = "ui_vis_once")
         )
     )
@@ -373,33 +373,82 @@ v_smart = fluidPage(
 # Visualization page
 page_vis = fluidRow(
 
-  box(title = "Selected parameters",
+  box(title = "Selected parameters", solidHeader = TRUE, status = "primary",
       tableOutput(outputId = "print_param")),
-  box(title = "Visualization for multiple iterations",
+  box(title = "Visualization for multiple iterations", solidHeader = TRUE, status = "primary",
       uiOutput(outputId = "yvar"),
       plotOutput(outputId = "plot_iterate"))
 )
 
 page_export = fluidRow(
   
-  box(title = "Download the simulation data",
+  box(title = "Download the simulation data", solidHeader = TRUE, status = "primary",
       p("Click the following button to download the csv file that contains the simulation data."),
       downloadButton(outputId = "downloadData", label = "Download")
       ),
   
   box(
-    title = "Variable interpretation",
-    p("The csv file contains a header with multiple variables. The interpretation is as follows.")
+    title = "Variable interpretation", solidHeader = TRUE, status = "primary",
+    p("The csv file contains a header with multiple variables. The interpretation is as follows."),
+    tags$div(tags$b("seed"), ": The random seed that determines the locations of contaminated kernels."),
+    tags$div(tags$b("P_rej"), ": Probability of rejection"),
+    tags$div(tags$b("Paccept"), ": Probability of acceptance = 1 - P_rej"),
+    tags$div(tags$b("param"), ": The primary tuning parameter"),
+    tags$div(tags$b("param2"), ": The secondary tuning parameter"),
+    tags$div(tags$b("c_true"), ": The true mycotoxin concentration in the container (ppb).")
   )
   
 )
 
+# Introduction page
+page_intro = fluidRow(box(width = 12,
+  h1("Welcome"),
+  tags$div("This is an interactive web app designed to run sampling simulation in a food safety context. The simulation model and the web app were built by Xianbin (Eric) Cheng, a graduated PhD student, and are maintained by researchers of the ",
+           tags$b("Stasiewicz Food Safety Lab"),
+           " under the department of ",
+           tags$b("Food Science and Human Nutrition"), 
+           " at the ",
+           tags$b("University of Illinois at Urbana-Champaign"), 
+           ". For more information about the Stasiewicz Food Safety Lab, please click this ",
+           tags$a(href = "https://mjs.fshn.illinois.edu/", "link"),
+           "."),
+  p(),
+  h2("Who We Are"),
+  p("We are a group of researchers in the department of Food Science and Human Nutrition at the University of Illinois at Urbana-Champaign, dedicated to using risk analysis, at the interface between microbiology and engineering, to analyze and develop solutions to applied problems in food safety and security. We endeavor to create a world where everyone and everywhere is food secure."),
+  p(),
+  h2("Goal"),
+  p("We aim to provide a tool to simulate bulk sampling in 2D (e.g. a produce field) or 3D (e.g. a grain container) scenarios and evaluate the performance of any specific sampling plan."),
+  p(),
+  h2("Funding Sources"),
+  tags$div("This web app is the product of two research projects funded by ", 
+           tags$a(href = "https://ilsi.org/", "International Life Sciences Institute"),
+           " (ILSI) and ",
+           tags$a(href = "https://www.centerforproducesafety.org/", "Center for Produce Safety"),
+           " (CPS)."),
+  p(),
+  h2("Major Outputs"),
+  p("This simulation model and web app have been used extensively in the following research articles."),
+  tags$ul(
+    tags$li(tags$div("Cheng, X., Stasiewicz, M. J. (2021). Evaluation of the impact of skewness, clustering, and probe sampling plan on aflatoxin detection in corn. Risk Analysis. ",
+                     tags$a(href = "https://doi.org/10.1111/risa.13721", "https://doi.org/10.1111/risa.13721"))),
+    tags$li(tags$div("Place holder for 2D paper"))
+  ),
+  p(),
+  h2("Version"),
+  tags$div("The current version is 4.0 and was updated on: 04/08/2021. Previous versions and source code can be found on GitHub (",
+           tags$a(href = "https://github.com/ericxbcheng/ILSI_remote_repo", "link"),
+           ")."),
+  p(),
+  h2("Contacts"),
+  p("Please feel free to contact us if you have any questions."),
+  tags$div(tags$b("Matthew Stasiewicz"), ": Principal Investigator, Assistant Professor, PhD. Email: mstasie@illinois.edu"),
+  tags$div(tags$b("Xianbin (Eric) Cheng"), ": Model Creator, PhD. Email: xianbin2@illinois.edu", tags$a(href = "https://www.linkedin.com/in/xianbincheng/", " LinkedIn"))
+))
 
 body = dashboardBody(
   
   tabItems(
-    tabItem(tabName = "intro", 
-            h2("This is the introduction page.")),
+    tabItem(tabName = "intro", page_intro),
     tabItem(tabName = "v_smart", v_smart),
     tabItem(tabName = "2D", v_manual_2D),
     tabItem(tabName = "3D", v_manual_3D),
@@ -410,7 +459,7 @@ body = dashboardBody(
 
 shinyUI(dashboardPage(
   
-  dashboardHeader(title = "2D and 3D Sampling Simulation"),
+  dashboardHeader(title = "Food Safety Sampling"),
   sidebar,
   body
 ))

@@ -363,7 +363,7 @@ f_ui_tuning_3d_vs = function(input, ...){
                   label = NULL,
                   choices = f_var_tuning_3d(method_sp = input$method_sp_3d_vs, n_vars = 1)),
       p("Q15B. What values do you want to tune over? (separated by a comma)"),
-      textInput(inputId = "val_prim_3d_vs", label = NULL, value = "1,10,20")
+      textInput(inputId = "val_prim_3d_vs", label = NULL, value = "5,10,20")
     )
     
   } else if(input$n_vars_3d_vs == 2) {
@@ -373,7 +373,7 @@ f_ui_tuning_3d_vs = function(input, ...){
                   label = NULL,
                   choices = list("Overall mycotoxin level (ppb)" = "c_hat")),
       p("Q15B. What values do you want to tune the primary parameter over? (separated by a comma)"),
-      textInput(inputId = "val_prim_3d_vs", label = NULL, value = "1,10,20"),
+      textInput(inputId = "val_prim_3d_vs", label = NULL, value = "5,10,20"),
       p("Q15C. Which secondary parameter do you want to tune?"),
       selectInput(inputId = "var_sec_3d_vs",
                   label = NULL,
