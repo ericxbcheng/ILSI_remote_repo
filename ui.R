@@ -427,22 +427,24 @@ page_intro = fluidRow(box(width = 12,
            " (CPS)."),
   p(),
   h2("Major Outputs"),
-  p("This simulation model and web app have been used extensively in the following research articles."),
+  p("This simulation model and web app have been used extensively in the following research articles or posters."),
   tags$ul(
     tags$li(tags$div("Cheng, X., Stasiewicz, M. J. (2021). Evaluation of the impact of skewness, clustering, and probe sampling plan on aflatoxin detection in corn. Risk Analysis. ",
                      tags$a(href = "https://doi.org/10.1111/risa.13721", "https://doi.org/10.1111/risa.13721"))),
-    tags$li(tags$div("Place holder for 2D paper"))
+    tags$li(tags$div("Stasiewicz, M. J., Wiedmann, M. (2019). Simulation analysis of in-field produce sampling for risk-based sampling plan development. CPS. ",
+                     tags$a(href = "https://www.centerforproducesafety.org/researchproject/438/awards/Simulation_analysis_of_infield_produce_sampling_for_riskbased_sampling_plan_development.html", "Link")))
   ),
   p(),
   h2("Version"),
-  tags$div("The current version is 4.0 and was updated on: 04/08/2021. Previous versions and source code can be found on GitHub (",
+  tags$div("The current version is 4.0.2 and was updated on: 04/13/2021. Previous versions and source code can be found on GitHub (",
            tags$a(href = "https://github.com/ericxbcheng/ILSI_remote_repo", "link"),
            ")."),
   p(),
   h2("Contacts"),
   p("Please feel free to contact us if you have any questions."),
   tags$div(tags$b("Matthew Stasiewicz"), ": Principal Investigator, Assistant Professor, PhD. Email: mstasie@illinois.edu"),
-  tags$div(tags$b("Xianbin (Eric) Cheng"), ": Model Creator, PhD. Email: xianbin2@illinois.edu", tags$a(href = "https://www.linkedin.com/in/xianbincheng/", " LinkedIn"))
+  tags$div(tags$b("Xianbin (Eric) Cheng"), ": Model Creator, PhD. Email: xianbin2@illinois.edu", tags$a(href = "https://www.linkedin.com/in/xianbincheng/", " LinkedIn")),
+  tags$div(tags$b("Jorge Quintanilla"), ": Produce Sampling Lead. Email: jfq@illinois.edu")
 ))
 
 body = dashboardBody(
