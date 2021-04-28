@@ -1,0 +1,447 @@
+---
+title: "Sampling 3D Simulation (truck)"
+author: "Xianbin Cheng"
+date: "09/17/2020"
+output: html_document
+---
+
+# Objective
+
+  To analyze data from 10,000 iterations of 3D simulation in a 3m x 2m x 1.5m truck (without parallelization).
+  
+# Method
+
+1. Necessary inputs
+
+```{r, warning = FALSE, message = FALSE}
+library(kableExtra)
+library(sensitivity)
+source(file = "Sampling_libraries.R")
+source(file = "Sampling_contamination.R")
+source(file = "Sampling_contamination_3d.R")
+source(file = "Sampling_visualization.R")
+source(file = "Sampling_assay_prep.R")
+source(file = "Sampling_plan.R")
+source(file = "Sampling_plan_3d.R")
+source(file = "Sampling_assay_3d.R")
+source(file = "Sampling_assay.R")
+source(file = "Sampling_outcome_3d.R")
+source(file = "Sampling_outcome.R")
+source(file = "Sampling_iteration.R")
+source(file = "Sampling_tuning_3d.R")
+source(file = "Sampling_analysis.R")
+```
+
+```{r}
+# Important parameters
+homogeneity = 0.1
+Mc = 20
+
+# Iteration
+n_iter = 100
+n_seed = 100
+
+# Experiment 1
+n_sp = 7
+
+# Experiment 2
+method_sp = "srs"
+
+# Parameter tuning
+c_hat_vec = c(5, 10, 20, 40, 80, 100)
+n_affected_vec = c(1, 10, 100, 1000)
+n_sp_vec = c(5, 10, 100)
+method_sp_vec = c("srs", "strs", "ss")
+```
+
+2. Load all the RDS files and clean them up.
+
+```{r, echo = FALSE}
+f_clean_up = function(data, vals_prim, vals_sec, vals_tert, n_seed){
+
+  # Clean up the data on the secondary tuning level
+  a = map(.x = data, .f = metrics_dis_sec, vals_prim = vals_prim, vals_sec = vals_sec, n_seed = n_seed) %>%
+    bind_rows()
+
+  # Create a vector that specifies the tertiary tuning level
+  b = as.character(rep(x = vals_tert, each = length(vals_prim) * length(vals_sec) * n_seed))
+
+  # Combine
+  return(data.frame(a, param3 = b, stringsAsFactors = FALSE))
+}
+```
+
+```{r, eval = FALSE}
+# Get the RDS file names
+rds_files = dir(path = paste0(getwd(), "/RDS/3D Simulation"),pattern = "3x2x1.5", full.names = TRUE)
+
+# Read rds files
+exp1 = map(.x = str_subset(string = rds_files, pattern = "srsxstrsxss"), .f = readRDS)
+exp2 = map(.x = str_subset(string = rds_files, pattern = "srsxstrsxss", negate = TRUE), .f = readRDS)
+
+# Clean up the rds files into csv files
+exp1_cleaned = f_clean_up(data = exp1, vals_prim = c_hat_vec, vals_sec = method_sp_vec, vals_tert = n_affected_vec, n_seed = n_seed)
+
+exp2_cleaned = f_clean_up(data = exp2, vals_prim = c_hat_vec, vals_sec = n_sp_vec, vals_tert = n_affected_vec, n_seed = n_seed)
+```
+
+```{r, echo = FALSE, message = FALSE}
+exp1_cleaned = read.csv(file = "sim_3x2x1.5_exp1_7_srsxstrsxss_1x10x100x1000_100x100.csv", header = TRUE, row.names = 1, stringsAsFactors = FALSE)
+exp2_cleaned = read.csv(file = "sim_3x2x1.5_exp2_5x10x100_srs_1x10x100x1000_100x100.csv", header = TRUE, row.names = 1, stringsAsFactors = FALSE)
+```
+
+```{r, echo = FALSE}
+exp_names = tibble(experiment = c(1,2), 
+                   c_hat = rep(x = str_c(c_hat_vec, collapse = ","), times = 2), 
+                   homogeneity = rep(homogeneity, 2), 
+                   n_sp = c(as.character(n_sp), str_c(as.character(n_sp_vec), collapse = ",")), 
+                   method_sp = c(str_c(method_sp_vec, collapse = ","), method_sp), 
+                   n_affected = rep(str_c(as.character(n_affected_vec), collapse = ","), times = 2), 
+                   n_seed = rep(n_seed, times = 2), 
+                   n_iter = rep(n_iter, times = 2))
+
+kable_styling(kable_input = kable(x = exp_names, format = "html"), full_width = TRUE)
+```
+
+2. Further summarizing of the data to produce OC curves
+
+```{r, echo = FALSE}
+# Combine two experiments
+f_combine = function(data1, data2, exp1_param, exp2_param){
+  
+  a = data1 %>%
+    rename(.data = ., "method_sp" = "param2", "c_hat" = "param", "n_affected" = "param3") %>%
+    mutate(experiment = 1, n_sp = exp1_param) %>%
+    dplyr::select(experiment, seed, P_rej, Paccept, c_true, c_hat, n_sp, method_sp, n_affected)
+  
+  b = data2 %>%
+    rename(.data = ., "n_sp" = "param2", "c_hat" = "param", "n_affected" = "param3") %>%
+    mutate(experiment = 2, method_sp = exp2_param) %>%
+    dplyr::select(experiment, seed, P_rej, Paccept, c_true, c_hat, n_sp, method_sp, n_affected)
+    
+  return(rbind.data.frame(a, b))
+}
+```
+
+```{r}
+exp_combined = f_combine(data1 = exp1_cleaned, data2 = exp2_cleaned, exp1_param = n_sp, exp2_param = method_sp)
+```
+
+3. Sensitivity analysis
+
+```{r}
+# Experiment all
+sens_all = sensitivity::pcc(X = subset(x = exp_combined, select = c("method_sp", "n_affected", "n_sp", "c_hat")), 
+                            y = exp_combined$Paccept, 
+                            rank = TRUE, 
+                            nboot = 100, 
+                            conf = 0.95)
+```
+
+4. Comparison of slopes at 20 ppb.
+
+* Intuition: We can't directly calculate the slope at 20 ppb because we don't have a differentiable OC curve. Since we have discrete data points at 10, 20, 40 ppb, we can first calculate the slope of each OC curve between 10 and 20 ppb, and then calculate the slope between 20 and 40 ppb. Finally, we take the average and treat it as an estimate of the slope at 20 ppb.
+
+$$slope=\frac{1}{2n}\times (\sum_{j=1}^n\frac{P_{10j}-P_{20j}}{10-20}+\sum_{j=1}^n\frac{P_{20j}-P_{40j}}{20-40})$$,
+where $P_{ij}=$ acceptance probability at $i^{th}$ concentration for $j^{th}$ OC curve, $n=$ `n_seed`.
+
+```{r, echo = FALSE}
+# Calculate slope
+calc_slope = function(x1, x2, y1, y2){
+  return((y1 - y2)/(x1 - x2))
+}
+
+# Calculate the mean slope at the threshold (Mc)
+calc_mean_slope = function(data, Mc, c_hat_vec, experiment, n_sp, n_affected, method_sp){
+  
+  # Make a subset to get data for OC curves at one input combination
+  if(experiment == 1){
+    # method_sp VS n_affected
+    temp = data[data$experiment == 1 & data$method_sp == method_sp & data$n_affected == n_affected,] 
+
+  } else if (experiment == 2){
+    # n_sp VS n_affected
+    temp = data[data$experiment == 2 & data$n_sp == n_sp & data$n_affected == n_affected,]
+    
+  } else{
+    stop("Undefined experiment")
+  }
+  
+  # Get the index of Mc in the c_hat_vec
+  Mc_idx = which(x = c_hat_vec == Mc)
+  
+  # Check point
+  if(Mc_idx %in% c(1, length(c_hat_vec))){
+    stop("Can't calculate slope for end points")
+  }
+  
+  # Find the concentration levels before and after Mc (i.e. 10 and 40)
+  x_lower = c_hat_vec[Mc_idx - 1]
+  x_higher = c_hat_vec[Mc_idx + 1]
+  
+  # Find the Paccepts for each concentration level
+  Pa_lower = subset(x = temp, subset = c_hat == x_lower, select = Paccept)
+  Pa_Mc = subset(x = temp, subset = c_hat == Mc, select = Paccept)
+  Pa_higher = subset(x = temp, subset = c_hat == x_higher, select = Paccept)
+  
+  # Calculate the mean slope at Mc
+  return(mean(c(unlist(calc_slope(x1 = x_lower, x2 = Mc, 
+                                  y1 = Pa_lower, y2 = Pa_Mc)),
+                unlist(calc_slope(x1 = Mc, x2 = x_higher, 
+                                  y1 = Pa_Mc, y2 = Pa_higher)))
+              )
+         )
+}
+
+# Calculate slopes for each experiment
+calc_mean_slope2 = function(data, Mc, c_hat_vec, experiment, n_sp_vec, n_affected_vec, method_sp_vec){
+  
+  if(experiment == 1){
+    
+    inputs = expand.grid(method_sp = method_sp_vec, n_affected = n_affected_vec, stringsAsFactors = FALSE)
+    slope = vector(mode = "numeric", length = nrow(inputs))
+    
+    for(i in 1:length(slope)){
+      slope[i] = calc_mean_slope(data = data, Mc = Mc, c_hat_vec = c_hat_vec, 
+                                  experiment = 1, n_affected = inputs$n_affected[i], 
+                                  method_sp = inputs$method_sp[i])
+    }
+    
+  }else if (experiment == 2){
+    
+    inputs = expand.grid(n_sp = n_sp_vec, n_affected = n_affected_vec, stringsAsFactors = FALSE)
+    slope = vector(mode = "numeric", length = nrow(inputs))
+    
+    for(i in 1:length(slope)){
+      slope[i] = calc_mean_slope(data = data, Mc = Mc, c_hat_vec = c_hat_vec, 
+                                  experiment = 2, n_affected = inputs$n_affected[i], 
+                                  n_sp = inputs$n_sp[i])
+    }
+    
+  }else{
+    stop("unknown experiment")
+  }
+  
+  return(cbind.data.frame(inputs, slope))
+}
+```
+
+```{r}
+slopes_exp1 = calc_mean_slope2(data = exp_combined, Mc = Mc, c_hat_vec = c_hat_vec, experiment = 1, 
+                               method_sp_vec = method_sp_vec, n_affected_vec = n_affected_vec)
+slopes_exp2 = calc_mean_slope2(data = exp_combined, Mc = Mc, c_hat_vec = c_hat_vec, experiment = 2, 
+                               n_sp_vec = n_sp_vec, n_affected_vec = n_affected_vec)
+```
+
+5. Comparison of mean acceptance probabilities at 20 ppb.
+
+```{r}
+# Get the p-value for anova of mean difference in Paccept at 20 ppb. 
+# param2 == method_sp or n_sp, param3 == n_affected
+calc_pval_anova = function(data, fix, val){
+  if(fix == "param3"){
+    mod = aov(formula = Paccept ~ as.factor(param2), 
+              data = subset(x = data, subset = (param == 20) & (param3 == val)))
+  } else if (fix == "param2"){
+    mod = aov(formula = Paccept ~ as.factor(param3), 
+              data = subset(x = data, subset = (param == 20) & (param2 == val)))
+  }
+  
+  return(summary(mod)[[1]]$`Pr(>F)`[1])
+}
+
+summarize_pval = function(data, param_tune_vec, fix){
+  
+  pvals = sapply(X = param_tune_vec, FUN = calc_pval_anova, data = data, fix = fix)
+  result = data.frame(param_tune = param_tune_vec, pval = pvals)
+  return(result)
+}
+```
+
+
+# Results
+
+```{r, echo = FALSE}
+plot_tornado = function(data, param_labels){
+  
+  a = rownames_to_column(.data = data$PRCC, var = "Variable")
+  a$Variable = fct_inorder(f = a$Variable)
+  colnames(a)[4:6] = c("std_error", "min_ci", "max_ci")
+  
+  ggplot(data = a) +
+    geom_crossbar(aes(x = Variable, y = original, ymin = min_ci, ymax = max_ci)) +
+    geom_hline(yintercept = 0, color = "red") +
+    scale_x_discrete(labels = param_labels) +
+    scale_y_continuous(breaks = seq(-1, 1, 0.2)) +
+    labs(x = "Variables", y = "PRCC index") +
+    coord_flip(ylim = c(-1, 1)) +
+    theme_bw()
+}
+
+appender = function(string, unit = " kernels/cluster source"){
+  return(paste0(string, unit))
+}
+
+plot_tune3 = function(data, xlab, legend_lab, Mc){
+  
+  a = data %>% 
+    gather(data = ., key = "metric", value = "value", -c(seed, param, param2, param3)) %>% 
+    group_by(param3, param2, param, metric) %>% 
+    summarise(lb = quantile(x = value, probs = 0.025), med = median(x = value), 
+              ub = quantile(x = value, probs = 0.975)) %>% 
+    dplyr::filter(metric == "Paccept")
+  
+  b = ggplot(data = a) + 
+    geom_ribbon(aes(x = param, ymin = lb, 
+                    ymax = ub, group = as.factor(param2), 
+                    fill = as.factor(param2)), 
+                alpha = 0.3) + 
+    geom_line(aes(x = param, y = med, color = as.factor(param2))) + 
+    geom_point(aes(x = param, y = med, color = as.factor(param2))) + 
+    geom_vline(xintercept = Mc, linetype = 2) +
+    scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) + 
+    scale_x_continuous(breaks = seq(from = 0, to = 100, by = 10))+
+    scale_fill_discrete(name = legend_lab) + 
+    scale_color_discrete(name = legend_lab) + 
+    coord_cartesian(ylim = c(0, 1)) + 
+    labs(x = xlab, y = "Probability of acceptance (2.5th - 97.5th percentile)") + 
+    facet_wrap(param3 ~ ., labeller = as_labeller(appender)) +
+    theme_bw() + 
+    theme(legend.position = "top")
+    
+  return(b)
+}
+
+vis_diag = function(data){
+  a = data %>% 
+    gather(data = ., key = "metric", value = "value", -c(seed, param, param2, param3)) %>% 
+    group_by(param3, param2, param, metric) %>% 
+    summarise(lb = quantile(x = value, probs = 0.025), med = median(x = value), 
+              ub = quantile(x = value, probs = 0.975)) %>% 
+    dplyr::filter(metric == "c_true")
+    
+  ggplot(data = a) +
+      geom_ribbon(aes(x = param, ymin = lb, ymax = ub, group = as.factor(param2), fill = as.factor(param2)), 
+                  alpha = 0.3) +
+      geom_line(aes(x = param, y = med, color = as.factor(param2))) +
+      geom_point(aes(x = param, y = med, color = as.factor(param2))) +
+      geom_abline(slope = 1,intercept = 0, color = "red") +
+      # scale_x_log10(breaks = c(5, seq(10, 100, 10))) +
+      # scale_y_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) +
+      # coord_cartesian(ylim = c(0,1)) +
+      labs(x = "Input concentration (ppb)", y = "Output concentration (2.5th - 97.5th percentile)") +
+      theme_bw() +
+      facet_wrap(~ param3) +
+      theme(legend.position = "top")
+}
+```
+
+1. Visualization: Experiment 1
+
+```{r, echo = FALSE}
+plot_sp_method = plot_tune3(data = exp1_cleaned, xlab = "Estimated aflatoxin concentration (ppb)", 
+           legend_lab = "Sampling strategy", Mc = Mc)
+plot_sp_method
+```
+
+```{r, echo = FALSE}
+slopes_exp1
+```
+
+2. Visualization: Experiment 2
+
+```{r, echo = FALSE}
+plot_n_sp = plot_tune3(data = exp2_cleaned, xlab = "Estimated aflatoxin concentration (ppb)", 
+           legend_lab = "Number of probes", Mc = Mc)
+plot_n_sp
+```
+
+```{r, echo = FALSE}
+slopes_exp2
+```
+
+3. Sensitivity tornado plot
+
+```{r, echo = FALSE}
+sens_all
+plot_sens = plot_tornado(data = sens_all, param_labels = c("Sampling strategy", "Clustering", "Number of probes", "Aflatoxin concentration"))
+plot_sens
+```
+4. Summary of the mean acceptance probabilities at 20 ppb
+
+```{r}
+# Experiment 1
+summary_exp1 = exp1_cleaned %>%
+  dplyr::filter(param == 20) %>%
+  group_by(param3, param2) %>%
+  summarize(mean_Paccept = mean(Paccept))
+
+summary_exp1
+summarize_pval(data = exp1_cleaned, fix = "param3", param_tune_vec = n_affected_vec)
+summarize_pval(data = exp1_cleaned, fix = "param2", param_tune_vec = method_sp_vec)
+
+# Experiment 2
+summary_exp2 = exp2_cleaned %>%
+  dplyr::filter(param == 20) %>%
+  group_by(param3, param2) %>%
+  summarize(mean_Paccept = mean(Paccept))
+
+summary_exp2
+summarize_pval(data = exp2_cleaned, fix = "param3", param_tune_vec = n_affected_vec)
+summarize_pval(data = exp2_cleaned, fix = "param2", param_tune_vec = n_sp_vec)
+```
+
+5. Quality control figures that show how much the output concentration deviates from the input concentration.
+
+```{r, echo = FALSE}
+vis_diag(data = exp1_cleaned)
+vis_diag(data = exp2_cleaned)
+```
+
+
+# Appendix
+
+```{r, echo = FALSE}
+sessionInfo()
+```
+
+# Retired code
+
+ANOVA for `Paccept` ~ `method_sp`/`n_sp` under different `n_affected`
+
+```{r, echo = FALSE, eval =FALSE}
+# ANOVA pvalues
+get_pval = function(data, form){
+  a = data %>%
+    dplyr::filter(param == 20)
+  b = aov(formula = form, data = a) %>%
+    summary() 
+  return(b[[1]]$`Pr(>F)`[1])
+}
+```
+
+```{r, eval = FALSE}
+pval1 = split(x = exp1_cleaned, f = exp1_cleaned$param3) %>%
+  map(.x = ., .f = get_pval, form = Paccept ~ as.factor(param2))
+
+pval2 = split(x = exp2_cleaned, f = exp2_cleaned$param3) %>%
+  map(.x = ., .f = get_pval, form = Paccept ~ as.factor(param2))
+
+pval_all = rbind.data.frame(bind_cols(pval1), bind_cols(pval2)) %>%
+  mutate(experiment = c(1, 2), formula = c("Paccept ~ as.factor(method_sp)", "Paccept ~ as.factor(n_sp)"), c_hat = 20) %>%
+  gather(data = ., key = "n_affected", value = "p.value", -c(experiment, formula, c_hat)) %>%
+  dplyr::arrange(experiment)
+```
+
+```{r, echo = FALSE, eval = FALSE}
+kable_styling(kable_input = kable(pval_all, format = "html"), full_width = TRUE)
+```
+
+```{r, echo = FALSE, eval = FALSE}
+pdf("3D_paper_figures.pdf")
+  plot_sp_method
+  plot_n_sp
+  plot_sens
+dev.off()
+```
+
