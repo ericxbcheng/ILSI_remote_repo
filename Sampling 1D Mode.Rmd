@@ -207,7 +207,7 @@ sim_data2 = map(.x = list(ArgList_ex2_1, ArgList_ex2_2, ArgList_ex2_3, ArgList_e
 5. Clean up values of probability of detection and probability of acceptance.
 
 ```{r, warning = FALSE}
-data_cleaned = metrics_cont_sec(data = sim_data, vals_prim = vals_prim, vals_sec = c("increments", "grab"), n_seed = n_seed)
+data_cleaned = metrics_cont_sec(data = sim_data, vals_prim = vals_prim, vals_sec = c("grab", "increments"), n_seed = n_seed)
 
 data_cleaned2 = metrics_cont_sec(data = sim_data2, vals_prim = vals_prim, vals_sec = c("increments", "grab (t = 75, r = 10)", "grab (t = 25, r = 30)", "grab (t = 10, r = 75)"), n_seed = n_seed)
 ```
