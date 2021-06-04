@@ -85,7 +85,7 @@ source(file = "Sampling_analysis.R")
 ## Contamination
 n_contam = 1
 x_lim = c(0, 30)
-y_lim = c(0, 10)
+y_lim = c(0, 1)
 lims = list(xlim = x_lim, ylim = y_lim)
 geom = "point"
 
@@ -272,6 +272,7 @@ plot_tune2_ribbon_P_det = function(data, xlab, legend_lab){
 ```{r}
 plot_tune2_ribbon_P_det(data = data_cleaned, xlab = "Prevalence", legend_lab = "Sampling scheme")
 ```
+
 ```{r}
 plot_tune2_ribbon_P_det(data = data_cleaned2, xlab = "Prevalence", legend_lab = "Sampling scheme")
 ```
